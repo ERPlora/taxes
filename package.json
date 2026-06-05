@@ -1,0 +1,10 @@
+{
+  "name": "@erplora/module-taxes",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Módulo taxes (manifest declarativo + Web Component Stencil): categorías, tipos por país/región y reglas fiscales, más un motor de cálculo de impuestos. Se compila con @erplora/module-cli.",
+  "dependencies": {
+    "@stencil/core": "^4.20.0"
+  }
+}

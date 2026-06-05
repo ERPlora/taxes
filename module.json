@@ -1,0 +1,137 @@
+{
+  "id": "taxes",
+  "name": "Taxes",
+  "version": "1.0.0",
+  "agent": {
+    "description": "Manages tax categories, tax rates, and tax rules: list/create rates and categories, filter by country, define application rules, and calculate tax amounts for sale lines.",
+    "keywords": ["tax", "vat", "rate", "category", "fiscal", "calculation", "rule"]
+  },
+  "depends_on": [],
+  "permissions": [
+    "taxes.view_tax",
+    "taxes.manage_tax",
+    "taxes.calculate_tax"
+  ],
+  "role_permissions": {
+    "admin": [
+      "*"
+    ],
+    "manager": [
+      "taxes.view_tax",
+      "taxes.manage_tax",
+      "taxes.calculate_tax"
+    ],
+    "employee": [
+      "taxes.view_tax",
+      "taxes.calculate_tax"
+    ]
+  },
+  "navigation": [
+    {
+      "id": "rates",
+      "label": "Tax Rates",
+      "icon": "receipt-outline",
+      "component": "erp-taxes-rates"
+    },
+    {
+      "id": "categories",
+      "label": "Categories",
+      "icon": "receipt-outline",
+      "component": "erp-taxes-rates"
+    }
+  ],
+  "migrations": {
+    "sqlite": [
+      "migrations/sqlite/001_init.sql"
+    ]
+  },
+  "queries": {
+    "taxes.categories.list": {
+      "permission": "taxes.view_tax",
+      "sql": "queries/categories_list.sql",
+      "ai": { "description": "Lists the available tax categories" }
+    },
+    "taxes.rates.list": {
+      "permission": "taxes.view_tax",
+      "sql": "queries/rates_list.sql",
+      "ai": { "description": "Lists all configured tax rates" }
+    },
+    "taxes.rates.get": {
+      "permission": "taxes.view_tax",
+      "sql": "queries/rate_get.sql",
+      "ai": { "description": "Gets the details of a tax rate by its identifier" }
+    },
+    "taxes.rules.list": {
+      "permission": "taxes.view_tax",
+      "sql": "queries/rules_list.sql",
+      "ai": { "description": "Lists tax application rules" }
+    },
+    "taxes.rates.by_country": {
+      "permission": "taxes.view_tax",
+      "sql": "queries/rates_by_country.sql",
+      "ai": { "description": "Lists tax rates filtered by country" }
+    }
+  },
+  "commands": {
+    "taxes.categories.create": {
+      "permission": "taxes.manage_tax",
+      "transaction": true,
+      "sql": [
+        "commands/category_create.sql"
+      ],
+      "schema": "schemas/category_create.json",
+      "emit": [
+        "taxes.category.created"
+      ],
+      "ai": { "description": "Creates a new tax category" }
+    },
+    "taxes.rates.create": {
+      "permission": "taxes.manage_tax",
+      "transaction": true,
+      "sql": [
+        "commands/rate_create.sql"
+      ],
+      "schema": "schemas/rate_create.json",
+      "emit": [
+        "taxes.rate.created"
+      ],
+      "ai": { "description": "Creates a new tax rate with its percentage and category" }
+    },
+    "taxes.rates.deactivate": {
+      "permission": "taxes.manage_tax",
+      "transaction": true,
+      "sql": [
+        "commands/rate_deactivate.sql"
+      ],
+      "schema": "schemas/rate_deactivate.json",
+      "emit": [
+        "taxes.rate.deactivated"
+      ],
+      "ai": { "description": "Deactivates a tax rate so it no longer applies to new transactions" }
+    },
+    "taxes.rules.create": {
+      "permission": "taxes.manage_tax",
+      "transaction": true,
+      "sql": [
+        "commands/rule_create.sql"
+      ],
+      "schema": "schemas/rule_create.json",
+      "emit": [
+        "taxes.rule.created"
+      ],
+      "ai": { "description": "Creates an automatic tax application rule based on product or customer criteria" }
+    },
+    "taxes.calculate": {
+      "permission": "taxes.calculate_tax",
+      "handler": {
+        "type": "wasm",
+        "file": "dist/handler.wasm",
+        "function": "calculate_tax"
+      },
+      "ai": { "description": "Calculates the applicable tax amount for a set of sale lines" }
+    }
+  },
+  "ui": {
+    "entry": "dist/taxes.esm.js"
+  }
+}
