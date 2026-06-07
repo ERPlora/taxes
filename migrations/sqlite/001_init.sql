@@ -1,7 +1,7 @@
 -- Taxes · esquema inicial (SQLite). Portado fielmente de modules/m_taxes/models.py.
 -- Modelos: TaxCategory (agrupación semántica), TaxRate (% por país/región/categoría con
 -- vigencia por fechas) y TaxRule (override declarativo que apunta a una TaxRate concreta).
--- Contrato de fila estándar de hub-next (§2.5): hub_id + soft-delete + auditoría.
+-- Contrato de fila estándar de hub (§2.5): hub_id + soft-delete + auditoría.
 
 -- Categoría fiscal: agrupación semántica de tipos (p.ej. "IVA reducido", "Exento").
 -- code es único por hub y es el identificador estable referenciado por otros módulos.

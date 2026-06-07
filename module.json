@@ -4,7 +4,15 @@
   "version": "1.0.0",
   "agent": {
     "description": "Manages tax categories, tax rates, and tax rules: list/create rates and categories, filter by country, define application rules, and calculate tax amounts for sale lines.",
-    "keywords": ["tax", "vat", "rate", "category", "fiscal", "calculation", "rule"]
+    "keywords": [
+      "tax",
+      "vat",
+      "rate",
+      "category",
+      "fiscal",
+      "calculation",
+      "rule"
+    ]
   },
   "depends_on": [],
   "permissions": [
@@ -49,27 +57,162 @@
     "taxes.categories.list": {
       "permission": "taxes.view_tax",
       "sql": "queries/categories_list.sql",
-      "ai": { "description": "Lists the available tax categories" }
+      "list": {
+        "search": [
+          "code",
+          "name",
+          "description"
+        ],
+        "sort": [
+          "id",
+          "code",
+          "name",
+          "description",
+          "is_active"
+        ],
+        "default_sort": "name",
+        "default_dir": "asc",
+        "filters": {
+          "code": {
+            "op": "eq"
+          },
+          "name": {
+            "op": "eq"
+          },
+          "description": {
+            "op": "eq"
+          },
+          "is_active": {
+            "op": "eq"
+          }
+        },
+        "page_size": 50
+      },
+      "ai": {
+        "description": "Lists the available tax categories"
+      }
     },
     "taxes.rates.list": {
       "permission": "taxes.view_tax",
       "sql": "queries/rates_list.sql",
-      "ai": { "description": "Lists all configured tax rates" }
+      "list": {
+        "search": [
+          "code",
+          "name",
+          "country_code",
+          "region_code"
+        ],
+        "sort": [
+          "id",
+          "code",
+          "name",
+          "category_id",
+          "country_code",
+          "region_code",
+          "rate_pct",
+          "tax_type",
+          "applies_from",
+          "applies_until",
+          "is_active"
+        ],
+        "default_sort": "name",
+        "default_dir": "asc",
+        "filters": {
+          "code": {
+            "op": "eq"
+          },
+          "name": {
+            "op": "eq"
+          },
+          "category_id": {
+            "op": "eq"
+          },
+          "country_code": {
+            "op": "eq"
+          },
+          "region_code": {
+            "op": "eq"
+          },
+          "rate_pct": {
+            "op": "range"
+          },
+          "tax_type": {
+            "op": "range"
+          },
+          "applies_from": {
+            "op": "eq"
+          },
+          "applies_until": {
+            "op": "eq"
+          },
+          "is_active": {
+            "op": "eq"
+          }
+        },
+        "page_size": 50
+      },
+      "ai": {
+        "description": "Lists all configured tax rates"
+      }
     },
     "taxes.rates.get": {
       "permission": "taxes.view_tax",
       "sql": "queries/rate_get.sql",
-      "ai": { "description": "Gets the details of a tax rate by its identifier" }
+      "ai": {
+        "description": "Gets the details of a tax rate by its identifier"
+      }
     },
     "taxes.rules.list": {
       "permission": "taxes.view_tax",
       "sql": "queries/rules_list.sql",
-      "ai": { "description": "Lists tax application rules" }
+      "list": {
+        "search": [
+          "code",
+          "name"
+        ],
+        "sort": [
+          "id",
+          "code",
+          "name",
+          "conditions",
+          "tax_rate_id",
+          "priority",
+          "is_active"
+        ],
+        "default_sort": "name",
+        "default_dir": "asc",
+        "filters": {
+          "code": {
+            "op": "eq"
+          },
+          "name": {
+            "op": "eq"
+          },
+          "conditions": {
+            "op": "eq"
+          },
+          "tax_rate_id": {
+            "op": "range"
+          },
+          "priority": {
+            "op": "eq"
+          },
+          "is_active": {
+            "op": "eq"
+          }
+        },
+        "page_size": 50
+      },
+      "ai": {
+        "description": "Lists tax application rules"
+      }
     },
     "taxes.rates.by_country": {
       "permission": "taxes.view_tax",
       "sql": "queries/rates_by_country.sql",
-      "ai": { "description": "Lists tax rates filtered by country" }
+      "ai": {
+        "description": "Lists tax rates filtered by country"
+      }
     }
   },
   "commands": {
@@ -83,7 +226,9 @@
       "emit": [
         "taxes.category.created"
       ],
-      "ai": { "description": "Creates a new tax category" }
+      "ai": {
+        "description": "Creates a new tax category"
+      }
     },
     "taxes.rates.create": {
       "permission": "taxes.manage_tax",
@@ -95,7 +240,9 @@
       "emit": [
         "taxes.rate.created"
       ],
-      "ai": { "description": "Creates a new tax rate with its percentage and category" }
+      "ai": {
+        "description": "Creates a new tax rate with its percentage and category"
+      }
     },
     "taxes.rates.deactivate": {
       "permission": "taxes.manage_tax",
@@ -107,7 +254,9 @@
       "emit": [
         "taxes.rate.deactivated"
       ],
-      "ai": { "description": "Deactivates a tax rate so it no longer applies to new transactions" }
+      "ai": {
+        "description": "Deactivates a tax rate so it no longer applies to new transactions"
+      }
     },
     "taxes.rules.create": {
       "permission": "taxes.manage_tax",
@@ -119,7 +268,9 @@
       "emit": [
         "taxes.rule.created"
       ],
-      "ai": { "description": "Creates an automatic tax application rule based on product or customer criteria" }
+      "ai": {
+        "description": "Creates an automatic tax application rule based on product or customer criteria"
+      }
     },
     "taxes.calculate": {
       "permission": "taxes.calculate_tax",
@@ -128,7 +279,9 @@
         "file": "dist/handler.wasm",
         "function": "calculate_tax"
       },
-      "ai": { "description": "Calculates the applicable tax amount for a set of sale lines" }
+      "ai": {
+        "description": "Calculates the applicable tax amount for a set of sale lines"
+      }
     }
   },
   "ui": {

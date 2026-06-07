@@ -6,6 +6,3 @@ SELECT id, code, name, category_id, country_code, region_code,
        rate_pct, tax_type, applies_from, applies_until, is_active
 FROM taxes_rate
 WHERE hub_id = :hub_id AND is_deleted = 0 AND is_active = 1
-  AND (:country_code = '' OR country_code = :country_code)
-  AND (:category_id  = '' OR category_id  = :category_id)
-ORDER BY country_code ASC, code ASC;
