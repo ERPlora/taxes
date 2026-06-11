@@ -44,8 +44,14 @@
     {
       "id": "categories",
       "label": "Categories",
-      "icon": "receipt-outline",
-      "component": "erp-taxes-rates"
+      "icon": "pricetags",
+      "component": "erp-taxes-categories"
+    },
+    {
+      "id": "rules",
+      "label": "Rules",
+      "icon": "funnel",
+      "component": "erp-taxes-rules"
     }
   ],
   "migrations": {

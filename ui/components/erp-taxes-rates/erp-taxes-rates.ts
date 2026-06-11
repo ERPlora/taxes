@@ -2,7 +2,7 @@ import { LitElement, html, css, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
 import { define } from '@erplora/outfitkit/define';
 import '@erplora/outfitkit/ok-data-table';
-import type { DataTableColumn } from '@erplora/outfitkit';
+import type { DataTableColumn, DataTableAction } from '@erplora/outfitkit';
 import { createListController } from '@erplora/module-sdk';
 import type { ListController, ListClient, ListParams, ListPage } from '@erplora/module-sdk';
 
@@ -90,8 +90,22 @@ export class ErpTaxesRates extends LitElement {
         filterType: 'range',
         format: (r) => Number(r.rate_pct).toFixed(2),
       },
+      {
+        key: 'is_active',
+        header: 'Activo',
+        sortable: true,
+        filterable: true,
+        filterType: 'select',
+        options: [
+          { value: '1', label: 'Sí' },
+          { value: '0', label: 'No' },
+        ],
+        format: (r) => (Number(r.is_active) ? 'Sí' : 'No'),
+      },
     ];
   }
+
+  private rowActions: DataTableAction[] = [{ id: 'deactivate', label: 'Desactivar', color: 'danger' }];
 
   // TODO-LIT: componentWillLoad → connectedCallback. Recuerda: connectedCallback se dispara
   // en CADA reconexión al DOM (no solo en el primer montaje). Si la init debe correr una
@@ -164,6 +178,19 @@ export class ErpTaxesRates extends LitElement {
     return this.categories.find((c) => c.id === id)?.code ?? '—';
   }
 
+  private async onRowAction(ev: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) {
+    if (ev.detail.actionId !== 'deactivate') return;
+    const rate = ev.detail.row as unknown as TaxRate;
+    if (!Number(rate.is_active)) return; // ya inactivo: no-op
+    this.formError = '';
+    try {
+      await erplora().command('taxes.rates.deactivate', { rate_id: rate.id });
+      await this.ctrl.load();
+    } catch (e) {
+      this.formError = e instanceof Error ? e.message : 'No se pudo desactivar el tipo';
+    }
+  }
+
   render() {
     return html`<div>
         <header>
@@ -178,7 +205,7 @@ export class ErpTaxesRates extends LitElement {
         </form>
         ${this.formError ? html`<p class="err">${this.formError}</p>` : nothing}
         ${this.ctrl?.error ? html`<p class="err">${this.ctrl.error}</p>` : nothing}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${"Buscar país o código…"} .emptyMessage=${this.ctrl?.loading ? 'Cargando…' : 'Sin tipos fiscales.'} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${"Buscar país o código…"} .emptyMessage=${this.ctrl?.loading ? 'Cargando…' : 'Sin tipos fiscales.'} .actions=${this.rowActions} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}></ok-data-table>
       </div>`;
   }
 }
