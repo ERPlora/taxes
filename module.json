@@ -1,7 +1,7 @@
 {
   "id": "taxes",
   "name": "Taxes",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "agent": {
     "description": "Manages tax categories, tax rates, and tax rules: list/create rates and categories, filter by country, define application rules, and calculate tax amounts for sale lines.",
     "keywords": [
