@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS taxes_rate (
     category_id   TEXT NOT NULL,
     country_code  TEXT NOT NULL,
     region_code   TEXT NOT NULL DEFAULT '',
-    rate_pct      NUMERIC NOT NULL DEFAULT 0,
+    rate_pct      REAL NOT NULL DEFAULT 0,    -- tasa % (no es dinero)
     tax_type      TEXT NOT NULL DEFAULT 'vat',   -- vat|sales_tax|withholding|excise|import_duty
     applies_from  TEXT,                          -- ISO YYYY-MM-DD o NULL
     applies_until TEXT,                          -- ISO YYYY-MM-DD o NULL

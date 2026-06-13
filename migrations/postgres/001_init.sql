@@ -5,7 +5,7 @@
 -- Tipos: subconjunto portable "ERPlora SQL" (ADR-0007):
 --   * ids/refs → TEXT (UUIDs del runtime como texto);
 --   * flags 0/1 → INTEGER (los commands bindean 0/1; Postgres no castea entero→bool);
---   * importes → NUMERIC;
+--   * importes → INTEGER en céntimos (ADR-0007); tasas % → REAL;
 --   * FECHAS → TEXT ISO-8601 (NO TIMESTAMPTZ): el motor de sync (ADR-0031) compara
 --     updated_at como string lexicográfico; timestamptz rompería el LWW entre dialectos.
 
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS taxes_rate (
     category_id   TEXT NOT NULL,
     country_code  TEXT NOT NULL,
     region_code   TEXT NOT NULL DEFAULT '',
-    rate_pct      NUMERIC NOT NULL DEFAULT 0,
+    rate_pct      REAL NOT NULL DEFAULT 0,    -- tasa % (no es dinero)
     tax_type      TEXT NOT NULL DEFAULT 'vat',   -- vat|sales_tax|withholding|excise|import_duty
     applies_from  TEXT,                          -- ISO YYYY-MM-DD o NULL
     applies_until TEXT,                          -- ISO YYYY-MM-DD o NULL

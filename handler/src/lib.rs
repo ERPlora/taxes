@@ -80,11 +80,12 @@ fn field(v: &Value, k: &str) -> String {
     as_str(v.get(k).unwrap_or(&Value::Null))
 }
 
-/// Redondeo HALF_UP (mitad lejos de cero) a 2 decimales, con epsilon para
-/// compensar la representación binaria (paridad SQLite↔Postgres, `WASM-TODO.md`).
+/// Redondeo HALF_UP (mitad lejos de cero) a **céntimos enteros** (ADR-0007: el dinero
+/// viaja en céntimos; el `amount` de entrada y `base`/`tax`/`total` de salida están en
+/// céntimos). Epsilon para compensar la representación binaria (paridad SQLite↔Postgres).
 fn round2_half_up(x: f64) -> f64 {
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
-    sign * ((x.abs() * 100.0) + 0.5 + 1e-9).floor() / 100.0
+    sign * (x.abs() + 0.5 + 1e-9).floor()
 }
 
 // ── Resolución del tipo ──────────────────────────────────────────────────────
