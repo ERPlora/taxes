@@ -50,8 +50,8 @@ export class ErpTaxesRates extends LitElement {
     :host { display:block; font-family: system-ui, sans-serif; color: var(--ink, #1c1b18); }
     header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
     h2 { margin:0; font-size:1.15rem; flex:1; }
-    .form { display:flex; gap:.5rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1rem; }
-    .form ion-input, .form ion-select { --background:var(--surface-2,#f7f4ec); border:1px solid var(--line,#e7e2d6); border-radius:8px; min-width:8rem; }
+    .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1.25rem; }
+    .form ion-input, .form ion-select { flex:1 1 11rem; min-width:9rem; }
     .err { color:#d9480f; font-weight:600; }
   `;
 
@@ -213,10 +213,10 @@ export class ErpTaxesRates extends LitElement {
           <h2>${t('ui.ratesTitle')}</h2>
         </header>
         <form class="form" @submit=${(e) => this.createRate(e)}>
-          <ion-input placeholder=${t('ui.phCode')} .value=${this.newCode} @ionInput=${(e: any) => (this.newCode = e.target.value)}></ion-input>
-          <ion-input placeholder=${t('ui.phCountry')} .value=${this.newCountry} @ionInput=${(e: any) => (this.newCountry = e.target.value)}></ion-input>
-          <ion-input type="number" step="0.0001" placeholder=${t('ui.phPercent')} .value=${this.newPct} @ionInput=${(e: any) => (this.newPct = e.target.value)}></ion-input>
-          <ion-select placeholder=${t('ui.phCategory')} .value=${this.newCategory} @ionChange=${(e: any) => (this.newCategory = e.target.value)}>${this.categories.map((c) => html`<ion-select-option .value=${c.id}>${c.code}</ion-select-option>`)}</ion-select>
+          <ion-input fill="outline" label-placement="floating" label=${t('ui.colCode')} placeholder=${t('ui.phCode')} .value=${this.newCode} @ionInput=${(e: any) => (this.newCode = e.target.value)}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t('ui.colCountry')} placeholder=${t('ui.phCountry')} .value=${this.newCountry} @ionInput=${(e: any) => (this.newCountry = e.target.value)}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t('ui.lblPercent')} type="number" step="0.0001" placeholder=${t('ui.phPercent')} .value=${this.newPct} @ionInput=${(e: any) => (this.newPct = e.target.value)}></ion-input>
+          <ion-select fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategory')} .value=${this.newCategory} @ionChange=${(e: any) => (this.newCategory = e.target.value)}>${this.categories.map((c) => html`<ion-select-option .value=${c.id}>${c.code}</ion-select-option>`)}</ion-select>
           <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newCountry || !this.newCategory}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
         </form>
         ${this.formError ? html`<p class="err">${this.formError}</p>` : nothing}

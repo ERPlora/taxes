@@ -9,7 +9,7 @@ var __decorateClass = (decorators, target, key, kind) => {
   return result;
 };
 
-// node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
+// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
 var ElementInternalsShim = class ElementInternals {
   get shadowRoot() {
     return this.__host.__shadowRoot;
@@ -88,7 +88,7 @@ var ElementInternalsShim = class ElementInternals {
   }
 };
 
-// node_modules/@lit-labs/ssr-dom-shim/lib/events.js
+// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/events.js
 var __classPrivateFieldSet = function(receiver, state, value, kind, f3) {
   if (kind === "m") throw new TypeError("Private method is not writable");
   if (kind === "a" && !f3) throw new TypeError("Private accessor was defined without a setter");
@@ -246,7 +246,7 @@ Object.defineProperties(CustomEventShim.prototype, {
 var EventShimWithRealType = EventShim;
 var CustomEventShimWithRealType = CustomEventShim;
 
-// node_modules/@lit-labs/ssr-dom-shim/lib/css.js
+// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/css.js
 var _a2;
 var CSSRuleShim = (_a2 = class CSSRule {
   constructor() {
@@ -277,7 +277,7 @@ var CSSRuleShim = (_a2 = class CSSRule {
   }
 }, _a2.STYLE_RULE = 1, _a2.CHARSET_RULE = 2, _a2.IMPORT_RULE = 3, _a2.MEDIA_RULE = 4, _a2.FONT_FACE_RULE = 5, _a2.PAGE_RULE = 6, _a2.NAMESPACE_RULE = 10, _a2.KEYFRAMES_RULE = 7, _a2.KEYFRAME_RULE = 8, _a2.SUPPORTS_RULE = 12, _a2.COUNTER_STYLE_RULE = 11, _a2.FONT_FEATURE_VALUES_RULE = 14, _a2.MARGIN_RULE = 9, _a2);
 
-// node_modules/@lit-labs/ssr-dom-shim/index.js
+// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/index.js
 globalThis.Event ??= EventShimWithRealType;
 globalThis.CustomEvent ??= CustomEventShimWithRealType;
 var constructionToken = Symbol();
@@ -674,7 +674,7 @@ var CustomElementRegistryShimWithRealType = CustomElementRegistry;
 var customElements2 = new CustomElementRegistryShimWithRealType();
 var windowShim = new WindowShim(constructionToken);
 
-// node_modules/@lit/reactive-element/node/css-tag.js
+// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/css-tag.js
 var t = globalThis;
 var e = t.ShadowRoot && (void 0 === t.ShadyCSS || t.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype;
 var s = Symbol();
@@ -719,7 +719,7 @@ var c = e || void 0 === t.CSSStyleSheet ? (t5) => t5 : (t5) => t5 instanceof CSS
   return r(e5);
 })(t5) : t5;
 
-// node_modules/@lit/reactive-element/node/reactive-element.js
+// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/reactive-element.js
 var { is: h, defineProperty: r2, getOwnPropertyDescriptor: o2, getOwnPropertyNames: n2, getOwnPropertySymbols: a, getPrototypeOf: c2 } = Object;
 var l = globalThis;
 l.customElements ??= customElements2;
@@ -942,7 +942,7 @@ var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
 };
 g.elementStyles = [], g.shadowRootOptions = { mode: "open" }, g[f("elementProperties")] = /* @__PURE__ */ new Map(), g[f("finalized")] = /* @__PURE__ */ new Map(), u?.({ ReactiveElement: g }), (l.reactiveElementVersions ??= []).push("2.1.2");
 
-// node_modules/lit-html/lit-html.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/lit-html.js
 var t2 = globalThis;
 var i2 = (t5) => t5;
 var s2 = t2.trustedTypes;
@@ -1197,7 +1197,7 @@ var D = (t5, i7, s5) => {
   return h4._$AI(t5), h4;
 };
 
-// node_modules/lit-element/lit-element.js
+// node_modules/.pnpm/lit-element@4.2.2/node_modules/lit-element/lit-element.js
 var s3 = globalThis;
 var i3 = class extends g {
   constructor() {
@@ -1226,7 +1226,7 @@ var o4 = s3.litElementPolyfillSupport;
 o4?.({ LitElement: i3 });
 (s3.litElementVersions ??= []).push("4.2.2");
 
-// node_modules/@lit/reactive-element/node/decorators/property.js
+// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/decorators/property.js
 var o5 = { attribute: true, type: String, converter: b, reflect: false, hasChanged: m };
 var r4 = (t5 = o5, e5, r6) => {
   const { kind: n6, metadata: i7 } = r6;
@@ -1256,19 +1256,19 @@ function n4(t5) {
   })(t5, e5, o7);
 }
 
-// node_modules/@lit/reactive-element/node/decorators/state.js
+// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/decorators/state.js
 function r5(r6) {
   return n4({ ...r6, state: true, attribute: false });
 }
 
-// ../outfitkit/dist/define.js
+// node_modules/.pnpm/@outfitkit+core@file+..+outfitkit/node_modules/@outfitkit/core/dist/define.js
 function define(tag, ctor) {
   if (typeof customElements !== "undefined" && !customElements.get(tag)) {
     customElements.define(tag, ctor);
   }
 }
 
-// node_modules/lit-html/directive.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive.js
 var t3 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
 var e4 = (t5) => (...e5) => ({ _$litDirective$: t5, values: e5 });
 var i4 = class {
@@ -1288,7 +1288,7 @@ var i4 = class {
   }
 };
 
-// node_modules/lit-html/directive-helpers.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive-helpers.js
 var { I: t4 } = j;
 var i5 = (o7) => o7;
 var s4 = () => document.createComment("");
@@ -1321,7 +1321,7 @@ var h3 = (o7) => {
   o7._$AR(), o7._$AA.remove();
 };
 
-// node_modules/lit-html/directives/repeat.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/repeat.js
 var u4 = (e5, s5, t5) => {
   const r6 = /* @__PURE__ */ new Map();
   for (let l3 = s5; l3 <= t5; l3++) r6.set(e5[l3], l3);
@@ -1374,7 +1374,7 @@ var c4 = e4(class extends i4 {
   }
 });
 
-// node_modules/lit-html/directives/style-map.js
+// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/style-map.js
 var n5 = "important";
 var i6 = " !" + n5;
 var o6 = e4(class extends i4 {
@@ -1403,7 +1403,7 @@ var o6 = e4(class extends i4 {
   }
 });
 
-// ../outfitkit/dist/ok-data-table.js
+// node_modules/.pnpm/@outfitkit+core@file+..+outfitkit/node_modules/@outfitkit/core/dist/ok-data-table.js
 var __defProp2 = Object.defineProperty;
 var __decorateClass2 = (decorators, target, key, kind) => {
   var result = void 0;
@@ -2681,7 +2681,7 @@ __decorateClass2([
 ], OkDataTable.prototype, "menuOpen");
 define("ok-data-table", OkDataTable);
 
-// ../hub/packages/module-sdk/src/index.ts
+// node_modules/.pnpm/@erplora+module-sdk@file+..+hub+packages+module-sdk/node_modules/@erplora/module-sdk/src/index.ts
 function isEmpty(v3) {
   return v3 === null || v3 === void 0 || v3 === "";
 }
@@ -2799,7 +2799,7 @@ function createListController(client, queryName, onChange = () => {
   return new ListController(client, queryName, onChange, opts);
 }
 
-// ../modules-workspace/modules/taxes/locales/es.json
+// modules/taxes/locales/es.json
 var es_default = {
   name: "Impuestos",
   navigation: {
@@ -2826,22 +2826,23 @@ var es_default = {
     colPriority: "Prioridad",
     colConditions: "Condiciones",
     colAppliedRate: "Tipo aplicado",
+    lblPercent: "Tipo %",
     optYes: "S\xED",
     optNo: "No",
     categoriesTitle: "Categor\xEDas fiscales",
     ratesTitle: "Tipos fiscales",
     rulesTitle: "Reglas de aplicaci\xF3n",
-    phCode: "C\xF3digo (standard)",
-    phName: "Nombre (IVA general)",
-    phDescription: "Descripci\xF3n (opcional)",
-    phCountry: "Pa\xEDs (ES)",
-    phPercent: "% tipo",
-    phCategory: "Categor\xEDa\u2026",
-    phRuleCode: "C\xF3digo (vip-es)",
-    phRuleName: "Nombre",
-    phConditions: 'Condiciones JSON ({"customer_segment":"vip"})',
-    phRate: "Tipo a aplicar\u2026",
-    phPriority: "Prioridad (100)",
+    phCode: "standard",
+    phName: "IVA general",
+    phDescription: "opcional",
+    phCountry: "ES",
+    phPercent: "21",
+    phCategory: "Selecciona\u2026",
+    phRuleCode: "vip-es",
+    phRuleName: "Recargo VIP",
+    phConditions: '{"customer_segment":"vip"}',
+    phRate: "Selecciona\u2026",
+    phPriority: "100",
     btnSaving: "Guardando\u2026",
     btnAdd: "A\xF1adir",
     searchCodeName: "Buscar c\xF3digo o nombre\u2026",
@@ -2860,7 +2861,7 @@ var es_default = {
   }
 };
 
-// ../modules-workspace/modules/taxes/locales/en.json
+// modules/taxes/locales/en.json
 var en_default = {
   name: "Taxes",
   navigation: {
@@ -2887,22 +2888,23 @@ var en_default = {
     colPriority: "Priority",
     colConditions: "Conditions",
     colAppliedRate: "Applied rate",
+    lblPercent: "Rate %",
     optYes: "Yes",
     optNo: "No",
     categoriesTitle: "Tax categories",
     ratesTitle: "Tax rates",
     rulesTitle: "Application rules",
-    phCode: "Code (standard)",
-    phName: "Name (general VAT)",
-    phDescription: "Description (optional)",
-    phCountry: "Country (ES)",
-    phPercent: "% rate",
-    phCategory: "Category\u2026",
-    phRuleCode: "Code (vip-es)",
-    phRuleName: "Name",
-    phConditions: 'Conditions JSON ({"customer_segment":"vip"})',
-    phRate: "Rate to apply\u2026",
-    phPriority: "Priority (100)",
+    phCode: "standard",
+    phName: "general VAT",
+    phDescription: "optional",
+    phCountry: "ES",
+    phPercent: "21",
+    phCategory: "Select\u2026",
+    phRuleCode: "vip-es",
+    phRuleName: "VIP surcharge",
+    phConditions: '{"customer_segment":"vip"}',
+    phRate: "Select\u2026",
+    phPriority: "100",
     btnSaving: "Saving\u2026",
     btnAdd: "Add",
     searchCodeName: "Search code or name\u2026",
@@ -2921,7 +2923,7 @@ var en_default = {
   }
 };
 
-// ../modules-workspace/modules/taxes/ui/components/erp-taxes-categories/erp-taxes-categories.ts
+// modules/taxes/ui/components/erp-taxes-categories/erp-taxes-categories.ts
 var CATALOG = { es: es_default, en: en_default };
 function erplora() {
   const c5 = globalThis.erplora;
@@ -2943,8 +2945,8 @@ var ErpTaxesCategories = class extends i3 {
     :host { display:block; font-family: system-ui, sans-serif; color: var(--ink, #1c1b18); }
     header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
     h2 { margin:0; font-size:1.15rem; flex:1; }
-    .form { display:flex; gap:.5rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1rem; }
-    .form ion-input { --background:var(--surface-2,#f7f4ec); border:1px solid var(--line,#e7e2d6); border-radius:8px; min-width:8rem; }
+    .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1.25rem; }
+    .form ion-input { flex:1 1 11rem; min-width:9rem; }
     .err { color:#d9480f; font-weight:600; }
   `;
   }
@@ -3022,9 +3024,9 @@ var ErpTaxesCategories = class extends i3 {
           <h2>${t5("ui.categoriesTitle")}</h2>
         </header>
         <form class="form" @submit=${(e5) => this.createCategory(e5)}>
-          <ion-input placeholder=${t5("ui.phCode")} .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
-          <ion-input placeholder=${t5("ui.phName")} .value=${this.newName} @ionInput=${(e5) => this.newName = e5.target.value}></ion-input>
-          <ion-input placeholder=${t5("ui.phDescription")} .value=${this.newDescription} @ionInput=${(e5) => this.newDescription = e5.target.value}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colCode")} placeholder=${t5("ui.phCode")} .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colName")} placeholder=${t5("ui.phName")} .value=${this.newName} @ionInput=${(e5) => this.newName = e5.target.value}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colDescription")} placeholder=${t5("ui.phDescription")} .value=${this.newDescription} @ionInput=${(e5) => this.newDescription = e5.target.value}></ion-input>
           <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newName}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
         </form>
         ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
@@ -3050,7 +3052,7 @@ __decorateClass([
 ], ErpTaxesCategories.prototype, "saving", 2);
 define("erp-taxes-categories", ErpTaxesCategories);
 
-// ../modules-workspace/modules/taxes/ui/components/erp-taxes-rates/erp-taxes-rates.ts
+// modules/taxes/ui/components/erp-taxes-rates/erp-taxes-rates.ts
 var CATALOG2 = { es: es_default, en: en_default };
 function erplora2() {
   const c5 = globalThis.erplora;
@@ -3075,8 +3077,8 @@ var ErpTaxesRates = class extends i3 {
     :host { display:block; font-family: system-ui, sans-serif; color: var(--ink, #1c1b18); }
     header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
     h2 { margin:0; font-size:1.15rem; flex:1; }
-    .form { display:flex; gap:.5rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1rem; }
-    .form ion-input, .form ion-select { --background:var(--surface-2,#f7f4ec); border:1px solid var(--line,#e7e2d6); border-radius:8px; min-width:8rem; }
+    .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1.25rem; }
+    .form ion-input, .form ion-select { flex:1 1 11rem; min-width:9rem; }
     .err { color:#d9480f; font-weight:600; }
   `;
   }
@@ -3206,10 +3208,10 @@ var ErpTaxesRates = class extends i3 {
           <h2>${t5("ui.ratesTitle")}</h2>
         </header>
         <form class="form" @submit=${(e5) => this.createRate(e5)}>
-          <ion-input placeholder=${t5("ui.phCode")} .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
-          <ion-input placeholder=${t5("ui.phCountry")} .value=${this.newCountry} @ionInput=${(e5) => this.newCountry = e5.target.value}></ion-input>
-          <ion-input type="number" step="0.0001" placeholder=${t5("ui.phPercent")} .value=${this.newPct} @ionInput=${(e5) => this.newPct = e5.target.value}></ion-input>
-          <ion-select placeholder=${t5("ui.phCategory")} .value=${this.newCategory} @ionChange=${(e5) => this.newCategory = e5.target.value}>${this.categories.map((c5) => b2`<ion-select-option .value=${c5.id}>${c5.code}</ion-select-option>`)}</ion-select>
+          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colCode")} placeholder=${t5("ui.phCode")} .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colCountry")} placeholder=${t5("ui.phCountry")} .value=${this.newCountry} @ionInput=${(e5) => this.newCountry = e5.target.value}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t5("ui.lblPercent")} type="number" step="0.0001" placeholder=${t5("ui.phPercent")} .value=${this.newPct} @ionInput=${(e5) => this.newPct = e5.target.value}></ion-input>
+          <ion-select fill="outline" label-placement="floating" label=${t5("ui.colCategory")} placeholder=${t5("ui.phCategory")} .value=${this.newCategory} @ionChange=${(e5) => this.newCategory = e5.target.value}>${this.categories.map((c5) => b2`<ion-select-option .value=${c5.id}>${c5.code}</ion-select-option>`)}</ion-select>
           <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newCountry || !this.newCategory}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
         </form>
         ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
@@ -3244,7 +3246,7 @@ __decorateClass([
 ], ErpTaxesRates.prototype, "tick", 2);
 define("erp-taxes-rates", ErpTaxesRates);
 
-// ../modules-workspace/modules/taxes/ui/components/erp-taxes-rules/erp-taxes-rules.ts
+// modules/taxes/ui/components/erp-taxes-rules/erp-taxes-rules.ts
 var CATALOG3 = { es: es_default, en: en_default };
 function erplora3() {
   const c5 = globalThis.erplora;
@@ -3269,9 +3271,9 @@ var ErpTaxesRules = class extends i3 {
     :host { display:block; font-family: system-ui, sans-serif; color: var(--ink, #1c1b18); }
     header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
     h2 { margin:0; font-size:1.15rem; flex:1; }
-    .form { display:flex; gap:.5rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1rem; }
-    .form ion-input, .form ion-select { --background:var(--surface-2,#f7f4ec); border:1px solid var(--line,#e7e2d6); border-radius:8px; min-width:8rem; }
-    .form .wide { min-width: 18rem; }
+    .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1.25rem; }
+    .form ion-input, .form ion-select { flex:1 1 11rem; min-width:9rem; }
+    .form .wide { flex:2 1 20rem; min-width: 16rem; }
     .hint { color:#6b675e; font-size:.85rem; margin:.25rem 0 .5rem; }
     .err { color:#d9480f; font-weight:600; }
   `;
@@ -3383,11 +3385,11 @@ var ErpTaxesRules = class extends i3 {
           <h2>${t5("ui.rulesTitle")}</h2>
         </header>
         <form class="form" @submit=${(e5) => this.createRule(e5)}>
-          <ion-input placeholder=${t5("ui.phRuleCode")} .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
-          <ion-input placeholder=${t5("ui.phRuleName")} .value=${this.newName} @ionInput=${(e5) => this.newName = e5.target.value}></ion-input>
-          <ion-input class="wide" placeholder=${t5("ui.phConditions")} .value=${this.newConditions} @ionInput=${(e5) => this.newConditions = e5.target.value}></ion-input>
-          <ion-select placeholder=${t5("ui.phRate")} .value=${this.newRateId} @ionChange=${(e5) => this.newRateId = e5.target.value}>${this.rates.map((r6) => b2`<ion-select-option .value=${r6.id}>${this.rateName(r6.id)}</ion-select-option>`)}</ion-select>
-          <ion-input type="number" step="1" placeholder=${t5("ui.phPriority")} .value=${this.newPriority} @ionInput=${(e5) => this.newPriority = e5.target.value}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colCode")} placeholder=${t5("ui.phRuleCode")} .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colName")} placeholder=${t5("ui.phRuleName")} .value=${this.newName} @ionInput=${(e5) => this.newName = e5.target.value}></ion-input>
+          <ion-input class="wide" fill="outline" label-placement="floating" label=${t5("ui.colConditions")} placeholder=${t5("ui.phConditions")} .value=${this.newConditions} @ionInput=${(e5) => this.newConditions = e5.target.value}></ion-input>
+          <ion-select fill="outline" label-placement="floating" label=${t5("ui.colAppliedRate")} placeholder=${t5("ui.phRate")} .value=${this.newRateId} @ionChange=${(e5) => this.newRateId = e5.target.value}>${this.rates.map((r6) => b2`<ion-select-option .value=${r6.id}>${this.rateName(r6.id)}</ion-select-option>`)}</ion-select>
+          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colPriority")} type="number" step="1" placeholder=${t5("ui.phPriority")} .value=${this.newPriority} @ionInput=${(e5) => this.newPriority = e5.target.value}></ion-input>
           <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newName || !this.newRateId}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
         </form>
         <p class="hint">${t5("ui.rulesHint")}</p>

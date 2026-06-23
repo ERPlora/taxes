@@ -49,9 +49,9 @@ export class ErpTaxesRules extends LitElement {
     :host { display:block; font-family: system-ui, sans-serif; color: var(--ink, #1c1b18); }
     header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
     h2 { margin:0; font-size:1.15rem; flex:1; }
-    .form { display:flex; gap:.5rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1rem; }
-    .form ion-input, .form ion-select { --background:var(--surface-2,#f7f4ec); border:1px solid var(--line,#e7e2d6); border-radius:8px; min-width:8rem; }
-    .form .wide { min-width: 18rem; }
+    .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1.25rem; }
+    .form ion-input, .form ion-select { flex:1 1 11rem; min-width:9rem; }
+    .form .wide { flex:2 1 20rem; min-width: 16rem; }
     .hint { color:#6b675e; font-size:.85rem; margin:.25rem 0 .5rem; }
     .err { color:#d9480f; font-weight:600; }
   `;
@@ -193,11 +193,11 @@ export class ErpTaxesRules extends LitElement {
           <h2>${t('ui.rulesTitle')}</h2>
         </header>
         <form class="form" @submit=${(e) => this.createRule(e)}>
-          <ion-input placeholder=${t('ui.phRuleCode')} .value=${this.newCode} @ionInput=${(e: any) => (this.newCode = e.target.value)}></ion-input>
-          <ion-input placeholder=${t('ui.phRuleName')} .value=${this.newName} @ionInput=${(e: any) => (this.newName = e.target.value)}></ion-input>
-          <ion-input class="wide" placeholder=${t('ui.phConditions')} .value=${this.newConditions} @ionInput=${(e: any) => (this.newConditions = e.target.value)}></ion-input>
-          <ion-select placeholder=${t('ui.phRate')} .value=${this.newRateId} @ionChange=${(e: any) => (this.newRateId = e.target.value)}>${this.rates.map((r) => html`<ion-select-option .value=${r.id}>${this.rateName(r.id)}</ion-select-option>`)}</ion-select>
-          <ion-input type="number" step="1" placeholder=${t('ui.phPriority')} .value=${this.newPriority} @ionInput=${(e: any) => (this.newPriority = e.target.value)}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t('ui.colCode')} placeholder=${t('ui.phRuleCode')} .value=${this.newCode} @ionInput=${(e: any) => (this.newCode = e.target.value)}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t('ui.colName')} placeholder=${t('ui.phRuleName')} .value=${this.newName} @ionInput=${(e: any) => (this.newName = e.target.value)}></ion-input>
+          <ion-input class="wide" fill="outline" label-placement="floating" label=${t('ui.colConditions')} placeholder=${t('ui.phConditions')} .value=${this.newConditions} @ionInput=${(e: any) => (this.newConditions = e.target.value)}></ion-input>
+          <ion-select fill="outline" label-placement="floating" label=${t('ui.colAppliedRate')} placeholder=${t('ui.phRate')} .value=${this.newRateId} @ionChange=${(e: any) => (this.newRateId = e.target.value)}>${this.rates.map((r) => html`<ion-select-option .value=${r.id}>${this.rateName(r.id)}</ion-select-option>`)}</ion-select>
+          <ion-input fill="outline" label-placement="floating" label=${t('ui.colPriority')} type="number" step="1" placeholder=${t('ui.phPriority')} .value=${this.newPriority} @ionInput=${(e: any) => (this.newPriority = e.target.value)}></ion-input>
           <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newName || !this.newRateId}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
         </form>
         <p class="hint">${t('ui.rulesHint')}</p>
