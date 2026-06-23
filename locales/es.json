@@ -1,0 +1,14 @@
+{
+  "name": "Impuestos",
+  "navigation": {
+    "rates": {
+      "label": "Tipos impositivos"
+    },
+    "categories": {
+      "label": "Categorías"
+    },
+    "rules": {
+      "label": "Reglas"
+    }
+  }
+}

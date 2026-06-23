@@ -1,0 +1,14 @@
+{
+  "name": "Taxes",
+  "navigation": {
+    "rates": {
+      "label": "Tax Rates"
+    },
+    "categories": {
+      "label": "Categories"
+    },
+    "rules": {
+      "label": "Rules"
+    }
+  }
+}
