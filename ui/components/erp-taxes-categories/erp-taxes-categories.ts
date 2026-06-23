@@ -5,12 +5,20 @@ import '@erplora/outfitkit/ok-data-table';
 import type { DataTableColumn } from '@erplora/outfitkit';
 import { createListController } from '@erplora/module-sdk';
 import type { ListController, ListClient, ListParams, ListPage } from '@erplora/module-sdk';
+// Catálogo i18n del módulo (ADR-0055): esbuild inlinea estos JSON en el `dist` del WC. Los textos
+// internos se resuelven con `erplora.t(CATALOG, 'ui.clave')` (idioma activo, fallback locale→en→clave).
+import esLocale from '../../../locales/es.json';
+import enLocale from '../../../locales/en.json';
+const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
 interface ErploraClientLike extends ListClient {
   query<T = unknown>(name: string, params?: Record<string, unknown>): Promise<T>;
   queryPage<R = unknown>(name: string, params: ListParams): Promise<ListPage<R>>;
   command<T = unknown>(name: string, payload?: Record<string, unknown>): Promise<T>;
   on(event: string, cb: (payload: unknown) => void): () => void;
+  /** i18n del módulo (ADR-0055): idioma activo + traducción del catálogo `ui`. */
+  locale: string;
+  t(catalog: Record<string, unknown>, key: string, params?: Record<string, unknown>): string;
 }
 
 interface TaxCategory {
@@ -51,33 +59,39 @@ export class ErpTaxesCategories extends LitElement {
 
   private unsub?: () => void;
 
-  private columns: DataTableColumn[] = [
-    { key: 'code', header: 'Código', sortable: true, filterable: true, filterType: 'text' },
-    { key: 'name', header: 'Nombre', sortable: true, filterable: true, filterType: 'text' },
-    {
-      key: 'description',
-      header: 'Descripción',
-      sortable: true,
-      filterable: true,
-      filterType: 'text',
-      format: (r) => (r.description as string) || '—',
-    },
-    {
-      key: 'is_active',
-      header: 'Activa',
-      sortable: true,
-      filterable: true,
-      filterType: 'select',
-      options: [
-        { value: '1', label: 'Sí' },
-        { value: '0', label: 'No' },
-      ],
-      format: (r) => (Number(r.is_active) ? 'Sí' : 'No'),
-    },
-  ];
+  private get columns(): DataTableColumn[] {
+    const t = (k: string): string => erplora().t(CATALOG, k);
+    return [
+      { key: 'code', header: t('ui.colCode'), sortable: true, filterable: true, filterType: 'text' },
+      { key: 'name', header: t('ui.colName'), sortable: true, filterable: true, filterType: 'text' },
+      {
+        key: 'description',
+        header: t('ui.colDescription'),
+        sortable: true,
+        filterable: true,
+        filterType: 'text',
+        format: (r) => (r.description as string) || '—',
+      },
+      {
+        key: 'is_active',
+        header: t('ui.colActive'),
+        sortable: true,
+        filterable: true,
+        filterType: 'select',
+        options: [
+          { value: '1', label: t('ui.optYes') },
+          { value: '0', label: t('ui.optNo') },
+        ],
+        format: (r) => (Number(r.is_active) ? t('ui.optYes') : t('ui.optNo')),
+      },
+    ];
+  }
+
+  private readonly onLocaleChange = (): void => this.requestUpdate();
 
   async connectedCallback() {
     super.connectedCallback();
+    window.addEventListener('erplora:locale-changed', this.onLocaleChange);
     this.ctrl = createListController<TaxCategory>(erplora(), 'taxes.categories.list', () => this.requestUpdate(), {
       pageSize: 50,
       sort: 'name',
@@ -92,6 +106,7 @@ export class ErpTaxesCategories extends LitElement {
   }
 
   disconnectedCallback() {
+    window.removeEventListener('erplora:locale-changed', this.onLocaleChange);
     super.disconnectedCallback();
     this.unsub?.();
   }
@@ -112,26 +127,27 @@ export class ErpTaxesCategories extends LitElement {
       this.newDescription = '';
       await this.ctrl.load();
     } catch (e) {
-      this.formError = e instanceof Error ? e.message : 'No se pudo crear la categoría';
+      this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errCreateCategory');
     } finally {
       this.saving = false;
     }
   }
 
   render() {
+    const t = (k: string): string => erplora().t(CATALOG, k);
     return html`<div>
         <header>
-          <h2>Categorías fiscales</h2>
+          <h2>${t('ui.categoriesTitle')}</h2>
         </header>
         <form class="form" @submit=${(e) => this.createCategory(e)}>
-          <ion-input placeholder="Código (standard)" .value=${this.newCode} @ionInput=${(e: any) => (this.newCode = e.target.value)}></ion-input>
-          <ion-input placeholder="Nombre (IVA general)" .value=${this.newName} @ionInput=${(e: any) => (this.newName = e.target.value)}></ion-input>
-          <ion-input placeholder="Descripción (opcional)" .value=${this.newDescription} @ionInput=${(e: any) => (this.newDescription = e.target.value)}></ion-input>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newName}>${this.saving ? 'Guardando…' : 'Añadir'}</ion-button>
+          <ion-input placeholder=${t('ui.phCode')} .value=${this.newCode} @ionInput=${(e: any) => (this.newCode = e.target.value)}></ion-input>
+          <ion-input placeholder=${t('ui.phName')} .value=${this.newName} @ionInput=${(e: any) => (this.newName = e.target.value)}></ion-input>
+          <ion-input placeholder=${t('ui.phDescription')} .value=${this.newDescription} @ionInput=${(e: any) => (this.newDescription = e.target.value)}></ion-input>
+          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newName}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
         </form>
         ${this.formError ? html`<p class="err">${this.formError}</p>` : nothing}
         ${this.ctrl?.error ? html`<p class="err">${this.ctrl.error}</p>` : nothing}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${"Buscar código o nombre…"} .emptyMessage=${this.ctrl?.loading ? 'Cargando…' : 'Sin categorías fiscales.'} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCodeName')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyCategories')} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}></ok-data-table>
       </div>`;
   }
 }

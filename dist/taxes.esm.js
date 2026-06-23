@@ -9,7 +9,7 @@ var __decorateClass = (decorators, target, key, kind) => {
   return result;
 };
 
-// ../../node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
+// node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
 var ElementInternalsShim = class ElementInternals {
   get shadowRoot() {
     return this.__host.__shadowRoot;
@@ -88,7 +88,7 @@ var ElementInternalsShim = class ElementInternals {
   }
 };
 
-// ../../node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/events.js
+// node_modules/@lit-labs/ssr-dom-shim/lib/events.js
 var __classPrivateFieldSet = function(receiver, state, value, kind, f3) {
   if (kind === "m") throw new TypeError("Private method is not writable");
   if (kind === "a" && !f3) throw new TypeError("Private accessor was defined without a setter");
@@ -246,7 +246,7 @@ Object.defineProperties(CustomEventShim.prototype, {
 var EventShimWithRealType = EventShim;
 var CustomEventShimWithRealType = CustomEventShim;
 
-// ../../node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/css.js
+// node_modules/@lit-labs/ssr-dom-shim/lib/css.js
 var _a2;
 var CSSRuleShim = (_a2 = class CSSRule {
   constructor() {
@@ -277,7 +277,7 @@ var CSSRuleShim = (_a2 = class CSSRule {
   }
 }, _a2.STYLE_RULE = 1, _a2.CHARSET_RULE = 2, _a2.IMPORT_RULE = 3, _a2.MEDIA_RULE = 4, _a2.FONT_FACE_RULE = 5, _a2.PAGE_RULE = 6, _a2.NAMESPACE_RULE = 10, _a2.KEYFRAMES_RULE = 7, _a2.KEYFRAME_RULE = 8, _a2.SUPPORTS_RULE = 12, _a2.COUNTER_STYLE_RULE = 11, _a2.FONT_FEATURE_VALUES_RULE = 14, _a2.MARGIN_RULE = 9, _a2);
 
-// ../../node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/index.js
+// node_modules/@lit-labs/ssr-dom-shim/index.js
 globalThis.Event ??= EventShimWithRealType;
 globalThis.CustomEvent ??= CustomEventShimWithRealType;
 var constructionToken = Symbol();
@@ -674,7 +674,7 @@ var CustomElementRegistryShimWithRealType = CustomElementRegistry;
 var customElements2 = new CustomElementRegistryShimWithRealType();
 var windowShim = new WindowShim(constructionToken);
 
-// ../../node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/css-tag.js
+// node_modules/@lit/reactive-element/node/css-tag.js
 var t = globalThis;
 var e = t.ShadowRoot && (void 0 === t.ShadyCSS || t.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype;
 var s = Symbol();
@@ -719,7 +719,7 @@ var c = e || void 0 === t.CSSStyleSheet ? (t5) => t5 : (t5) => t5 instanceof CSS
   return r(e5);
 })(t5) : t5;
 
-// ../../node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/reactive-element.js
+// node_modules/@lit/reactive-element/node/reactive-element.js
 var { is: h, defineProperty: r2, getOwnPropertyDescriptor: o2, getOwnPropertyNames: n2, getOwnPropertySymbols: a, getPrototypeOf: c2 } = Object;
 var l = globalThis;
 l.customElements ??= customElements2;
@@ -942,7 +942,7 @@ var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
 };
 g.elementStyles = [], g.shadowRootOptions = { mode: "open" }, g[f("elementProperties")] = /* @__PURE__ */ new Map(), g[f("finalized")] = /* @__PURE__ */ new Map(), u?.({ ReactiveElement: g }), (l.reactiveElementVersions ??= []).push("2.1.2");
 
-// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/lit-html.js
+// node_modules/lit-html/lit-html.js
 var t2 = globalThis;
 var i2 = (t5) => t5;
 var s2 = t2.trustedTypes;
@@ -1197,7 +1197,7 @@ var D = (t5, i7, s5) => {
   return h4._$AI(t5), h4;
 };
 
-// ../../node_modules/.pnpm/lit-element@4.2.2/node_modules/lit-element/lit-element.js
+// node_modules/lit-element/lit-element.js
 var s3 = globalThis;
 var i3 = class extends g {
   constructor() {
@@ -1226,7 +1226,7 @@ var o4 = s3.litElementPolyfillSupport;
 o4?.({ LitElement: i3 });
 (s3.litElementVersions ??= []).push("4.2.2");
 
-// ../../node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/decorators/property.js
+// node_modules/@lit/reactive-element/node/decorators/property.js
 var o5 = { attribute: true, type: String, converter: b, reflect: false, hasChanged: m };
 var r4 = (t5 = o5, e5, r6) => {
   const { kind: n6, metadata: i7 } = r6;
@@ -1256,19 +1256,19 @@ function n4(t5) {
   })(t5, e5, o7);
 }
 
-// ../../node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/decorators/state.js
+// node_modules/@lit/reactive-element/node/decorators/state.js
 function r5(r6) {
   return n4({ ...r6, state: true, attribute: false });
 }
 
-// ../../node_modules/.pnpm/@outfitkit+core@file+..+outfitkit/node_modules/@outfitkit/core/dist/define.js
+// ../outfitkit/dist/define.js
 function define(tag, ctor) {
   if (typeof customElements !== "undefined" && !customElements.get(tag)) {
     customElements.define(tag, ctor);
   }
 }
 
-// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive.js
+// node_modules/lit-html/directive.js
 var t3 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
 var e4 = (t5) => (...e5) => ({ _$litDirective$: t5, values: e5 });
 var i4 = class {
@@ -1288,7 +1288,7 @@ var i4 = class {
   }
 };
 
-// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive-helpers.js
+// node_modules/lit-html/directive-helpers.js
 var { I: t4 } = j;
 var i5 = (o7) => o7;
 var s4 = () => document.createComment("");
@@ -1321,7 +1321,7 @@ var h3 = (o7) => {
   o7._$AR(), o7._$AA.remove();
 };
 
-// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/repeat.js
+// node_modules/lit-html/directives/repeat.js
 var u4 = (e5, s5, t5) => {
   const r6 = /* @__PURE__ */ new Map();
   for (let l3 = s5; l3 <= t5; l3++) r6.set(e5[l3], l3);
@@ -1374,7 +1374,7 @@ var c4 = e4(class extends i4 {
   }
 });
 
-// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/style-map.js
+// node_modules/lit-html/directives/style-map.js
 var n5 = "important";
 var i6 = " !" + n5;
 var o6 = e4(class extends i4 {
@@ -1403,7 +1403,7 @@ var o6 = e4(class extends i4 {
   }
 });
 
-// ../../node_modules/.pnpm/@outfitkit+core@file+..+outfitkit/node_modules/@outfitkit/core/dist/ok-data-table.js
+// ../outfitkit/dist/ok-data-table.js
 var __defProp2 = Object.defineProperty;
 var __decorateClass2 = (decorators, target, key, kind) => {
   var result = void 0;
@@ -1571,12 +1571,15 @@ var OkDataTable = class extends i3 {
 
     /* ── Topbar / cabecera (relieve) ─────────────────────────────────────────────────────── */
     .bar { display: flex; flex-direction: column; gap: 0.6rem; padding: 0.65rem 1rem; border-bottom: 1px solid var(--border-color); background: var(--header-background); }
-    /* Toolbar CONSOLIDADA: TODOS los controles (buscador, filtros, page-size, vistas, columnas,
-     * CSV, ⋮, alta) son hijos directos de UNA sola fila flex que envuelve ELEMENTO A ELEMENTO
-     * (no por bloques): caben en una línea → una línea; los que no caben bajan a la(s) línea(s)
-     * que hagan falta. El cluster derecho se empuja al borde con .tk-spacer (hueco flexible)
-     * solo cuando todo cabe en una línea; al envolver, el spacer se oculta y todo se apila a la
-     * izquierda. */
+    /* Toolbar CONSOLIDADA: TODOS los controles son hijos directos de UNA sola fila flex que
+     * envuelve ELEMENTO A ELEMENTO (no por bloques): caben en una línea → una línea; los que no
+     * caben bajan a la(s) línea(s) que hagan falta. El cluster derecho se empuja al borde con
+     * .tk-spacer (hueco flexible) solo cuando todo cabe en una línea; al envolver, el spacer se
+     * oculta y todo se apila a la izquierda.
+     * ORDEN CANÓNICO (2026-06-22, izquierda→derecha): [buscador] · [filtros en línea] · ‹spacer› ·
+     * [SELECTORES: columnas → filas/página] · [BOTONES: vistas → filtros(funnel) → import → export →
+     * alta → ⋮ → acción primaria]. Es decir: buscador al inicio, filtros en medio, y al final los
+     * selectores (columnas, luego «N por página») seguidos de los botones de acción. */
     .bar-main { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
     .bar-main > ion-button { --padding-start: 0.5rem; --padding-end: 0.5rem; margin: 0; }
     /* Spacer que absorbe el hueco libre en pantallas anchas (empuja el cluster derecho al borde).
@@ -2287,6 +2290,19 @@ var OkDataTable = class extends i3 {
                   ${this.hasSearch ? b2`<div class="search">${searchbar}</div>` : A}
                   ${this.inlineFilters ? this.renderInlineFilters() : A}
                   <span class="tk-spacer"></span>
+                    ${this.effColumnPicker ? b2`
+                          <ion-select
+                            class="tk-cols"
+                            multiple
+                            interface="popover"
+                            aria-label=${this.t.columnsVisible}
+                            .value=${this.visibleColumns.map((c5) => c5.key)}
+                            .selectedText=${this.t.columns}
+                            @ionChange=${(e5) => this.setVisibleColumns(e5.detail.value)}
+                          >
+                            ${this.columns.map((c5) => b2`<ion-select-option value=${c5.key}>${c5.header}</ion-select-option>`)}
+                          </ion-select>
+                        ` : A}
                     ${this.effPageSizes.length ? b2`
                           <ion-select
                             class="tk-psize"
@@ -2303,19 +2319,6 @@ var OkDataTable = class extends i3 {
                             ${this.toolButton("list-outline", this.viewMode === "table", () => this.setViewMode("table"), this.t.viewList)}
                             ${this.toolButton("grid-outline", this.viewMode === "cards", () => this.setViewMode("cards"), this.t.viewCards)}
                           </span>
-                        ` : A}
-                    ${this.effColumnPicker ? b2`
-                          <ion-select
-                            class="tk-cols"
-                            multiple
-                            interface="popover"
-                            aria-label=${this.t.columnsVisible}
-                            .value=${this.visibleColumns.map((c5) => c5.key)}
-                            .selectedText=${this.t.columns}
-                            @ionChange=${(e5) => this.setVisibleColumns(e5.detail.value)}
-                          >
-                            ${this.columns.map((c5) => b2`<ion-select-option value=${c5.key}>${c5.header}</ion-select-option>`)}
-                          </ion-select>
                         ` : A}
                     ${this.hasFilterRow && !this.inlineFilters ? this.toolButton("funnel-outline", this.panel === "filters" || this.activeFilterCount > 0, () => this.toggle("filters"), this.t.filters, this.serverSide ? void 0 : this.activeFilterCount) : A}
                     ${this.effImport ? b2`
@@ -2678,7 +2681,7 @@ __decorateClass2([
 ], OkDataTable.prototype, "menuOpen");
 define("ok-data-table", OkDataTable);
 
-// ../../node_modules/.pnpm/@erplora+module-sdk@file+..+hub+packages+module-sdk/node_modules/@erplora/module-sdk/src/index.ts
+// ../hub/packages/module-sdk/src/index.ts
 function isEmpty(v3) {
   return v3 === null || v3 === void 0 || v3 === "";
 }
@@ -2796,7 +2799,130 @@ function createListController(client, queryName, onChange = () => {
   return new ListController(client, queryName, onChange, opts);
 }
 
-// ui/components/erp-taxes-categories/erp-taxes-categories.ts
+// ../modules-workspace/modules/taxes/locales/es.json
+var es_default = {
+  name: "Impuestos",
+  navigation: {
+    rates: {
+      label: "Tipos impositivos"
+    },
+    categories: {
+      label: "Categor\xEDas"
+    },
+    rules: {
+      label: "Reglas"
+    }
+  },
+  ui: {
+    colCode: "C\xF3digo",
+    colName: "Nombre",
+    colDescription: "Descripci\xF3n",
+    colActive: "Activa",
+    colCountry: "Pa\xEDs",
+    colCategory: "Categor\xEDa",
+    colType: "Tipo",
+    colPercent: "%",
+    colActiveMasc: "Activo",
+    colPriority: "Prioridad",
+    colConditions: "Condiciones",
+    colAppliedRate: "Tipo aplicado",
+    optYes: "S\xED",
+    optNo: "No",
+    categoriesTitle: "Categor\xEDas fiscales",
+    ratesTitle: "Tipos fiscales",
+    rulesTitle: "Reglas de aplicaci\xF3n",
+    phCode: "C\xF3digo (standard)",
+    phName: "Nombre (IVA general)",
+    phDescription: "Descripci\xF3n (opcional)",
+    phCountry: "Pa\xEDs (ES)",
+    phPercent: "% tipo",
+    phCategory: "Categor\xEDa\u2026",
+    phRuleCode: "C\xF3digo (vip-es)",
+    phRuleName: "Nombre",
+    phConditions: 'Condiciones JSON ({"customer_segment":"vip"})',
+    phRate: "Tipo a aplicar\u2026",
+    phPriority: "Prioridad (100)",
+    btnSaving: "Guardando\u2026",
+    btnAdd: "A\xF1adir",
+    searchCodeName: "Buscar c\xF3digo o nombre\u2026",
+    searchCountryCode: "Buscar pa\xEDs o c\xF3digo\u2026",
+    loading: "Cargando\u2026",
+    emptyCategories: "Sin categor\xEDas fiscales.",
+    emptyRates: "Sin tipos fiscales.",
+    emptyRules: "Sin reglas fiscales.",
+    actionDeactivate: "Desactivar",
+    rulesHint: "Las reglas se eval\xFAan por prioridad ascendente (menor gana) y mapean condiciones (pa\xEDs, segmento de cliente, categor\xEDa de producto\u2026) a un tipo concreto.",
+    errCreateCategory: "No se pudo crear la categor\xEDa",
+    errCreateRate: "No se pudo crear el tipo",
+    errDeactivateRate: "No se pudo desactivar el tipo",
+    errCreateRule: "No se pudo crear la regla",
+    errConditionsJson: 'Condiciones: JSON inv\xE1lido (debe ser un objeto, p.ej. {"customer_segment":"vip"})'
+  }
+};
+
+// ../modules-workspace/modules/taxes/locales/en.json
+var en_default = {
+  name: "Taxes",
+  navigation: {
+    rates: {
+      label: "Tax Rates"
+    },
+    categories: {
+      label: "Categories"
+    },
+    rules: {
+      label: "Rules"
+    }
+  },
+  ui: {
+    colCode: "Code",
+    colName: "Name",
+    colDescription: "Description",
+    colActive: "Active",
+    colCountry: "Country",
+    colCategory: "Category",
+    colType: "Type",
+    colPercent: "%",
+    colActiveMasc: "Active",
+    colPriority: "Priority",
+    colConditions: "Conditions",
+    colAppliedRate: "Applied rate",
+    optYes: "Yes",
+    optNo: "No",
+    categoriesTitle: "Tax categories",
+    ratesTitle: "Tax rates",
+    rulesTitle: "Application rules",
+    phCode: "Code (standard)",
+    phName: "Name (general VAT)",
+    phDescription: "Description (optional)",
+    phCountry: "Country (ES)",
+    phPercent: "% rate",
+    phCategory: "Category\u2026",
+    phRuleCode: "Code (vip-es)",
+    phRuleName: "Name",
+    phConditions: 'Conditions JSON ({"customer_segment":"vip"})',
+    phRate: "Rate to apply\u2026",
+    phPriority: "Priority (100)",
+    btnSaving: "Saving\u2026",
+    btnAdd: "Add",
+    searchCodeName: "Search code or name\u2026",
+    searchCountryCode: "Search country or code\u2026",
+    loading: "Loading\u2026",
+    emptyCategories: "No tax categories.",
+    emptyRates: "No tax rates.",
+    emptyRules: "No tax rules.",
+    actionDeactivate: "Deactivate",
+    rulesHint: "Rules are evaluated by ascending priority (lower wins) and map conditions (country, customer segment, product category\u2026) to a specific rate.",
+    errCreateCategory: "Could not create the category",
+    errCreateRate: "Could not create the rate",
+    errDeactivateRate: "Could not deactivate the rate",
+    errCreateRule: "Could not create the rule",
+    errConditionsJson: 'Conditions: invalid JSON (must be an object, e.g. {"customer_segment":"vip"})'
+  }
+};
+
+// ../modules-workspace/modules/taxes/ui/components/erp-taxes-categories/erp-taxes-categories.ts
+var CATALOG = { es: es_default, en: en_default };
 function erplora() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
@@ -2810,30 +2936,7 @@ var ErpTaxesCategories = class extends i3 {
     this.newName = "";
     this.newDescription = "";
     this.saving = false;
-    this.columns = [
-      { key: "code", header: "C\xF3digo", sortable: true, filterable: true, filterType: "text" },
-      { key: "name", header: "Nombre", sortable: true, filterable: true, filterType: "text" },
-      {
-        key: "description",
-        header: "Descripci\xF3n",
-        sortable: true,
-        filterable: true,
-        filterType: "text",
-        format: (r6) => r6.description || "\u2014"
-      },
-      {
-        key: "is_active",
-        header: "Activa",
-        sortable: true,
-        filterable: true,
-        filterType: "select",
-        options: [
-          { value: "1", label: "S\xED" },
-          { value: "0", label: "No" }
-        ],
-        format: (r6) => Number(r6.is_active) ? "S\xED" : "No"
-      }
-    ];
+    this.onLocaleChange = () => this.requestUpdate();
   }
   static {
     this.styles = i`
@@ -2845,8 +2948,36 @@ var ErpTaxesCategories = class extends i3 {
     .err { color:#d9480f; font-weight:600; }
   `;
   }
+  get columns() {
+    const t5 = (k2) => erplora().t(CATALOG, k2);
+    return [
+      { key: "code", header: t5("ui.colCode"), sortable: true, filterable: true, filterType: "text" },
+      { key: "name", header: t5("ui.colName"), sortable: true, filterable: true, filterType: "text" },
+      {
+        key: "description",
+        header: t5("ui.colDescription"),
+        sortable: true,
+        filterable: true,
+        filterType: "text",
+        format: (r6) => r6.description || "\u2014"
+      },
+      {
+        key: "is_active",
+        header: t5("ui.colActive"),
+        sortable: true,
+        filterable: true,
+        filterType: "select",
+        options: [
+          { value: "1", label: t5("ui.optYes") },
+          { value: "0", label: t5("ui.optNo") }
+        ],
+        format: (r6) => Number(r6.is_active) ? t5("ui.optYes") : t5("ui.optNo")
+      }
+    ];
+  }
   async connectedCallback() {
     super.connectedCallback();
+    window.addEventListener("erplora:locale-changed", this.onLocaleChange);
     this.ctrl = createListController(erplora(), "taxes.categories.list", () => this.requestUpdate(), {
       pageSize: 50,
       sort: "name",
@@ -2859,6 +2990,7 @@ var ErpTaxesCategories = class extends i3 {
     }
   }
   disconnectedCallback() {
+    window.removeEventListener("erplora:locale-changed", this.onLocaleChange);
     super.disconnectedCallback();
     this.unsub?.();
   }
@@ -2878,25 +3010,26 @@ var ErpTaxesCategories = class extends i3 {
       this.newDescription = "";
       await this.ctrl.load();
     } catch (e5) {
-      this.formError = e5 instanceof Error ? e5.message : "No se pudo crear la categor\xEDa";
+      this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errCreateCategory");
     } finally {
       this.saving = false;
     }
   }
   render() {
+    const t5 = (k2) => erplora().t(CATALOG, k2);
     return b2`<div>
         <header>
-          <h2>Categorías fiscales</h2>
+          <h2>${t5("ui.categoriesTitle")}</h2>
         </header>
         <form class="form" @submit=${(e5) => this.createCategory(e5)}>
-          <ion-input placeholder="Código (standard)" .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
-          <ion-input placeholder="Nombre (IVA general)" .value=${this.newName} @ionInput=${(e5) => this.newName = e5.target.value}></ion-input>
-          <ion-input placeholder="Descripción (opcional)" .value=${this.newDescription} @ionInput=${(e5) => this.newDescription = e5.target.value}></ion-input>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newName}>${this.saving ? "Guardando\u2026" : "A\xF1adir"}</ion-button>
+          <ion-input placeholder=${t5("ui.phCode")} .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
+          <ion-input placeholder=${t5("ui.phName")} .value=${this.newName} @ionInput=${(e5) => this.newName = e5.target.value}></ion-input>
+          <ion-input placeholder=${t5("ui.phDescription")} .value=${this.newDescription} @ionInput=${(e5) => this.newDescription = e5.target.value}></ion-input>
+          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newName}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
         </form>
         ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
         ${this.ctrl?.error ? b2`<p class="err">${this.ctrl.error}</p>` : A}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${"Buscar c\xF3digo o nombre\u2026"} .emptyMessage=${this.ctrl?.loading ? "Cargando\u2026" : "Sin categor\xEDas fiscales."} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCodeName")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyCategories")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
       </div>`;
   }
 };
@@ -2917,7 +3050,8 @@ __decorateClass([
 ], ErpTaxesCategories.prototype, "saving", 2);
 define("erp-taxes-categories", ErpTaxesCategories);
 
-// ui/components/erp-taxes-rates/erp-taxes-rates.ts
+// ../modules-workspace/modules/taxes/ui/components/erp-taxes-rates/erp-taxes-rates.ts
+var CATALOG2 = { es: es_default, en: en_default };
 function erplora2() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
@@ -2934,7 +3068,7 @@ var ErpTaxesRates = class extends i3 {
     this.newCategory = "";
     this.saving = false;
     this.tick = 0;
-    this.rowActions = [{ id: "deactivate", label: "Desactivar", color: "danger" }];
+    this.onLocaleChange = () => this.requestUpdate();
   }
   static {
     this.styles = i`
@@ -2947,22 +3081,23 @@ var ErpTaxesRates = class extends i3 {
   `;
   }
   get columns() {
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return [
-      { key: "country_code", header: "Pa\xEDs", sortable: true, filterable: true, filterType: "text" },
-      { key: "code", header: "C\xF3digo", sortable: true, filterable: true, filterType: "text" },
+      { key: "country_code", header: t5("ui.colCountry"), sortable: true, filterable: true, filterType: "text" },
+      { key: "code", header: t5("ui.colCode"), sortable: true, filterable: true, filterType: "text" },
       {
         key: "category_id",
-        header: "Categor\xEDa",
+        header: t5("ui.colCategory"),
         sortable: true,
         filterable: true,
         filterType: "select",
         options: this.categories.map((c5) => ({ value: c5.id, label: c5.code })),
         format: (r6) => this.catName(r6.category_id)
       },
-      { key: "tax_type", header: "Tipo", sortable: true, filterable: true, filterType: "range" },
+      { key: "tax_type", header: t5("ui.colType"), sortable: true, filterable: true, filterType: "range" },
       {
         key: "rate_pct",
-        header: "%",
+        header: t5("ui.colPercent"),
         align: "right",
         sortable: true,
         filterable: true,
@@ -2971,23 +3106,27 @@ var ErpTaxesRates = class extends i3 {
       },
       {
         key: "is_active",
-        header: "Activo",
+        header: t5("ui.colActiveMasc"),
         sortable: true,
         filterable: true,
         filterType: "select",
         options: [
-          { value: "1", label: "S\xED" },
-          { value: "0", label: "No" }
+          { value: "1", label: t5("ui.optYes") },
+          { value: "0", label: t5("ui.optNo") }
         ],
-        format: (r6) => Number(r6.is_active) ? "S\xED" : "No"
+        format: (r6) => Number(r6.is_active) ? t5("ui.optYes") : t5("ui.optNo")
       }
     ];
+  }
+  get rowActions() {
+    return [{ id: "deactivate", label: erplora2().t(CATALOG2, "ui.actionDeactivate"), color: "danger" }];
   }
   // TODO-LIT: componentWillLoad → connectedCallback. Recuerda: connectedCallback se dispara
   // en CADA reconexión al DOM (no solo en el primer montaje). Si la init debe correr una
   // sola vez tras el primer render, considera firstUpdated() en su lugar.
   async connectedCallback() {
     super.connectedCallback();
+    window.addEventListener("erplora:locale-changed", this.onLocaleChange);
     this.ctrl = createListController(erplora2(), "taxes.rates.list", () => this.requestUpdate(), {
       pageSize: 50,
       sort: "name",
@@ -3007,6 +3146,7 @@ var ErpTaxesRates = class extends i3 {
     }
   }
   disconnectedCallback() {
+    window.removeEventListener("erplora:locale-changed", this.onLocaleChange);
     super.disconnectedCallback();
     this.unsub?.();
   }
@@ -3039,7 +3179,7 @@ var ErpTaxesRates = class extends i3 {
       this.newCategory = "";
       await this.ctrl.load();
     } catch (e5) {
-      this.formError = e5 instanceof Error ? e5.message : "No se pudo crear el tipo";
+      this.formError = e5 instanceof Error ? e5.message : erplora2().t(CATALOG2, "ui.errCreateRate");
     } finally {
       this.saving = false;
     }
@@ -3056,24 +3196,25 @@ var ErpTaxesRates = class extends i3 {
       await erplora2().command("taxes.rates.deactivate", { rate_id: rate.id });
       await this.ctrl.load();
     } catch (e5) {
-      this.formError = e5 instanceof Error ? e5.message : "No se pudo desactivar el tipo";
+      this.formError = e5 instanceof Error ? e5.message : erplora2().t(CATALOG2, "ui.errDeactivateRate");
     }
   }
   render() {
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return b2`<div>
         <header>
-          <h2>Tipos fiscales</h2>
+          <h2>${t5("ui.ratesTitle")}</h2>
         </header>
         <form class="form" @submit=${(e5) => this.createRate(e5)}>
-          <ion-input placeholder="Código (standard)" .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
-          <ion-input placeholder="País (ES)" .value=${this.newCountry} @ionInput=${(e5) => this.newCountry = e5.target.value}></ion-input>
-          <ion-input type="number" step="0.0001" placeholder="% tipo" .value=${this.newPct} @ionInput=${(e5) => this.newPct = e5.target.value}></ion-input>
-          <ion-select placeholder="Categoría…" .value=${this.newCategory} @ionChange=${(e5) => this.newCategory = e5.target.value}>${this.categories.map((c5) => b2`<ion-select-option .value=${c5.id}>${c5.code}</ion-select-option>`)}</ion-select>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newCountry || !this.newCategory}>${this.saving ? "Guardando\u2026" : "A\xF1adir"}</ion-button>
+          <ion-input placeholder=${t5("ui.phCode")} .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
+          <ion-input placeholder=${t5("ui.phCountry")} .value=${this.newCountry} @ionInput=${(e5) => this.newCountry = e5.target.value}></ion-input>
+          <ion-input type="number" step="0.0001" placeholder=${t5("ui.phPercent")} .value=${this.newPct} @ionInput=${(e5) => this.newPct = e5.target.value}></ion-input>
+          <ion-select placeholder=${t5("ui.phCategory")} .value=${this.newCategory} @ionChange=${(e5) => this.newCategory = e5.target.value}>${this.categories.map((c5) => b2`<ion-select-option .value=${c5.id}>${c5.code}</ion-select-option>`)}</ion-select>
+          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newCountry || !this.newCategory}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
         </form>
         ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
         ${this.ctrl?.error ? b2`<p class="err">${this.ctrl.error}</p>` : A}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${"Buscar pa\xEDs o c\xF3digo\u2026"} .emptyMessage=${this.ctrl?.loading ? "Cargando\u2026" : "Sin tipos fiscales."} .actions=${this.rowActions} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCountryCode")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRates")} .actions=${this.rowActions} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
       </div>`;
   }
 };
@@ -3103,7 +3244,8 @@ __decorateClass([
 ], ErpTaxesRates.prototype, "tick", 2);
 define("erp-taxes-rates", ErpTaxesRates);
 
-// ui/components/erp-taxes-rules/erp-taxes-rules.ts
+// ../modules-workspace/modules/taxes/ui/components/erp-taxes-rules/erp-taxes-rules.ts
+var CATALOG3 = { es: es_default, en: en_default };
 function erplora3() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
@@ -3120,6 +3262,7 @@ var ErpTaxesRules = class extends i3 {
     this.newRateId = "";
     this.newPriority = "";
     this.saving = false;
+    this.onLocaleChange = () => this.requestUpdate();
   }
   static {
     this.styles = i`
@@ -3134,33 +3277,35 @@ var ErpTaxesRules = class extends i3 {
   `;
   }
   get columns() {
+    const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return [
-      { key: "priority", header: "Prioridad", align: "right", sortable: true, filterable: true, filterType: "text" },
-      { key: "code", header: "C\xF3digo", sortable: true, filterable: true, filterType: "text" },
-      { key: "name", header: "Nombre", sortable: true, filterable: true, filterType: "text" },
-      { key: "conditions", header: "Condiciones", format: (r6) => String(r6.conditions ?? "") || "\u2014" },
+      { key: "priority", header: t5("ui.colPriority"), align: "right", sortable: true, filterable: true, filterType: "text" },
+      { key: "code", header: t5("ui.colCode"), sortable: true, filterable: true, filterType: "text" },
+      { key: "name", header: t5("ui.colName"), sortable: true, filterable: true, filterType: "text" },
+      { key: "conditions", header: t5("ui.colConditions"), format: (r6) => String(r6.conditions ?? "") || "\u2014" },
       {
         key: "tax_rate_id",
-        header: "Tipo aplicado",
+        header: t5("ui.colAppliedRate"),
         sortable: true,
         format: (r6) => this.rateName(r6.tax_rate_id)
       },
       {
         key: "is_active",
-        header: "Activa",
+        header: t5("ui.colActive"),
         sortable: true,
         filterable: true,
         filterType: "select",
         options: [
-          { value: "1", label: "S\xED" },
-          { value: "0", label: "No" }
+          { value: "1", label: t5("ui.optYes") },
+          { value: "0", label: t5("ui.optNo") }
         ],
-        format: (r6) => Number(r6.is_active) ? "S\xED" : "No"
+        format: (r6) => Number(r6.is_active) ? t5("ui.optYes") : t5("ui.optNo")
       }
     ];
   }
   async connectedCallback() {
     super.connectedCallback();
+    window.addEventListener("erplora:locale-changed", this.onLocaleChange);
     this.ctrl = createListController(erplora3(), "taxes.rules.list", () => this.requestUpdate(), {
       pageSize: 50,
       sort: "priority",
@@ -3178,6 +3323,7 @@ var ErpTaxesRules = class extends i3 {
     }
   }
   disconnectedCallback() {
+    window.removeEventListener("erplora:locale-changed", this.onLocaleChange);
     super.disconnectedCallback();
     this.unsub?.();
   }
@@ -3204,7 +3350,7 @@ var ErpTaxesRules = class extends i3 {
         if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("no es un objeto");
         conditions = parsed;
       } catch {
-        this.formError = 'Condiciones: JSON inv\xE1lido (debe ser un objeto, p.ej. {"customer_segment":"vip"})';
+        this.formError = erplora3().t(CATALOG3, "ui.errConditionsJson");
         return;
       }
     }
@@ -3225,28 +3371,29 @@ var ErpTaxesRules = class extends i3 {
       this.newPriority = "";
       await this.ctrl.load();
     } catch (e5) {
-      this.formError = e5 instanceof Error ? e5.message : "No se pudo crear la regla";
+      this.formError = e5 instanceof Error ? e5.message : erplora3().t(CATALOG3, "ui.errCreateRule");
     } finally {
       this.saving = false;
     }
   }
   render() {
+    const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return b2`<div>
         <header>
-          <h2>Reglas de aplicación</h2>
+          <h2>${t5("ui.rulesTitle")}</h2>
         </header>
         <form class="form" @submit=${(e5) => this.createRule(e5)}>
-          <ion-input placeholder="Código (vip-es)" .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
-          <ion-input placeholder="Nombre" .value=${this.newName} @ionInput=${(e5) => this.newName = e5.target.value}></ion-input>
-          <ion-input class="wide" placeholder='Condiciones JSON ({"customer_segment":"vip"})' .value=${this.newConditions} @ionInput=${(e5) => this.newConditions = e5.target.value}></ion-input>
-          <ion-select placeholder="Tipo a aplicar…" .value=${this.newRateId} @ionChange=${(e5) => this.newRateId = e5.target.value}>${this.rates.map((r6) => b2`<ion-select-option .value=${r6.id}>${this.rateName(r6.id)}</ion-select-option>`)}</ion-select>
-          <ion-input type="number" step="1" placeholder="Prioridad (100)" .value=${this.newPriority} @ionInput=${(e5) => this.newPriority = e5.target.value}></ion-input>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newName || !this.newRateId}>${this.saving ? "Guardando\u2026" : "A\xF1adir"}</ion-button>
+          <ion-input placeholder=${t5("ui.phRuleCode")} .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
+          <ion-input placeholder=${t5("ui.phRuleName")} .value=${this.newName} @ionInput=${(e5) => this.newName = e5.target.value}></ion-input>
+          <ion-input class="wide" placeholder=${t5("ui.phConditions")} .value=${this.newConditions} @ionInput=${(e5) => this.newConditions = e5.target.value}></ion-input>
+          <ion-select placeholder=${t5("ui.phRate")} .value=${this.newRateId} @ionChange=${(e5) => this.newRateId = e5.target.value}>${this.rates.map((r6) => b2`<ion-select-option .value=${r6.id}>${this.rateName(r6.id)}</ion-select-option>`)}</ion-select>
+          <ion-input type="number" step="1" placeholder=${t5("ui.phPriority")} .value=${this.newPriority} @ionInput=${(e5) => this.newPriority = e5.target.value}></ion-input>
+          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newName || !this.newRateId}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
         </form>
-        <p class="hint">Las reglas se evalúan por prioridad ascendente (menor gana) y mapean condiciones (país, segmento de cliente, categoría de producto…) a un tipo concreto.</p>
+        <p class="hint">${t5("ui.rulesHint")}</p>
         ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
         ${this.ctrl?.error ? b2`<p class="err">${this.ctrl.error}</p>` : A}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${"Buscar c\xF3digo o nombre\u2026"} .emptyMessage=${this.ctrl?.loading ? "Cargando\u2026" : "Sin reglas fiscales."} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCodeName")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
       </div>`;
   }
 };
