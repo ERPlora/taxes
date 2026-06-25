@@ -3,19 +3,20 @@
   "title": "taxes.rates.create",
   "type": "object",
   "additionalProperties": false,
-  "required": ["code", "category_id", "country_code", "rate_pct"],
+  "required": ["code", "country_code", "rate_pct"],
   "properties": {
     "code": { "type": "string", "minLength": 1, "maxLength": 50 },
     "name": { "type": "string", "default": "", "maxLength": 255 },
-    "category_id": { "type": "string", "minLength": 1 },
+    "category_id": { "type": ["string", "null"], "default": null },
     "country_code": { "type": "string", "minLength": 2, "maxLength": 2 },
     "region_code": { "type": "string", "default": "", "maxLength": 10 },
     "rate_pct": { "type": "number", "minimum": 0 },
     "tax_type": {
       "type": "string",
-      "enum": ["vat", "sales_tax", "withholding", "excise", "import_duty"],
+      "enum": ["vat", "sales_tax", "withholding", "excise", "import_duty", "group"],
       "default": "vat"
     },
+    "parent_id": { "type": ["string", "null"], "default": null },
     "applies_from": { "type": ["string", "null"], "format": "date", "default": null },
     "applies_until": { "type": ["string", "null"], "format": "date", "default": null }
   }

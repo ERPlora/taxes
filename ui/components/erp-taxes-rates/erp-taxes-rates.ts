@@ -2,6 +2,7 @@ import { LitElement, html, css, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
 import { define } from '@erplora/outfitkit/define';
 import '@erplora/outfitkit/ok-data-table';
+import '@erplora/outfitkit/ok-empty-state';
 import type { DataTableColumn, DataTableAction } from '@erplora/outfitkit';
 import { createListController } from '@erplora/module-sdk';
 import type { ListController, ListClient, ListParams, ListPage } from '@erplora/module-sdk';
@@ -53,6 +54,21 @@ export class ErpTaxesRates extends LitElement {
     .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1.25rem; }
     .form ion-input, .form ion-select { flex:1 1 11rem; min-width:9rem; }
     .err { color:#d9480f; font-weight:600; }
+    /* Caja del prompt copiable para el asistente (ADR-0066). Vive en el slot de
+       <ok-empty-state> (icono + título + mensaje los pone el propio componente).
+       Tokens Ionic (overridables); sin handlers inline (CSP estricta) — Lit liga @click. */
+    .prompt {
+      display:flex; align-items:flex-start; gap:.5rem; width:100%; max-width:46rem;
+      margin-top:.25rem; padding:.75rem .9rem; text-align:left;
+      background: var(--ion-color-light, #f4f5f8); border-radius:8px;
+      border:1px solid var(--ion-color-step-150, rgba(0,0,0,.08));
+    }
+    .prompt code {
+      flex:1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size:.85rem; line-height:1.45; color: var(--ion-text-color, #1f2933);
+      white-space:pre-wrap; word-break:break-word;
+    }
+    .prompt ion-button { flex:0 0 auto; margin:0; }
   `;
 
   @state() categories: TaxCategory[] = [];
@@ -68,6 +84,8 @@ export class ErpTaxesRates extends LitElement {
   @state() newCategory = '';
 
   @state() saving = false;
+
+  @state() copied = false;
 
   @state() tick = 0;
 
@@ -162,14 +180,15 @@ export class ErpTaxesRates extends LitElement {
 
   private async createRate(ev: Event) {
     ev.preventDefault();
-    if (!this.newCode.trim() || !this.newCountry.trim() || !this.newCategory) return;
+    // ADR-0066: la categoría es OPCIONAL — solo code/país/% son obligatorios.
+    if (!this.newCode.trim() || !this.newCountry.trim()) return;
     this.saving = true;
     this.formError = '';
     try {
       await erplora().command('taxes.rates.create', {
         code: this.newCode.trim(),
         name: '',
-        category_id: this.newCategory,
+        category_id: this.newCategory || null,
         country_code: this.newCountry.trim().toUpperCase(),
         region_code: '',
         rate_pct: Number(this.newPct) || 0,
@@ -191,6 +210,61 @@ export class ErpTaxesRates extends LitElement {
 
   private catName(id: string): string {
     return this.categories.find((c) => c.id === id)?.code ?? '—';
+  }
+
+  /** ¿Catálogo genuinamente vacío y ya cargado? Solo entonces se muestra el empty-state con
+   *  el prompt copiable (y se oculta la tabla). Si hay búsqueda/filtro activos, el «0 filas»
+   *  lo gestiona la propia tabla (con sus controles para limpiar el filtro) — no atrapamos al
+   *  usuario escondiéndola. */
+  private get isEmpty(): boolean {
+    const s = this.ctrl?.state;
+    const noFilters = !s?.search && Object.keys(s?.filters ?? {}).length === 0;
+    return !this.ctrl?.loading && !this.ctrl?.error && (this.ctrl?.total ?? 0) === 0 && noFilters;
+  }
+
+  /** Copia el prompt sugerido al portapapeles (ADR-0066). Fallback a textarea+execCommand
+   *  para contextos sin Clipboard API (CSP/permite ejecutar sin red). */
+  private async copyPrompt() {
+    const text = erplora().t(CATALOG, 'ui.emptyRatesPrompt');
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+      } catch {
+        /* sin portapapeles: el usuario puede seleccionar el texto a mano */
+      }
+      ta.remove();
+    }
+    this.copied = true;
+    window.setTimeout(() => {
+      this.copied = false;
+    }, 2000);
+  }
+
+  /** Empty-state: <ok-empty-state> (icono + título + mensaje) + prompt copiable para el
+   *  asistente en el slot (ADR-0066). Reutiliza el componente de OutfitKit, no duplica el shell. */
+  private renderEmpty() {
+    const t = (k: string): string => erplora().t(CATALOG, k);
+    return html`<ok-empty-state
+      icon="receipt-outline"
+      heading=${t('ui.emptyRatesHeading')}
+      message=${t('ui.emptyRatesMessage')}
+    >
+      <div class="prompt">
+        <code>${t('ui.emptyRatesPrompt')}</code>
+        <ion-button size="small" fill="solid" @click=${() => this.copyPrompt()}>
+          <ion-icon slot="start" name=${this.copied ? 'checkmark-outline' : 'copy-outline'}></ion-icon>
+          ${this.copied ? t('ui.btnCopiedPrompt') : t('ui.btnCopyPrompt')}
+        </ion-button>
+      </div>
+    </ok-empty-state>`;
   }
 
   private async onRowAction(ev: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) {
@@ -216,12 +290,14 @@ export class ErpTaxesRates extends LitElement {
           <ion-input fill="outline" label-placement="floating" label=${t('ui.colCode')} placeholder=${t('ui.phCode')} .value=${this.newCode} @ionInput=${(e: any) => (this.newCode = e.target.value)}></ion-input>
           <ion-input fill="outline" label-placement="floating" label=${t('ui.colCountry')} placeholder=${t('ui.phCountry')} .value=${this.newCountry} @ionInput=${(e: any) => (this.newCountry = e.target.value)}></ion-input>
           <ion-input fill="outline" label-placement="floating" label=${t('ui.lblPercent')} type="number" step="0.0001" placeholder=${t('ui.phPercent')} .value=${this.newPct} @ionInput=${(e: any) => (this.newPct = e.target.value)}></ion-input>
-          <ion-select fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategory')} .value=${this.newCategory} @ionChange=${(e: any) => (this.newCategory = e.target.value)}>${this.categories.map((c) => html`<ion-select-option .value=${c.id}>${c.code}</ion-select-option>`)}</ion-select>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newCountry || !this.newCategory}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
+          <ion-select fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategory')} .value=${this.newCategory} @ionChange=${(e: any) => (this.newCategory = e.target.value)}><ion-select-option .value=${''}>—</ion-select-option>${this.categories.map((c) => html`<ion-select-option .value=${c.id}>${c.code}</ion-select-option>`)}</ion-select>
+          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newCountry}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
         </form>
         ${this.formError ? html`<p class="err">${this.formError}</p>` : nothing}
         ${this.ctrl?.error ? html`<p class="err">${this.ctrl.error}</p>` : nothing}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCountryCode')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRates')} .actions=${this.rowActions} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}></ok-data-table>
+        ${this.isEmpty
+          ? this.renderEmpty()
+          : html`<ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCountryCode')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRates')} .actions=${this.rowActions} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}></ok-data-table>`}
       </div>`;
   }
 }

@@ -1,7 +1,7 @@
 {
   "id": "taxes",
   "name": "Taxes",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "agent": {
     "description": "Manages tax categories, tax rates, and tax rules: list/create rates and categories, filter by country, define application rules, and calculate tax amounts for sale lines.",
     "keywords": [
@@ -57,6 +57,9 @@
   "migrations": {
     "sqlite": [
       "migrations/sqlite/001_init.sql"
+    ],
+    "postgres": [
+      "migrations/postgres/001_init.sql"
     ]
   },
   "queries": {
@@ -96,7 +99,8 @@
       },
       "ai": {
         "description": "Lists the available tax categories"
-      }
+      },
+      "expose_api": true
     },
     "taxes.rates.list": {
       "permission": "taxes.view_tax",
@@ -159,14 +163,16 @@
       },
       "ai": {
         "description": "Lists all configured tax rates"
-      }
+      },
+      "expose_api": true
     },
     "taxes.rates.get": {
       "permission": "taxes.view_tax",
       "sql": "queries/rate_get.sql",
       "ai": {
         "description": "Gets the details of a tax rate by its identifier"
-      }
+      },
+      "expose_api": true
     },
     "taxes.rules.list": {
       "permission": "taxes.view_tax",
@@ -211,14 +217,16 @@
       },
       "ai": {
         "description": "Lists tax application rules"
-      }
+      },
+      "expose_api": true
     },
     "taxes.rates.by_country": {
       "permission": "taxes.view_tax",
       "sql": "queries/rates_by_country.sql",
       "ai": {
         "description": "Lists tax rates filtered by country"
-      }
+      },
+      "expose_api": true
     }
   },
   "commands": {
@@ -247,7 +255,19 @@
         "taxes.rate.created"
       ],
       "ai": {
-        "description": "Creates a new tax rate with its percentage and category"
+        "description": "Creates a new tax rate with its percentage; the category is optional"
+      }
+    },
+    "taxes.rates.bulk_create": {
+      "permission": "taxes.manage_tax",
+      "schema": "schemas/rates_bulk_create.json",
+      "handler": {
+        "type": "wasm",
+        "file": "dist/handler.wasm",
+        "function": "bulk_create_rates"
+      },
+      "ai": {
+        "description": "Creates multiple tax rates in a single call (e.g. all the VAT rates of a country at once, such as 'create the 2026 VAT rates for Spain'). The category is optional. Invalid rows are skipped without aborting the batch."
       }
     },
     "taxes.rates.deactivate": {
@@ -278,6 +298,12 @@
         "description": "Creates an automatic tax application rule based on product or customer criteria"
       }
     },
+    "taxes._insert_rate": {
+      "permission": "taxes.manage_tax",
+      "sql": [
+        "commands/_insert_rate.sql"
+      ]
+    },
     "taxes.calculate": {
       "permission": "taxes.calculate_tax",
       "handler": {
@@ -285,6 +311,7 @@
         "file": "dist/handler.wasm",
         "function": "calculate_tax"
       },
+      "reads": ["taxes.rates.list", "taxes.rules.list"],
       "ai": {
         "description": "Calculates the applicable tax amount for a set of sale lines"
       }
