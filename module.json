@@ -1,7 +1,7 @@
 {
   "id": "taxes",
   "name": "Taxes",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "agent": {
     "description": "Manages fiscal categories (the linkable tax_category_key), per-jurisdiction tax rules (the % by country+region+category, with multi-tax components like surcharge), and category aliases for CSV import. Resolves the applicable tax for a sale line by category.",
     "keywords": [
@@ -57,83 +57,166 @@
       "migrations/postgres/001_init.sql"
     ]
   },
+  "seed": {
+    "sqlite": [
+      "seed/install.sqlite.sql"
+    ],
+    "postgres": [
+      "seed/install.postgres.sql"
+    ]
+  },
   "queries": {
     "taxes.categories.list": {
       "permission": "taxes.view_tax",
       "sql": "queries/categories_list.sql",
       "list": {
-        "search": ["key", "name", "description"],
-        "sort": ["id", "key", "name", "is_system", "is_active"],
+        "search": [
+          "key",
+          "name",
+          "description"
+        ],
+        "sort": [
+          "id",
+          "key",
+          "name",
+          "is_system",
+          "is_active"
+        ],
         "default_sort": "key",
         "default_dir": "asc",
         "filters": {
-          "key": { "op": "eq" },
-          "name": { "op": "eq" },
-          "is_system": { "op": "eq" },
-          "is_active": { "op": "eq" }
+          "key": {
+            "op": "eq"
+          },
+          "name": {
+            "op": "eq"
+          },
+          "is_system": {
+            "op": "eq"
+          },
+          "is_active": {
+            "op": "eq"
+          }
         },
         "page_size": 50
       },
-      "ai": { "description": "Lists the canonical fiscal categories (the linkable tax_category_key)" },
+      "ai": {
+        "description": "Lists the canonical fiscal categories (the linkable tax_category_key)"
+      },
       "expose_api": true
     },
     "taxes.categories.get": {
       "permission": "taxes.view_tax",
       "sql": "queries/category_get.sql",
-      "ai": { "description": "Gets a fiscal category by its canonical key (FK validation for import)" },
+      "ai": {
+        "description": "Gets a fiscal category by its canonical key (FK validation for import)"
+      },
       "expose_api": true
     },
     "taxes.rules.list": {
       "permission": "taxes.view_tax",
       "sql": "queries/rules_list.sql",
       "list": {
-        "search": ["country_code", "region_code", "tax_category_key"],
-        "sort": ["id", "country_code", "region_code", "tax_category_key", "rate_pct", "tax_type", "valid_from", "valid_to", "is_active"],
+        "search": [
+          "country_code",
+          "region_code",
+          "tax_category_key"
+        ],
+        "sort": [
+          "id",
+          "country_code",
+          "region_code",
+          "tax_category_key",
+          "rate_pct",
+          "tax_type",
+          "valid_from",
+          "valid_to",
+          "is_active"
+        ],
         "default_sort": "tax_category_key",
         "default_dir": "asc",
         "filters": {
-          "country_code": { "op": "eq" },
-          "region_code": { "op": "eq" },
-          "tax_category_key": { "op": "eq" },
-          "rate_pct": { "op": "range" },
-          "tax_type": { "op": "eq" },
-          "parent_id": { "op": "eq" },
-          "is_active": { "op": "eq" }
+          "country_code": {
+            "op": "eq"
+          },
+          "region_code": {
+            "op": "eq"
+          },
+          "tax_category_key": {
+            "op": "eq"
+          },
+          "rate_pct": {
+            "op": "range"
+          },
+          "tax_type": {
+            "op": "eq"
+          },
+          "parent_id": {
+            "op": "eq"
+          },
+          "is_active": {
+            "op": "eq"
+          }
         },
         "page_size": 50
       },
-      "ai": { "description": "Lists all tax rules (rates by country+region+category, including multi-tax components)" },
+      "ai": {
+        "description": "Lists all tax rules (rates by country+region+category, including multi-tax components)"
+      },
       "expose_api": true
     },
     "taxes.rules.by_country": {
       "permission": "taxes.view_tax",
       "sql": "queries/rules_by_country.sql",
-      "ai": { "description": "Lists tax rules for a given country" },
+      "ai": {
+        "description": "Lists tax rules for a given country"
+      },
       "expose_api": true
     },
     "taxes.aliases.list": {
       "permission": "taxes.view_tax",
       "sql": "queries/aliases_list.sql",
       "list": {
-        "search": ["alias", "tax_category_key"],
-        "sort": ["id", "alias", "tax_category_key", "source", "is_active"],
+        "search": [
+          "alias",
+          "tax_category_key"
+        ],
+        "sort": [
+          "id",
+          "alias",
+          "tax_category_key",
+          "source",
+          "is_active"
+        ],
         "default_sort": "alias",
         "default_dir": "asc",
         "filters": {
-          "alias": { "op": "eq" },
-          "tax_category_key": { "op": "eq" },
-          "source": { "op": "eq" },
-          "is_active": { "op": "eq" }
+          "alias": {
+            "op": "eq"
+          },
+          "tax_category_key": {
+            "op": "eq"
+          },
+          "source": {
+            "op": "eq"
+          },
+          "is_active": {
+            "op": "eq"
+          }
         },
         "page_size": 50
       },
-      "ai": { "description": "Lists category aliases (external text → canonical key) used by CSV import" },
+      "ai": {
+        "description": "Lists category aliases (external text → canonical key) used by CSV import"
+      },
       "expose_api": true
     },
     "taxes.aliases.resolve": {
       "permission": "taxes.view_tax",
       "sql": "queries/alias_resolve.sql",
-      "ai": { "description": "Resolves an external alias text to a canonical tax_category_key" },
+      "ai": {
+        "description": "Resolves an external alias text to a canonical tax_category_key"
+      },
       "expose_api": true
     }
   },
@@ -141,18 +224,30 @@
     "taxes.categories.create": {
       "permission": "taxes.manage_tax",
       "transaction": true,
-      "sql": ["commands/category_create.sql"],
+      "sql": [
+        "commands/category_create.sql"
+      ],
       "schema": "schemas/category_create.json",
-      "emit": ["taxes.category.created"],
-      "ai": { "description": "Creates a fiscal category with a canonical key" }
+      "emit": [
+        "taxes.category.created"
+      ],
+      "ai": {
+        "description": "Creates a fiscal category with a canonical key"
+      }
     },
     "taxes.rules.create": {
       "permission": "taxes.manage_tax",
       "transaction": true,
-      "sql": ["commands/rule_create.sql"],
+      "sql": [
+        "commands/rule_create.sql"
+      ],
       "schema": "schemas/rule_create.json",
-      "emit": ["taxes.rule.created"],
-      "ai": { "description": "Creates a tax rule (the % for a country+region+category). Pass parent_id to add a multi-tax component (e.g. surcharge) to a root rule." }
+      "emit": [
+        "taxes.rule.created"
+      ],
+      "ai": {
+        "description": "Creates a tax rule (the % for a country+region+category). Pass parent_id to add a multi-tax component (e.g. surcharge) to a root rule."
+      }
     },
     "taxes.rules.bulk_create": {
       "permission": "taxes.manage_tax",
@@ -162,31 +257,49 @@
         "function": "bulk_create_rules"
       },
       "schema": "schemas/rules_bulk_create.json",
-      "ai": { "description": "Creates multiple tax rules at once (e.g. 'create the 2026 Spain VAT rates'). Invalid rows are skipped without aborting the batch. Components (parent_id) must be created individually." }
+      "ai": {
+        "description": "Creates multiple tax rules at once (e.g. 'create the 2026 Spain VAT rates'). Invalid rows are skipped without aborting the batch. Components (parent_id) must be created individually."
+      }
     },
     "taxes.rules.deactivate": {
       "permission": "taxes.manage_tax",
       "transaction": true,
-      "sql": ["commands/rule_deactivate.sql"],
+      "sql": [
+        "commands/rule_deactivate.sql"
+      ],
       "schema": "schemas/rule_deactivate.json",
-      "emit": ["taxes.rule.deactivated"],
-      "ai": { "description": "Deactivates a tax rule so it no longer applies to new transactions (issued invoices keep their snapshot)" }
+      "emit": [
+        "taxes.rule.deactivated"
+      ],
+      "ai": {
+        "description": "Deactivates a tax rule so it no longer applies to new transactions (issued invoices keep their snapshot)"
+      }
     },
     "taxes.aliases.create": {
       "permission": "taxes.manage_tax",
       "transaction": true,
-      "sql": ["commands/alias_create.sql"],
+      "sql": [
+        "commands/alias_create.sql"
+      ],
       "schema": "schemas/alias_create.json",
-      "emit": ["taxes.alias.created"],
-      "ai": { "description": "Persists a category alias (external text → canonical key) learned during CSV import" }
+      "emit": [
+        "taxes.alias.created"
+      ],
+      "ai": {
+        "description": "Persists a category alias (external text → canonical key) learned during CSV import"
+      }
     },
     "taxes._insert_category": {
       "permission": "taxes.manage_tax",
-      "sql": ["commands/_insert_category.sql"]
+      "sql": [
+        "commands/_insert_category.sql"
+      ]
     },
     "taxes._insert_rule": {
       "permission": "taxes.manage_tax",
-      "sql": ["commands/_insert_rule.sql"]
+      "sql": [
+        "commands/_insert_rule.sql"
+      ]
     },
     "taxes.calculate": {
       "permission": "taxes.calculate_tax",
@@ -195,8 +308,12 @@
         "file": "dist/handler.wasm",
         "function": "calculate_tax"
       },
-      "reads": ["taxes.rules.list"],
-      "ai": { "description": "Resolves and calculates the applicable tax for an amount by fiscal category (country/region from the hub's fiscal identity)" }
+      "reads": [
+        "taxes.rules.list"
+      ],
+      "ai": {
+        "description": "Resolves and calculates the applicable tax for an amount by fiscal category (country/region from the hub's fiscal identity)"
+      }
     }
   },
   "ui": {

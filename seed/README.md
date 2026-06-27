@@ -1,16 +1,15 @@
 # Seed canónico del módulo `taxes` (ADR-0085)
 
-Dos capas, alineadas con ADR-0072 (seed por país, `<país>/<sector>/`):
+`install.sqlite.sql` / `install.postgres.sql` — **DML idempotente por hub** que el **instalador
+del runtime** aplica automáticamente **tras las migraciones** (campo `seed` del `module.json`),
+con `:hub_id`/`:now`/`:current_user_id` inyectados. Garantiza que **todo hub nuevo** tenga:
 
-- **`canonical.json`** — las **categorías fiscales canónicas** del módulo (`is_system=1`) + los
-  **alias de fábrica** (`source='shipped'`). Son universales (no dependen del país) y deben
-  existir en **todo** hub: es lo que garantiza el contrato `required_tax_categories` del
-  `module.json` de otros módulos. Se siembran al instalar `taxes` (o vía el seed por país).
-- **`es.json`** — las **reglas de tipo** (`taxes_rule`) de **España** (fase 1, ADR-0072): el
-  "IVA por defecto" a nivel de app. Otros países añaden su propio `<cc>.json` (columna humano:
-  IVA-por-país más allá de ES está aplazado).
+- las **6 categorías canónicas** (`is_system=1`): `restaurant.food/drink/alcohol/delivery`,
+  `service.generic`, `product.generic`;
+- los **alias de fábrica** (`source='shipped'`): `food`/`pizza`/`meal`→`restaurant.food`, etc.;
+- las **reglas IVA de España** (fase 1, ADR-0072): general 21, reducido 10.
 
-> **Wiring del seed (FLAG, columna humano):** el mecanismo per-hub que aplica estos datos con el
-> `hub_id` correcto (install-hook del runtime vs. seed por país desde S3 ADR-0072) **no está
-> cableado** en este cambio. Los datos están listos; falta el conector. En los tests E2E se
-> siembra vía los comandos `taxes.categories.create` / `taxes.rules.create` (camino verificado).
+Idempotente por la clave natural (`WHERE NOT EXISTS` sobre `(hub_id, key)` / `(hub_id, alias)` /
+`(hub_id, country, category, parent NULL, region NULL)`): se re-ejecuta en cada install/rehydrate
+sin duplicar. **IVA por país más allá de ES** = columna humano (añadir reglas de otro país aquí o
+vía el seed por país de ADR-0072).
