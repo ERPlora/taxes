@@ -21,11 +21,15 @@ interface ErploraClientLike extends ListClient {
   t(catalog: Record<string, unknown>, key: string, params?: Record<string, unknown>): string;
 }
 
+// ADR-0085: la identidad enlazable de una categoría fiscal es ahora `key`
+// (p.ej. `restaurant.food`), no un `code` libre. Las categorías de sistema
+// (`is_system`) las siembra el módulo y no se editan a mano.
 interface TaxCategory {
   id: string;
-  code: string;
+  key: string;
   name: string;
   description: string;
+  is_system: number;
   is_active: number;
 }
 
@@ -47,7 +51,7 @@ export class ErpTaxesCategories extends LitElement {
 
   @state() formError = '';
 
-  @state() newCode = '';
+  @state() newKey = '';
 
   @state() newName = '';
 
@@ -62,7 +66,7 @@ export class ErpTaxesCategories extends LitElement {
   private get columns(): DataTableColumn[] {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
-      { key: 'code', header: t('ui.colCode'), sortable: true, filterable: true, filterType: 'text' },
+      { key: 'key', header: t('ui.colKey'), sortable: true, filterable: true, filterType: 'text' },
       { key: 'name', header: t('ui.colName'), sortable: true, filterable: true, filterType: 'text' },
       {
         key: 'description',
@@ -71,6 +75,18 @@ export class ErpTaxesCategories extends LitElement {
         filterable: true,
         filterType: 'text',
         format: (r) => (r.description as string) || '—',
+      },
+      {
+        key: 'is_system',
+        header: t('ui.colSystem'),
+        sortable: true,
+        filterable: true,
+        filterType: 'select',
+        options: [
+          { value: '1', label: t('ui.optSystem') },
+          { value: '0', label: t('ui.optCustom') },
+        ],
+        format: (r) => (Number(r.is_system) ? `🔒 ${t('ui.optSystem')}` : t('ui.optCustom')),
       },
       {
         key: 'is_active',
@@ -113,16 +129,16 @@ export class ErpTaxesCategories extends LitElement {
 
   private async createCategory(ev: Event) {
     ev.preventDefault();
-    if (!this.newCode.trim() || !this.newName.trim()) return;
+    if (!this.newKey.trim() || !this.newName.trim()) return;
     this.saving = true;
     this.formError = '';
     try {
       await erplora().command('taxes.categories.create', {
-        code: this.newCode.trim(),
+        key: this.newKey.trim(),
         name: this.newName.trim(),
         description: this.newDescription.trim(),
       });
-      this.newCode = '';
+      this.newKey = '';
       this.newName = '';
       this.newDescription = '';
       await this.ctrl.load();
@@ -140,14 +156,14 @@ export class ErpTaxesCategories extends LitElement {
           <h2>${t('ui.categoriesTitle')}</h2>
         </header>
         <form class="form" @submit=${(e) => this.createCategory(e)}>
-          <ion-input fill="outline" label-placement="floating" label=${t('ui.colCode')} placeholder=${t('ui.phCode')} .value=${this.newCode} @ionInput=${(e: any) => (this.newCode = e.target.value)}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t('ui.colKey')} placeholder=${t('ui.phKey')} .value=${this.newKey} @ionInput=${(e: any) => (this.newKey = e.target.value)}></ion-input>
           <ion-input fill="outline" label-placement="floating" label=${t('ui.colName')} placeholder=${t('ui.phName')} .value=${this.newName} @ionInput=${(e: any) => (this.newName = e.target.value)}></ion-input>
           <ion-input fill="outline" label-placement="floating" label=${t('ui.colDescription')} placeholder=${t('ui.phDescription')} .value=${this.newDescription} @ionInput=${(e: any) => (this.newDescription = e.target.value)}></ion-input>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newName}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
+          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newKey || !this.newName}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
         </form>
         ${this.formError ? html`<p class="err">${this.formError}</p>` : nothing}
         ${this.ctrl?.error ? html`<p class="err">${this.ctrl.error}</p>` : nothing}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCodeName')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyCategories')} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchKeyName')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyCategories')} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}></ok-data-table>
       </div>`;
   }
 }

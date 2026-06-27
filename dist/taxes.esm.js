@@ -9,7 +9,7 @@ var __decorateClass = (decorators, target, key, kind) => {
   return result;
 };
 
-// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
+// ../../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
 var ElementInternalsShim = class ElementInternals {
   get shadowRoot() {
     return this.__host.__shadowRoot;
@@ -88,7 +88,7 @@ var ElementInternalsShim = class ElementInternals {
   }
 };
 
-// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/events.js
+// ../../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/lib/events.js
 var __classPrivateFieldSet = function(receiver, state, value, kind, f3) {
   if (kind === "m") throw new TypeError("Private method is not writable");
   if (kind === "a" && !f3) throw new TypeError("Private accessor was defined without a setter");
@@ -246,7 +246,7 @@ Object.defineProperties(CustomEventShim.prototype, {
 var EventShimWithRealType = EventShim;
 var CustomEventShimWithRealType = CustomEventShim;
 
-// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/css.js
+// ../../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/lib/css.js
 var _a2;
 var CSSRuleShim = (_a2 = class CSSRule {
   constructor() {
@@ -277,7 +277,7 @@ var CSSRuleShim = (_a2 = class CSSRule {
   }
 }, _a2.STYLE_RULE = 1, _a2.CHARSET_RULE = 2, _a2.IMPORT_RULE = 3, _a2.MEDIA_RULE = 4, _a2.FONT_FACE_RULE = 5, _a2.PAGE_RULE = 6, _a2.NAMESPACE_RULE = 10, _a2.KEYFRAMES_RULE = 7, _a2.KEYFRAME_RULE = 8, _a2.SUPPORTS_RULE = 12, _a2.COUNTER_STYLE_RULE = 11, _a2.FONT_FEATURE_VALUES_RULE = 14, _a2.MARGIN_RULE = 9, _a2);
 
-// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/index.js
+// ../../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/index.js
 globalThis.Event ??= EventShimWithRealType;
 globalThis.CustomEvent ??= CustomEventShimWithRealType;
 var constructionToken = Symbol();
@@ -674,7 +674,7 @@ var CustomElementRegistryShimWithRealType = CustomElementRegistry;
 var customElements2 = new CustomElementRegistryShimWithRealType();
 var windowShim = new WindowShim(constructionToken);
 
-// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/css-tag.js
+// ../../../module-toolkit/node_modules/@lit/reactive-element/node/css-tag.js
 var t = globalThis;
 var e = t.ShadowRoot && (void 0 === t.ShadyCSS || t.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype;
 var s = Symbol();
@@ -719,7 +719,7 @@ var c = e || void 0 === t.CSSStyleSheet ? (t5) => t5 : (t5) => t5 instanceof CSS
   return r(e5);
 })(t5) : t5;
 
-// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/reactive-element.js
+// ../../../module-toolkit/node_modules/@lit/reactive-element/node/reactive-element.js
 var { is: h, defineProperty: r2, getOwnPropertyDescriptor: o2, getOwnPropertyNames: n2, getOwnPropertySymbols: a, getPrototypeOf: c2 } = Object;
 var l = globalThis;
 l.customElements ??= customElements2;
@@ -942,7 +942,7 @@ var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
 };
 g.elementStyles = [], g.shadowRootOptions = { mode: "open" }, g[f("elementProperties")] = /* @__PURE__ */ new Map(), g[f("finalized")] = /* @__PURE__ */ new Map(), u?.({ ReactiveElement: g }), (l.reactiveElementVersions ??= []).push("2.1.2");
 
-// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/lit-html.js
+// ../../../module-toolkit/node_modules/lit-html/lit-html.js
 var t2 = globalThis;
 var i2 = (t5) => t5;
 var s2 = t2.trustedTypes;
@@ -1197,7 +1197,7 @@ var D = (t5, i7, s5) => {
   return h4._$AI(t5), h4;
 };
 
-// node_modules/.pnpm/lit-element@4.2.2/node_modules/lit-element/lit-element.js
+// ../../../module-toolkit/node_modules/lit-element/lit-element.js
 var s3 = globalThis;
 var i3 = class extends g {
   constructor() {
@@ -1226,7 +1226,7 @@ var o4 = s3.litElementPolyfillSupport;
 o4?.({ LitElement: i3 });
 (s3.litElementVersions ??= []).push("4.2.2");
 
-// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/decorators/property.js
+// ../../../module-toolkit/node_modules/@lit/reactive-element/node/decorators/property.js
 var o5 = { attribute: true, type: String, converter: b, reflect: false, hasChanged: m };
 var r4 = (t5 = o5, e5, r6) => {
   const { kind: n6, metadata: i7 } = r6;
@@ -1256,19 +1256,19 @@ function n4(t5) {
   })(t5, e5, o7);
 }
 
-// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/decorators/state.js
+// ../../../module-toolkit/node_modules/@lit/reactive-element/node/decorators/state.js
 function r5(r6) {
   return n4({ ...r6, state: true, attribute: false });
 }
 
-// node_modules/.pnpm/@outfitkit+core@file+..+outfitkit/node_modules/@outfitkit/core/dist/define.js
+// ../../../outfitkit/dist/define.js
 function define(tag, ctor) {
   if (typeof customElements !== "undefined" && !customElements.get(tag)) {
     customElements.define(tag, ctor);
   }
 }
 
-// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive.js
+// ../../../module-toolkit/node_modules/lit-html/directive.js
 var t3 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
 var e4 = (t5) => (...e5) => ({ _$litDirective$: t5, values: e5 });
 var i4 = class {
@@ -1288,7 +1288,7 @@ var i4 = class {
   }
 };
 
-// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive-helpers.js
+// ../../../module-toolkit/node_modules/lit-html/directive-helpers.js
 var { I: t4 } = j;
 var i5 = (o7) => o7;
 var s4 = () => document.createComment("");
@@ -1321,7 +1321,7 @@ var h3 = (o7) => {
   o7._$AR(), o7._$AA.remove();
 };
 
-// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/repeat.js
+// ../../../module-toolkit/node_modules/lit-html/directives/repeat.js
 var u4 = (e5, s5, t5) => {
   const r6 = /* @__PURE__ */ new Map();
   for (let l3 = s5; l3 <= t5; l3++) r6.set(e5[l3], l3);
@@ -1374,7 +1374,7 @@ var c4 = e4(class extends i4 {
   }
 });
 
-// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/style-map.js
+// ../../../module-toolkit/node_modules/lit-html/directives/style-map.js
 var n5 = "important";
 var i6 = " !" + n5;
 var o6 = e4(class extends i4 {
@@ -1403,7 +1403,7 @@ var o6 = e4(class extends i4 {
   }
 });
 
-// node_modules/.pnpm/@outfitkit+core@file+..+outfitkit/node_modules/@outfitkit/core/dist/ok-data-table.js
+// ../../../outfitkit/dist/ok-data-table.js
 var __defProp2 = Object.defineProperty;
 var __decorateClass2 = (decorators, target, key, kind) => {
   var result = void 0;
@@ -2700,7 +2700,7 @@ __decorateClass2([
 ], OkDataTable.prototype, "menuOpen");
 define("ok-data-table", OkDataTable);
 
-// node_modules/.pnpm/@erplora+module-sdk@file+..+hub+packages+module-sdk/node_modules/@erplora/module-sdk/src/index.ts
+// ../../../hub/packages/module-sdk/src/index.ts
 function isEmpty(v3) {
   return v3 === null || v3 === void 0 || v3 === "";
 }
@@ -2818,143 +2818,305 @@ function createListController(client, queryName, onChange = () => {
   return new ListController(client, queryName, onChange, opts);
 }
 
-// modules/taxes/locales/es.json
+// locales/es.json
 var es_default = {
   name: "Impuestos",
   navigation: {
-    rates: {
-      label: "Tipos impositivos"
-    },
     categories: {
       label: "Categor\xEDas"
     },
     rules: {
       label: "Reglas"
+    },
+    aliases: {
+      label: "Alias"
     }
   },
   ui: {
-    colCode: "C\xF3digo",
+    colKey: "Clave",
     colName: "Nombre",
     colDescription: "Descripci\xF3n",
     colActive: "Activa",
+    colSystem: "Origen",
     colCountry: "Pa\xEDs",
+    colRegion: "Regi\xF3n",
     colCategory: "Categor\xEDa",
+    colRate: "%",
     colType: "Tipo",
-    colPercent: "%",
-    colActiveMasc: "Activo",
-    colPriority: "Prioridad",
-    colConditions: "Condiciones",
-    colAppliedRate: "Tipo aplicado",
-    lblPercent: "Tipo %",
+    colValidFrom: "Vigente desde",
+    colValidTo: "Vigente hasta",
+    colParentId: "ID regla ra\xEDz",
+    colComponentLabel: "Etiqueta componente",
+    colAlias: "Alias",
+    colSource: "Origen",
     optYes: "S\xED",
     optNo: "No",
+    optSystem: "Sistema",
+    optCustom: "Propia",
+    srcShipped: "De f\xE1brica",
+    srcLearned: "Aprendido",
+    taxType_vat: "IVA",
+    taxType_surcharge: "Recargo",
+    taxType_sales_tax: "Sales tax",
+    taxType_withholding: "Retenci\xF3n",
+    taxType_excise: "Especial",
+    taxType_import_duty: "Arancel",
     categoriesTitle: "Categor\xEDas fiscales",
-    ratesTitle: "Tipos fiscales",
-    rulesTitle: "Reglas de aplicaci\xF3n",
-    phCode: "standard",
+    rulesTitle: "Reglas por jurisdicci\xF3n",
+    aliasesTitle: "Alias de categor\xEDas",
+    phKey: "restaurant.food",
     phName: "IVA general",
     phDescription: "opcional",
     phCountry: "ES",
+    phRegion: "opcional",
+    phCategoryKey: "restaurant.food",
     phPercent: "21",
-    phCategory: "Selecciona\u2026",
-    phRuleCode: "vip-es",
-    phRuleName: "Recargo VIP",
-    phConditions: '{"customer_segment":"vip"}',
-    phRate: "Selecciona\u2026",
-    phPriority: "100",
+    phParentId: "opcional",
+    phComponentLabel: "Recargo de equivalencia",
+    phAlias: "comida",
     btnSaving: "Guardando\u2026",
     btnAdd: "A\xF1adir",
-    searchCodeName: "Buscar c\xF3digo o nombre\u2026",
-    searchCountryCode: "Buscar pa\xEDs o c\xF3digo\u2026",
+    searchKeyName: "Buscar clave o nombre\u2026",
+    searchCategoryCountry: "Buscar categor\xEDa o pa\xEDs\u2026",
+    searchAlias: "Buscar alias o categor\xEDa\u2026",
     loading: "Cargando\u2026",
     emptyCategories: "Sin categor\xEDas fiscales.",
-    emptyRates: "Sin tipos fiscales.",
     emptyRules: "Sin reglas fiscales.",
-    emptyRatesHeading: "A\xFAn no hay tipos de IVA",
-    emptyRatesMessage: "Crea tus tipos impositivos con el asistente: copia este texto, p\xE9galo en el asistente y aj\xFAstalo a tu pa\xEDs.",
-    emptyRatesPrompt: "Crea los tipos de IVA de Espa\xF1a vigentes en 2026: IVA General 21%, IVA Reducido 10%, IVA Superreducido 4%, Exento 0%. Pa\xEDs ES.",
-    btnCopyPrompt: "Copiar",
-    btnCopiedPrompt: "Copiado",
+    emptyAliases: "Sin alias de categor\xEDas.",
     actionDeactivate: "Desactivar",
-    rulesHint: "Las reglas se eval\xFAan por prioridad ascendente (menor gana) y mapean condiciones (pa\xEDs, segmento de cliente, categor\xEDa de producto\u2026) a un tipo concreto.",
+    rulesHint: "Cada regla fija el % para una categor\xEDa en un pa\xEDs (y opcionalmente una regi\xF3n). Para multi-tributo (p.ej. recargo de equivalencia), indica el ID de una regla ra\xEDz en \xABID regla ra\xEDz\xBB y una \xABEtiqueta componente\xBB.",
     errCreateCategory: "No se pudo crear la categor\xEDa",
-    errCreateRate: "No se pudo crear el tipo",
-    errDeactivateRate: "No se pudo desactivar el tipo",
     errCreateRule: "No se pudo crear la regla",
-    errConditionsJson: 'Condiciones: JSON inv\xE1lido (debe ser un objeto, p.ej. {"customer_segment":"vip"})'
+    errDeactivateRule: "No se pudo desactivar la regla",
+    errCreateAlias: "No se pudo crear el alias"
   }
 };
 
-// modules/taxes/locales/en.json
+// locales/en.json
 var en_default = {
   name: "Taxes",
   navigation: {
-    rates: {
-      label: "Tax Rates"
-    },
     categories: {
       label: "Categories"
     },
     rules: {
       label: "Rules"
+    },
+    aliases: {
+      label: "Aliases"
     }
   },
   ui: {
-    colCode: "Code",
+    colKey: "Key",
     colName: "Name",
     colDescription: "Description",
     colActive: "Active",
+    colSystem: "Origin",
     colCountry: "Country",
+    colRegion: "Region",
     colCategory: "Category",
+    colRate: "%",
     colType: "Type",
-    colPercent: "%",
-    colActiveMasc: "Active",
-    colPriority: "Priority",
-    colConditions: "Conditions",
-    colAppliedRate: "Applied rate",
-    lblPercent: "Rate %",
+    colValidFrom: "Valid from",
+    colValidTo: "Valid to",
+    colParentId: "Root rule ID",
+    colComponentLabel: "Component label",
+    colAlias: "Alias",
+    colSource: "Source",
     optYes: "Yes",
     optNo: "No",
+    optSystem: "System",
+    optCustom: "Custom",
+    srcShipped: "Shipped",
+    srcLearned: "Learned",
+    taxType_vat: "VAT",
+    taxType_surcharge: "Surcharge",
+    taxType_sales_tax: "Sales tax",
+    taxType_withholding: "Withholding",
+    taxType_excise: "Excise",
+    taxType_import_duty: "Import duty",
     categoriesTitle: "Tax categories",
-    ratesTitle: "Tax rates",
-    rulesTitle: "Application rules",
-    phCode: "standard",
+    rulesTitle: "Rules by jurisdiction",
+    aliasesTitle: "Category aliases",
+    phKey: "restaurant.food",
     phName: "general VAT",
     phDescription: "optional",
     phCountry: "ES",
+    phRegion: "optional",
+    phCategoryKey: "restaurant.food",
     phPercent: "21",
-    phCategory: "Select\u2026",
-    phRuleCode: "vip-es",
-    phRuleName: "VIP surcharge",
-    phConditions: '{"customer_segment":"vip"}',
-    phRate: "Select\u2026",
-    phPriority: "100",
+    phParentId: "optional",
+    phComponentLabel: "Equivalence surcharge",
+    phAlias: "food",
     btnSaving: "Saving\u2026",
     btnAdd: "Add",
-    searchCodeName: "Search code or name\u2026",
-    searchCountryCode: "Search country or code\u2026",
+    searchKeyName: "Search key or name\u2026",
+    searchCategoryCountry: "Search category or country\u2026",
+    searchAlias: "Search alias or category\u2026",
     loading: "Loading\u2026",
     emptyCategories: "No tax categories.",
-    emptyRates: "No tax rates.",
     emptyRules: "No tax rules.",
-    emptyRatesHeading: "No VAT rates yet",
-    emptyRatesMessage: "Create your tax rates with the assistant: copy this text, paste it into the assistant, and adjust it to your country.",
-    emptyRatesPrompt: "Create the VAT rates in force in Spain in 2026: Standard VAT 21%, Reduced VAT 10%, Super-reduced VAT 4%, Exempt 0%. Country ES.",
-    btnCopyPrompt: "Copy",
-    btnCopiedPrompt: "Copied",
+    emptyAliases: "No category aliases.",
     actionDeactivate: "Deactivate",
-    rulesHint: "Rules are evaluated by ascending priority (lower wins) and map conditions (country, customer segment, product category\u2026) to a specific rate.",
+    rulesHint: "Each rule sets the % for a category in a country (and optionally a region). For multi-tax (e.g. equivalence surcharge), enter a root rule ID in \u201CRoot rule ID\u201D and a \u201CComponent label\u201D.",
     errCreateCategory: "Could not create the category",
-    errCreateRate: "Could not create the rate",
-    errDeactivateRate: "Could not deactivate the rate",
     errCreateRule: "Could not create the rule",
-    errConditionsJson: 'Conditions: invalid JSON (must be an object, e.g. {"customer_segment":"vip"})'
+    errDeactivateRule: "Could not deactivate the rule",
+    errCreateAlias: "Could not create the alias"
   }
 };
 
-// modules/taxes/ui/components/erp-taxes-categories/erp-taxes-categories.ts
+// ui/components/erp-taxes-aliases/erp-taxes-aliases.ts
 var CATALOG = { es: es_default, en: en_default };
 function erplora() {
+  const c5 = globalThis.erplora;
+  if (!c5) throw new Error("erplora SDK no inicializado por el shell");
+  return c5;
+}
+var ErpTaxesAliases = class extends i3 {
+  constructor() {
+    super(...arguments);
+    this.categories = [];
+    this.formError = "";
+    this.newAlias = "";
+    this.newCategoryKey = "";
+    this.newSource = "learned";
+    this.saving = false;
+    this.onLocaleChange = () => this.requestUpdate();
+  }
+  static {
+    this.styles = i`
+    :host { display:block; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
+    header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
+    h2 { margin:0; font-size:1.15rem; flex:1; }
+    .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1.25rem; }
+    .form ion-input, .form ion-select { flex:1 1 11rem; min-width:9rem; }
+    .err { color:#d9480f; font-weight:600; }
+  `;
+  }
+  get columns() {
+    const t5 = (k2) => erplora().t(CATALOG, k2);
+    return [
+      { key: "alias", header: t5("ui.colAlias"), sortable: true, filterable: true, filterType: "text" },
+      { key: "tax_category_key", header: t5("ui.colCategory"), sortable: true, filterable: true, filterType: "text" },
+      {
+        key: "source",
+        header: t5("ui.colSource"),
+        sortable: true,
+        filterable: true,
+        filterType: "select",
+        options: [
+          { value: "shipped", label: t5("ui.srcShipped") },
+          { value: "learned", label: t5("ui.srcLearned") }
+        ],
+        format: (r6) => String(r6.source) === "shipped" ? t5("ui.srcShipped") : t5("ui.srcLearned")
+      },
+      {
+        key: "is_active",
+        header: t5("ui.colActive"),
+        sortable: true,
+        filterable: true,
+        filterType: "select",
+        options: [
+          { value: "1", label: t5("ui.optYes") },
+          { value: "0", label: t5("ui.optNo") }
+        ],
+        format: (r6) => Number(r6.is_active) ? t5("ui.optYes") : t5("ui.optNo")
+      }
+    ];
+  }
+  async connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener("erplora:locale-changed", this.onLocaleChange);
+    this.ctrl = createListController(erplora(), "taxes.aliases.list", () => this.requestUpdate(), {
+      pageSize: 50,
+      sort: "alias",
+      dir: "asc"
+    });
+    await Promise.all([this.ctrl.load(), this.loadAux()]);
+    try {
+      this.unsub = erplora().on("taxes.alias.created", () => this.ctrl.load());
+    } catch {
+    }
+  }
+  disconnectedCallback() {
+    window.removeEventListener("erplora:locale-changed", this.onLocaleChange);
+    super.disconnectedCallback();
+    this.unsub?.();
+  }
+  async loadAux() {
+    try {
+      const page = await erplora().queryPage("taxes.categories.list", { limit: 200, offset: 0, sort: "key", dir: "asc" });
+      this.categories = page?.rows ?? [];
+      this.requestUpdate();
+    } catch {
+    }
+  }
+  async createAlias(ev) {
+    ev.preventDefault();
+    if (!this.newAlias.trim() || !this.newCategoryKey.trim()) return;
+    this.saving = true;
+    this.formError = "";
+    try {
+      await erplora().command("taxes.aliases.create", {
+        alias: this.newAlias.trim(),
+        tax_category_key: this.newCategoryKey.trim(),
+        source: this.newSource || "learned"
+      });
+      this.newAlias = "";
+      this.newCategoryKey = "";
+      this.newSource = "learned";
+      await this.ctrl.load();
+    } catch (e5) {
+      this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errCreateAlias");
+    } finally {
+      this.saving = false;
+    }
+  }
+  render() {
+    const t5 = (k2) => erplora().t(CATALOG, k2);
+    return b2`<div>
+        <header>
+          <h2>${t5("ui.aliasesTitle")}</h2>
+        </header>
+        <form class="form" @submit=${(e5) => this.createAlias(e5)}>
+          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colAlias")} placeholder=${t5("ui.phAlias")} .value=${this.newAlias} @ionInput=${(e5) => this.newAlias = e5.target.value}></ion-input>
+          <ion-select fill="outline" label-placement="floating" label=${t5("ui.colCategory")} placeholder=${t5("ui.phCategoryKey")} .value=${this.newCategoryKey} @ionChange=${(e5) => this.newCategoryKey = e5.target.value}>${this.categories.map((c5) => b2`<ion-select-option .value=${c5.key}>${c5.key} · ${c5.name}</ion-select-option>`)}</ion-select>
+          <ion-select fill="outline" label-placement="floating" label=${t5("ui.colSource")} .value=${this.newSource} @ionChange=${(e5) => this.newSource = e5.target.value}>
+            <ion-select-option value="learned">${t5("ui.srcLearned")}</ion-select-option>
+            <ion-select-option value="shipped">${t5("ui.srcShipped")}</ion-select-option>
+          </ion-select>
+          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newAlias || !this.newCategoryKey}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
+        </form>
+        ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
+        ${this.ctrl?.error ? b2`<p class="err">${this.ctrl.error}</p>` : A}
+        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchAlias")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyAliases")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
+      </div>`;
+  }
+};
+__decorateClass([
+  r5()
+], ErpTaxesAliases.prototype, "categories", 2);
+__decorateClass([
+  r5()
+], ErpTaxesAliases.prototype, "formError", 2);
+__decorateClass([
+  r5()
+], ErpTaxesAliases.prototype, "newAlias", 2);
+__decorateClass([
+  r5()
+], ErpTaxesAliases.prototype, "newCategoryKey", 2);
+__decorateClass([
+  r5()
+], ErpTaxesAliases.prototype, "newSource", 2);
+__decorateClass([
+  r5()
+], ErpTaxesAliases.prototype, "saving", 2);
+define("erp-taxes-aliases", ErpTaxesAliases);
+
+// ui/components/erp-taxes-categories/erp-taxes-categories.ts
+var CATALOG2 = { es: es_default, en: en_default };
+function erplora2() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
   return c5;
@@ -2963,7 +3125,7 @@ var ErpTaxesCategories = class extends i3 {
   constructor() {
     super(...arguments);
     this.formError = "";
-    this.newCode = "";
+    this.newKey = "";
     this.newName = "";
     this.newDescription = "";
     this.saving = false;
@@ -2980,9 +3142,9 @@ var ErpTaxesCategories = class extends i3 {
   `;
   }
   get columns() {
-    const t5 = (k2) => erplora().t(CATALOG, k2);
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return [
-      { key: "code", header: t5("ui.colCode"), sortable: true, filterable: true, filterType: "text" },
+      { key: "key", header: t5("ui.colKey"), sortable: true, filterable: true, filterType: "text" },
       { key: "name", header: t5("ui.colName"), sortable: true, filterable: true, filterType: "text" },
       {
         key: "description",
@@ -2991,6 +3153,18 @@ var ErpTaxesCategories = class extends i3 {
         filterable: true,
         filterType: "text",
         format: (r6) => r6.description || "\u2014"
+      },
+      {
+        key: "is_system",
+        header: t5("ui.colSystem"),
+        sortable: true,
+        filterable: true,
+        filterType: "select",
+        options: [
+          { value: "1", label: t5("ui.optSystem") },
+          { value: "0", label: t5("ui.optCustom") }
+        ],
+        format: (r6) => Number(r6.is_system) ? `\u{1F512} ${t5("ui.optSystem")}` : t5("ui.optCustom")
       },
       {
         key: "is_active",
@@ -3009,14 +3183,14 @@ var ErpTaxesCategories = class extends i3 {
   async connectedCallback() {
     super.connectedCallback();
     window.addEventListener("erplora:locale-changed", this.onLocaleChange);
-    this.ctrl = createListController(erplora(), "taxes.categories.list", () => this.requestUpdate(), {
+    this.ctrl = createListController(erplora2(), "taxes.categories.list", () => this.requestUpdate(), {
       pageSize: 50,
       sort: "name",
       dir: "asc"
     });
     await this.ctrl.load();
     try {
-      this.unsub = erplora().on("taxes.category.created", () => this.ctrl.load());
+      this.unsub = erplora2().on("taxes.category.created", () => this.ctrl.load());
     } catch {
     }
   }
@@ -3027,40 +3201,40 @@ var ErpTaxesCategories = class extends i3 {
   }
   async createCategory(ev) {
     ev.preventDefault();
-    if (!this.newCode.trim() || !this.newName.trim()) return;
+    if (!this.newKey.trim() || !this.newName.trim()) return;
     this.saving = true;
     this.formError = "";
     try {
-      await erplora().command("taxes.categories.create", {
-        code: this.newCode.trim(),
+      await erplora2().command("taxes.categories.create", {
+        key: this.newKey.trim(),
         name: this.newName.trim(),
         description: this.newDescription.trim()
       });
-      this.newCode = "";
+      this.newKey = "";
       this.newName = "";
       this.newDescription = "";
       await this.ctrl.load();
     } catch (e5) {
-      this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errCreateCategory");
+      this.formError = e5 instanceof Error ? e5.message : erplora2().t(CATALOG2, "ui.errCreateCategory");
     } finally {
       this.saving = false;
     }
   }
   render() {
-    const t5 = (k2) => erplora().t(CATALOG, k2);
+    const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return b2`<div>
         <header>
           <h2>${t5("ui.categoriesTitle")}</h2>
         </header>
         <form class="form" @submit=${(e5) => this.createCategory(e5)}>
-          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colCode")} placeholder=${t5("ui.phCode")} .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colKey")} placeholder=${t5("ui.phKey")} .value=${this.newKey} @ionInput=${(e5) => this.newKey = e5.target.value}></ion-input>
           <ion-input fill="outline" label-placement="floating" label=${t5("ui.colName")} placeholder=${t5("ui.phName")} .value=${this.newName} @ionInput=${(e5) => this.newName = e5.target.value}></ion-input>
           <ion-input fill="outline" label-placement="floating" label=${t5("ui.colDescription")} placeholder=${t5("ui.phDescription")} .value=${this.newDescription} @ionInput=${(e5) => this.newDescription = e5.target.value}></ion-input>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newName}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
+          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newKey || !this.newName}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
         </form>
         ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
         ${this.ctrl?.error ? b2`<p class="err">${this.ctrl.error}</p>` : A}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCodeName")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyCategories")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchKeyName")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyCategories")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
       </div>`;
   }
 };
@@ -3069,7 +3243,7 @@ __decorateClass([
 ], ErpTaxesCategories.prototype, "formError", 2);
 __decorateClass([
   r5()
-], ErpTaxesCategories.prototype, "newCode", 2);
+], ErpTaxesCategories.prototype, "newKey", 2);
 __decorateClass([
   r5()
 ], ErpTaxesCategories.prototype, "newName", 2);
@@ -3081,125 +3255,28 @@ __decorateClass([
 ], ErpTaxesCategories.prototype, "saving", 2);
 define("erp-taxes-categories", ErpTaxesCategories);
 
-// node_modules/.pnpm/@outfitkit+core@file+..+outfitkit/node_modules/@outfitkit/core/dist/ok-empty-state.js
-var __defProp3 = Object.defineProperty;
-var __decorateClass3 = (decorators, target, key, kind) => {
-  var result = void 0;
-  for (var i7 = decorators.length - 1, decorator; i7 >= 0; i7--)
-    if (decorator = decorators[i7])
-      result = decorator(target, key, result) || result;
-  if (result) __defProp3(target, key, result);
-  return result;
-};
-var OkEmptyState = class extends i3 {
-  constructor() {
-    super(...arguments);
-    this.icon = "file-tray-outline";
-  }
-  static {
-    this.styles = i`
-    /* Ancho máximo del contenedor; bloque a 100%. */
-    :host {
-      display: block;
-      width: 100%;
-      /* Tokens propios estilo Ionic (overridables): --ok-* → --ion-* → hex. */
-      --icon-color: var(--ok-color-medium, var(--ion-color-medium, #92949c));
-      --heading-color: var(--ok-text-color, var(--ion-text-color, #1f2933));
-      --message-color: var(--ok-color-medium, var(--ion-color-medium, #92949c));
-      --icon-size: 64px;
-      --padding: 2.5rem 1.25rem;
-    }
-
-    /* Centrado vertical y horizontal del contenido. */
-    .wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      gap: 0.5rem;
-      padding: var(--padding);
-      box-sizing: border-box;
-      width: 100%;
-    }
-
-    ion-icon {
-      font-size: var(--icon-size);
-      color: var(--icon-color);
-      opacity: 0.5; /* atenuado */
-      margin-bottom: 0.25rem;
-    }
-
-    .heading {
-      margin: 0;
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: var(--heading-color);
-    }
-
-    .message {
-      margin: 0;
-      font-size: 0.9375rem;
-      color: var(--message-color);
-      max-width: 38ch;
-    }
-
-    /* Acción debajo del texto. */
-    .action {
-      margin-top: 1rem;
-    }
-
-    /* Oculta los wrappers si no hay contenido. */
-    .heading:empty,
-    .message:empty {
-      display: none;
-    }
-  `;
-  }
-  render() {
-    return b2`
-      <div class="wrap">
-        <ion-icon name=${this.icon} aria-hidden="true"></ion-icon>
-        ${this.heading ? b2`<h2 class="heading">${this.heading}</h2>` : null}
-        ${this.message ? b2`<p class="message">${this.message}</p>` : null}
-        <slot></slot>
-        <div class="action">
-          <slot name="action"></slot>
-        </div>
-      </div>
-    `;
-  }
-};
-__decorateClass3([
-  n4()
-], OkEmptyState.prototype, "icon");
-__decorateClass3([
-  n4()
-], OkEmptyState.prototype, "heading");
-__decorateClass3([
-  n4()
-], OkEmptyState.prototype, "message");
-define("ok-empty-state", OkEmptyState);
-
-// modules/taxes/ui/components/erp-taxes-rates/erp-taxes-rates.ts
-var CATALOG2 = { es: es_default, en: en_default };
-function erplora2() {
+// ui/components/erp-taxes-rules/erp-taxes-rules.ts
+var CATALOG3 = { es: es_default, en: en_default };
+var TAX_TYPES = ["vat", "surcharge", "sales_tax", "withholding", "excise", "import_duty"];
+function erplora3() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
   return c5;
 }
-var ErpTaxesRates = class extends i3 {
+var ErpTaxesRules = class extends i3 {
   constructor() {
     super(...arguments);
-    this.categories = [];
     this.formError = "";
-    this.newCode = "";
     this.newCountry = "";
-    this.newPct = "";
-    this.newCategory = "";
+    this.newRegion = "";
+    this.newCategoryKey = "";
+    this.newRatePct = "";
+    this.newTaxType = "vat";
+    this.newValidFrom = "";
+    this.newValidTo = "";
+    this.newParentId = "";
+    this.newComponentLabel = "";
     this.saving = false;
-    this.copied = false;
-    this.tick = 0;
     this.onLocaleChange = () => this.requestUpdate();
   }
   static {
@@ -3208,52 +3285,50 @@ var ErpTaxesRates = class extends i3 {
     header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
     h2 { margin:0; font-size:1.15rem; flex:1; }
     .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1.25rem; }
-    .form ion-input, .form ion-select { flex:1 1 11rem; min-width:9rem; }
+    .form ion-input, .form ion-select { flex:1 1 9rem; min-width:7rem; }
+    .form .narrow { flex:1 1 6rem; min-width:5rem; }
+    .hint { color:#6b675e; font-size:.85rem; margin:.25rem 0 .5rem; }
     .err { color:#d9480f; font-weight:600; }
-    /* Caja del prompt copiable para el asistente (ADR-0066). Vive en el slot de
-       <ok-empty-state> (icono + título + mensaje los pone el propio componente).
-       Tokens Ionic (overridables); sin handlers inline (CSP estricta) — Lit liga @click. */
-    .prompt {
-      display:flex; align-items:flex-start; gap:.5rem; width:100%; max-width:46rem;
-      margin-top:.25rem; padding:.75rem .9rem; text-align:left;
-      background: var(--ion-color-light, #f4f5f8); border-radius:8px;
-      border:1px solid var(--ion-color-step-150, rgba(0,0,0,.08));
-    }
-    .prompt code {
-      flex:1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size:.85rem; line-height:1.45; color: var(--ion-text-color, #1f2933);
-      white-space:pre-wrap; word-break:break-word;
-    }
-    .prompt ion-button { flex:0 0 auto; margin:0; }
   `;
   }
   get columns() {
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
+    const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return [
-      { key: "country_code", header: t5("ui.colCountry"), sortable: true, filterable: true, filterType: "text" },
-      { key: "code", header: t5("ui.colCode"), sortable: true, filterable: true, filterType: "text" },
       {
-        key: "category_id",
+        key: "tax_category_key",
         header: t5("ui.colCategory"),
         sortable: true,
         filterable: true,
-        filterType: "select",
-        options: this.categories.map((c5) => ({ value: c5.id, label: c5.code })),
-        format: (r6) => this.catName(r6.category_id)
+        filterType: "text",
+        format: (r6) => {
+          const key = String(r6.tax_category_key ?? "") || "\u2014";
+          const label = String(r6.component_label ?? "");
+          return r6.parent_id && label ? `\u21B3 ${key} \xB7 ${label}` : key;
+        }
       },
-      { key: "tax_type", header: t5("ui.colType"), sortable: true, filterable: true, filterType: "range" },
+      { key: "country_code", header: t5("ui.colCountry"), sortable: true, filterable: true, filterType: "text" },
+      { key: "region_code", header: t5("ui.colRegion"), sortable: true, filterable: true, filterType: "text", format: (r6) => String(r6.region_code ?? "") || "\u2014" },
       {
         key: "rate_pct",
-        header: t5("ui.colPercent"),
+        header: t5("ui.colRate"),
         align: "right",
         sortable: true,
-        filterable: true,
-        filterType: "range",
-        format: (r6) => Number(r6.rate_pct).toFixed(2)
+        format: (r6) => `${Number(r6.rate_pct).toFixed(2)}%`
       },
       {
+        key: "tax_type",
+        header: t5("ui.colType"),
+        sortable: true,
+        filterable: true,
+        filterType: "select",
+        options: TAX_TYPES.map((v3) => ({ value: v3, label: t5(`ui.taxType_${v3}`) })),
+        format: (r6) => t5(`ui.taxType_${String(r6.tax_type)}`)
+      },
+      { key: "valid_from", header: t5("ui.colValidFrom"), sortable: true, format: (r6) => String(r6.valid_from ?? "") || "\u2014" },
+      { key: "valid_to", header: t5("ui.colValidTo"), sortable: true, format: (r6) => String(r6.valid_to ?? "") || "\u2014" },
+      {
         key: "is_active",
-        header: t5("ui.colActiveMasc"),
+        header: t5("ui.colActive"),
         sortable: true,
         filterable: true,
         filterType: "select",
@@ -3266,258 +3341,34 @@ var ErpTaxesRates = class extends i3 {
     ];
   }
   get rowActions() {
-    return [{ id: "deactivate", label: erplora2().t(CATALOG2, "ui.actionDeactivate"), color: "danger" }];
-  }
-  // TODO-LIT: componentWillLoad → connectedCallback. Recuerda: connectedCallback se dispara
-  // en CADA reconexión al DOM (no solo en el primer montaje). Si la init debe correr una
-  // sola vez tras el primer render, considera firstUpdated() en su lugar.
-  async connectedCallback() {
-    super.connectedCallback();
-    window.addEventListener("erplora:locale-changed", this.onLocaleChange);
-    this.ctrl = createListController(erplora2(), "taxes.rates.list", () => this.requestUpdate(), {
-      pageSize: 50,
-      sort: "name",
-      dir: "asc"
-    });
-    await Promise.all([this.ctrl.load(), this.loadAux()]);
-    try {
-      const off1 = erplora2().on("taxes.rate.created", () => this.ctrl.load());
-      const off2 = erplora2().on("taxes.rate.deactivated", () => this.ctrl.load());
-      const off3 = erplora2().on("taxes.category.created", () => this.loadAux());
-      this.unsub = () => {
-        off1();
-        off2();
-        off3();
-      };
-    } catch {
-    }
-  }
-  disconnectedCallback() {
-    window.removeEventListener("erplora:locale-changed", this.onLocaleChange);
-    super.disconnectedCallback();
-    this.unsub?.();
-  }
-  async loadAux() {
-    try {
-      this.categories = await erplora2().query("taxes.categories.list") ?? [];
-    } catch {
-    }
-  }
-  async createRate(ev) {
-    ev.preventDefault();
-    if (!this.newCode.trim() || !this.newCountry.trim()) return;
-    this.saving = true;
-    this.formError = "";
-    try {
-      await erplora2().command("taxes.rates.create", {
-        code: this.newCode.trim(),
-        name: "",
-        category_id: this.newCategory || null,
-        country_code: this.newCountry.trim().toUpperCase(),
-        region_code: "",
-        rate_pct: Number(this.newPct) || 0,
-        tax_type: "vat",
-        applies_from: null,
-        applies_until: null
-      });
-      this.newCode = "";
-      this.newCountry = "";
-      this.newPct = "";
-      this.newCategory = "";
-      await this.ctrl.load();
-    } catch (e5) {
-      this.formError = e5 instanceof Error ? e5.message : erplora2().t(CATALOG2, "ui.errCreateRate");
-    } finally {
-      this.saving = false;
-    }
-  }
-  catName(id) {
-    return this.categories.find((c5) => c5.id === id)?.code ?? "\u2014";
-  }
-  /** ¿Catálogo genuinamente vacío y ya cargado? Solo entonces se muestra el empty-state con
-   *  el prompt copiable (y se oculta la tabla). Si hay búsqueda/filtro activos, el «0 filas»
-   *  lo gestiona la propia tabla (con sus controles para limpiar el filtro) — no atrapamos al
-   *  usuario escondiéndola. */
-  get isEmpty() {
-    const s5 = this.ctrl?.state;
-    const noFilters = !s5?.search && Object.keys(s5?.filters ?? {}).length === 0;
-    return !this.ctrl?.loading && !this.ctrl?.error && (this.ctrl?.total ?? 0) === 0 && noFilters;
-  }
-  /** Copia el prompt sugerido al portapapeles (ADR-0066). Fallback a textarea+execCommand
-   *  para contextos sin Clipboard API (CSP/permite ejecutar sin red). */
-  async copyPrompt() {
-    const text = erplora2().t(CATALOG2, "ui.emptyRatesPrompt");
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand("copy");
-      } catch {
-      }
-      ta.remove();
-    }
-    this.copied = true;
-    window.setTimeout(() => {
-      this.copied = false;
-    }, 2e3);
-  }
-  /** Empty-state: <ok-empty-state> (icono + título + mensaje) + prompt copiable para el
-   *  asistente en el slot (ADR-0066). Reutiliza el componente de OutfitKit, no duplica el shell. */
-  renderEmpty() {
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
-    return b2`<ok-empty-state
-      icon="receipt-outline"
-      heading=${t5("ui.emptyRatesHeading")}
-      message=${t5("ui.emptyRatesMessage")}
-    >
-      <div class="prompt">
-        <code>${t5("ui.emptyRatesPrompt")}</code>
-        <ion-button size="small" fill="solid" @click=${() => this.copyPrompt()}>
-          <ion-icon slot="start" name=${this.copied ? "checkmark-outline" : "copy-outline"}></ion-icon>
-          ${this.copied ? t5("ui.btnCopiedPrompt") : t5("ui.btnCopyPrompt")}
-        </ion-button>
-      </div>
-    </ok-empty-state>`;
+    const t5 = (k2) => erplora3().t(CATALOG3, k2);
+    return [{ id: "deactivate", label: t5("ui.actionDeactivate"), color: "danger" }];
   }
   async onRowAction(ev) {
-    if (ev.detail.actionId !== "deactivate") return;
-    const rate = ev.detail.row;
-    if (!Number(rate.is_active)) return;
+    const { actionId, row } = ev.detail;
+    if (actionId !== "deactivate") return;
+    if (!Number(row.is_active)) return;
     this.formError = "";
     try {
-      await erplora2().command("taxes.rates.deactivate", { rate_id: rate.id });
+      await erplora3().command("taxes.rules.deactivate", { rule_id: row.id });
       await this.ctrl.load();
     } catch (e5) {
-      this.formError = e5 instanceof Error ? e5.message : erplora2().t(CATALOG2, "ui.errDeactivateRate");
+      this.formError = e5 instanceof Error ? e5.message : erplora3().t(CATALOG3, "ui.errDeactivateRule");
     }
-  }
-  render() {
-    const t5 = (k2) => erplora2().t(CATALOG2, k2);
-    return b2`<div>
-        <header>
-          <h2>${t5("ui.ratesTitle")}</h2>
-        </header>
-        <form class="form" @submit=${(e5) => this.createRate(e5)}>
-          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colCode")} placeholder=${t5("ui.phCode")} .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
-          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colCountry")} placeholder=${t5("ui.phCountry")} .value=${this.newCountry} @ionInput=${(e5) => this.newCountry = e5.target.value}></ion-input>
-          <ion-input fill="outline" label-placement="floating" label=${t5("ui.lblPercent")} type="number" step="0.0001" placeholder=${t5("ui.phPercent")} .value=${this.newPct} @ionInput=${(e5) => this.newPct = e5.target.value}></ion-input>
-          <ion-select fill="outline" label-placement="floating" label=${t5("ui.colCategory")} placeholder=${t5("ui.phCategory")} .value=${this.newCategory} @ionChange=${(e5) => this.newCategory = e5.target.value}><ion-select-option .value=${""}>—</ion-select-option>${this.categories.map((c5) => b2`<ion-select-option .value=${c5.id}>${c5.code}</ion-select-option>`)}</ion-select>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newCountry}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
-        </form>
-        ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
-        ${this.ctrl?.error ? b2`<p class="err">${this.ctrl.error}</p>` : A}
-        ${this.isEmpty ? this.renderEmpty() : b2`<ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCountryCode")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRates")} .actions=${this.rowActions} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>`}
-      </div>`;
-  }
-};
-__decorateClass([
-  r5()
-], ErpTaxesRates.prototype, "categories", 2);
-__decorateClass([
-  r5()
-], ErpTaxesRates.prototype, "formError", 2);
-__decorateClass([
-  r5()
-], ErpTaxesRates.prototype, "newCode", 2);
-__decorateClass([
-  r5()
-], ErpTaxesRates.prototype, "newCountry", 2);
-__decorateClass([
-  r5()
-], ErpTaxesRates.prototype, "newPct", 2);
-__decorateClass([
-  r5()
-], ErpTaxesRates.prototype, "newCategory", 2);
-__decorateClass([
-  r5()
-], ErpTaxesRates.prototype, "saving", 2);
-__decorateClass([
-  r5()
-], ErpTaxesRates.prototype, "copied", 2);
-__decorateClass([
-  r5()
-], ErpTaxesRates.prototype, "tick", 2);
-define("erp-taxes-rates", ErpTaxesRates);
-
-// modules/taxes/ui/components/erp-taxes-rules/erp-taxes-rules.ts
-var CATALOG3 = { es: es_default, en: en_default };
-function erplora3() {
-  const c5 = globalThis.erplora;
-  if (!c5) throw new Error("erplora SDK no inicializado por el shell");
-  return c5;
-}
-var ErpTaxesRules = class extends i3 {
-  constructor() {
-    super(...arguments);
-    this.rates = [];
-    this.formError = "";
-    this.newCode = "";
-    this.newName = "";
-    this.newConditions = "";
-    this.newRateId = "";
-    this.newPriority = "";
-    this.saving = false;
-    this.onLocaleChange = () => this.requestUpdate();
-  }
-  static {
-    this.styles = i`
-    :host { display:block; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
-    header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
-    h2 { margin:0; font-size:1.15rem; flex:1; }
-    .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1.25rem; }
-    .form ion-input, .form ion-select { flex:1 1 11rem; min-width:9rem; }
-    .form .wide { flex:2 1 20rem; min-width: 16rem; }
-    .hint { color:#6b675e; font-size:.85rem; margin:.25rem 0 .5rem; }
-    .err { color:#d9480f; font-weight:600; }
-  `;
-  }
-  get columns() {
-    const t5 = (k2) => erplora3().t(CATALOG3, k2);
-    return [
-      { key: "priority", header: t5("ui.colPriority"), align: "right", sortable: true, filterable: true, filterType: "text" },
-      { key: "code", header: t5("ui.colCode"), sortable: true, filterable: true, filterType: "text" },
-      { key: "name", header: t5("ui.colName"), sortable: true, filterable: true, filterType: "text" },
-      { key: "conditions", header: t5("ui.colConditions"), format: (r6) => String(r6.conditions ?? "") || "\u2014" },
-      {
-        key: "tax_rate_id",
-        header: t5("ui.colAppliedRate"),
-        sortable: true,
-        format: (r6) => this.rateName(r6.tax_rate_id)
-      },
-      {
-        key: "is_active",
-        header: t5("ui.colActive"),
-        sortable: true,
-        filterable: true,
-        filterType: "select",
-        options: [
-          { value: "1", label: t5("ui.optYes") },
-          { value: "0", label: t5("ui.optNo") }
-        ],
-        format: (r6) => Number(r6.is_active) ? t5("ui.optYes") : t5("ui.optNo")
-      }
-    ];
   }
   async connectedCallback() {
     super.connectedCallback();
     window.addEventListener("erplora:locale-changed", this.onLocaleChange);
     this.ctrl = createListController(erplora3(), "taxes.rules.list", () => this.requestUpdate(), {
       pageSize: 50,
-      sort: "priority",
+      sort: "country_code",
       dir: "asc"
     });
-    await Promise.all([this.ctrl.load(), this.loadAux()]);
+    await this.ctrl.load();
     try {
       const offs = [
         erplora3().on("taxes.rule.created", () => this.ctrl.load()),
-        erplora3().on("taxes.rate.created", () => this.loadAux()),
-        erplora3().on("taxes.rate.deactivated", () => this.loadAux())
+        erplora3().on("taxes.rule.deactivated", () => this.ctrl.load())
       ];
       this.unsub = () => offs.forEach((o7) => o7());
     } catch {
@@ -3528,48 +3379,33 @@ var ErpTaxesRules = class extends i3 {
     super.disconnectedCallback();
     this.unsub?.();
   }
-  async loadAux() {
-    try {
-      const page = await erplora3().queryPage("taxes.rates.list", { limit: 200, offset: 0, sort: "code", dir: "asc" });
-      this.rates = page?.rows ?? [];
-      this.requestUpdate();
-    } catch {
-    }
-  }
-  rateName(id) {
-    const r6 = this.rates.find((x2) => x2.id === id);
-    return r6 ? `${r6.country_code} \xB7 ${r6.code} (${Number(r6.rate_pct).toFixed(2)}%)` : id || "\u2014";
-  }
   async createRule(ev) {
     ev.preventDefault();
-    if (!this.newCode.trim() || !this.newName.trim() || !this.newRateId) return;
-    let conditions = {};
-    const raw = this.newConditions.trim();
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("no es un objeto");
-        conditions = parsed;
-      } catch {
-        this.formError = erplora3().t(CATALOG3, "ui.errConditionsJson");
-        return;
-      }
-    }
+    if (!this.newCountry.trim() || !this.newCategoryKey.trim() || this.newRatePct === "") return;
     this.saving = true;
     this.formError = "";
     try {
-      await erplora3().command("taxes.rules.create", {
-        code: this.newCode.trim(),
-        name: this.newName.trim(),
-        conditions,
-        tax_rate_id: this.newRateId,
-        priority: this.newPriority === "" ? 100 : Math.trunc(Number(this.newPriority)) || 100
-      });
-      this.newCode = "";
-      this.newName = "";
-      this.newConditions = "";
-      this.newRateId = "";
-      this.newPriority = "";
+      const payload = {
+        country_code: this.newCountry.trim().toUpperCase(),
+        tax_category_key: this.newCategoryKey.trim(),
+        rate_pct: Number(this.newRatePct),
+        tax_type: this.newTaxType || "vat"
+      };
+      if (this.newRegion.trim()) payload.region_code = this.newRegion.trim().toUpperCase();
+      if (this.newValidFrom.trim()) payload.valid_from = this.newValidFrom.trim();
+      if (this.newValidTo.trim()) payload.valid_to = this.newValidTo.trim();
+      if (this.newParentId.trim()) payload.parent_id = this.newParentId.trim();
+      if (this.newComponentLabel.trim()) payload.component_label = this.newComponentLabel.trim();
+      await erplora3().command("taxes.rules.create", payload);
+      this.newCountry = "";
+      this.newRegion = "";
+      this.newCategoryKey = "";
+      this.newRatePct = "";
+      this.newTaxType = "vat";
+      this.newValidFrom = "";
+      this.newValidTo = "";
+      this.newParentId = "";
+      this.newComponentLabel = "";
       await this.ctrl.load();
     } catch (e5) {
       this.formError = e5 instanceof Error ? e5.message : erplora3().t(CATALOG3, "ui.errCreateRule");
@@ -3584,41 +3420,54 @@ var ErpTaxesRules = class extends i3 {
           <h2>${t5("ui.rulesTitle")}</h2>
         </header>
         <form class="form" @submit=${(e5) => this.createRule(e5)}>
-          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colCode")} placeholder=${t5("ui.phRuleCode")} .value=${this.newCode} @ionInput=${(e5) => this.newCode = e5.target.value}></ion-input>
-          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colName")} placeholder=${t5("ui.phRuleName")} .value=${this.newName} @ionInput=${(e5) => this.newName = e5.target.value}></ion-input>
-          <ion-input class="wide" fill="outline" label-placement="floating" label=${t5("ui.colConditions")} placeholder=${t5("ui.phConditions")} .value=${this.newConditions} @ionInput=${(e5) => this.newConditions = e5.target.value}></ion-input>
-          <ion-select fill="outline" label-placement="floating" label=${t5("ui.colAppliedRate")} placeholder=${t5("ui.phRate")} .value=${this.newRateId} @ionChange=${(e5) => this.newRateId = e5.target.value}>${this.rates.map((r6) => b2`<ion-select-option .value=${r6.id}>${this.rateName(r6.id)}</ion-select-option>`)}</ion-select>
-          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colPriority")} type="number" step="1" placeholder=${t5("ui.phPriority")} .value=${this.newPriority} @ionInput=${(e5) => this.newPriority = e5.target.value}></ion-input>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCode || !this.newName || !this.newRateId}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
+          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t5("ui.colCountry")} placeholder=${t5("ui.phCountry")} maxlength="2" .value=${this.newCountry} @ionInput=${(e5) => this.newCountry = e5.target.value}></ion-input>
+          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t5("ui.colRegion")} placeholder=${t5("ui.phRegion")} .value=${this.newRegion} @ionInput=${(e5) => this.newRegion = e5.target.value}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colCategory")} placeholder=${t5("ui.phCategoryKey")} .value=${this.newCategoryKey} @ionInput=${(e5) => this.newCategoryKey = e5.target.value}></ion-input>
+          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t5("ui.colRate")} type="number" step="0.01" placeholder=${t5("ui.phPercent")} .value=${this.newRatePct} @ionInput=${(e5) => this.newRatePct = e5.target.value}></ion-input>
+          <ion-select fill="outline" label-placement="floating" label=${t5("ui.colType")} .value=${this.newTaxType} @ionChange=${(e5) => this.newTaxType = e5.target.value}>${TAX_TYPES.map((v3) => b2`<ion-select-option .value=${v3}>${t5(`ui.taxType_${v3}`)}</ion-select-option>`)}</ion-select>
+          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t5("ui.colValidFrom")} type="date" .value=${this.newValidFrom} @ionInput=${(e5) => this.newValidFrom = e5.target.value}></ion-input>
+          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t5("ui.colValidTo")} type="date" .value=${this.newValidTo} @ionInput=${(e5) => this.newValidTo = e5.target.value}></ion-input>
+          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t5("ui.colParentId")} placeholder=${t5("ui.phParentId")} .value=${this.newParentId} @ionInput=${(e5) => this.newParentId = e5.target.value}></ion-input>
+          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colComponentLabel")} placeholder=${t5("ui.phComponentLabel")} .value=${this.newComponentLabel} @ionInput=${(e5) => this.newComponentLabel = e5.target.value}></ion-input>
+          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCountry || !this.newCategoryKey || this.newRatePct === ""}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
         </form>
         <p class="hint">${t5("ui.rulesHint")}</p>
         ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
         ${this.ctrl?.error ? b2`<p class="err">${this.ctrl.error}</p>` : A}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCodeName")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCategoryCountry")} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
       </div>`;
   }
 };
 __decorateClass([
   r5()
-], ErpTaxesRules.prototype, "rates", 2);
-__decorateClass([
-  r5()
 ], ErpTaxesRules.prototype, "formError", 2);
 __decorateClass([
   r5()
-], ErpTaxesRules.prototype, "newCode", 2);
+], ErpTaxesRules.prototype, "newCountry", 2);
 __decorateClass([
   r5()
-], ErpTaxesRules.prototype, "newName", 2);
+], ErpTaxesRules.prototype, "newRegion", 2);
 __decorateClass([
   r5()
-], ErpTaxesRules.prototype, "newConditions", 2);
+], ErpTaxesRules.prototype, "newCategoryKey", 2);
 __decorateClass([
   r5()
-], ErpTaxesRules.prototype, "newRateId", 2);
+], ErpTaxesRules.prototype, "newRatePct", 2);
 __decorateClass([
   r5()
-], ErpTaxesRules.prototype, "newPriority", 2);
+], ErpTaxesRules.prototype, "newTaxType", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "newValidFrom", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "newValidTo", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "newParentId", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "newComponentLabel", 2);
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "saving", 2);
