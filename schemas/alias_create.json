@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "taxes.aliases.create",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["alias", "tax_category_key"],
+  "properties": {
+    "alias": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "tax_category_key": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[a-z][a-z0-9_.]*$" },
+    "source": { "type": "string", "enum": ["shipped", "learned"], "default": "learned" }
+  }
+}
