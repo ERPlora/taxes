@@ -236,10 +236,7 @@
       "schema": "schemas/category_create.json",
       "emit": [
         "taxes.category.created"
-      ],
-      "ai": {
-        "description": "Creates a fiscal category with a canonical key"
-      }
+      ]
     },
     "taxes.rules.create": {
       "permission": "taxes.manage_tax",
@@ -250,10 +247,7 @@
       "schema": "schemas/rule_create.json",
       "emit": [
         "taxes.rule.created"
-      ],
-      "ai": {
-        "description": "Creates a tax rule (the % for a country+region+category). Pass parent_id to add a multi-tax component (e.g. surcharge) to a root rule."
-      }
+      ]
     },
     "taxes.rules.bulk_create": {
       "permission": "taxes.manage_tax",
@@ -262,10 +256,7 @@
         "file": "dist/handler.wasm",
         "function": "bulk_create_rules"
       },
-      "schema": "schemas/rules_bulk_create.json",
-      "ai": {
-        "description": "Creates multiple tax rules at once (e.g. 'create the 2026 Spain VAT rates'). Invalid rows are skipped without aborting the batch. Components (parent_id) must be created individually."
-      }
+      "schema": "schemas/rules_bulk_create.json"
     },
     "taxes.rules.deactivate": {
       "permission": "taxes.manage_tax",
@@ -276,10 +267,7 @@
       "schema": "schemas/rule_deactivate.json",
       "emit": [
         "taxes.rule.deactivated"
-      ],
-      "ai": {
-        "description": "Deactivates a tax rule so it no longer applies to new transactions (issued invoices keep their snapshot)"
-      }
+      ]
     },
     "taxes.aliases.create": {
       "permission": "taxes.manage_tax",
@@ -290,10 +278,7 @@
       "schema": "schemas/alias_create.json",
       "emit": [
         "taxes.alias.created"
-      ],
-      "ai": {
-        "description": "Persists a category alias (external text → canonical key) learned during CSV import"
-      }
+      ]
     },
     "taxes._insert_category": {
       "permission": "taxes.manage_tax",

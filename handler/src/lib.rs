@@ -638,4 +638,32 @@ mod tests {
         assert_eq!(report["created"], json!(2));
         assert_eq!(report["errors"].as_array().unwrap().len(), 3);
     }
+
+    // ── Guard fiscal: la IA no escribe la verdad fiscal ──────────────────────
+
+    /// Un `rate_pct` que entra por aquí acaba en `<TipoImpositivo>` del XML que VeriFactu
+    /// presenta a la AEAT, y ese camino no valida el tipo contra ningún catálogo. El asistente
+    /// no tiene acceso a internet, así que un `bulk_create` invocado por el LLM sólo puede
+    /// responder desde su memoria de entrenamiento. Sólo se le permite CALCULAR, nunca escribir.
+    #[test]
+    fn no_fiscal_write_command_is_exposed_to_the_assistant() {
+        const AI_PERMITIDOS: [&str; 1] = ["taxes.calculate"];
+
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../module.json");
+        let raw = std::fs::read_to_string(&path).expect("module.json legible");
+        let manifest: Value = serde_json::from_str(&raw).expect("module.json es JSON válido");
+        let commands = manifest["commands"].as_object().expect("bloque commands");
+
+        let expuestos: Vec<&str> = commands
+            .iter()
+            .filter(|(_, def)| def.get("ai").is_some())
+            .map(|(name, _)| name.as_str())
+            .filter(|name| !AI_PERMITIDOS.contains(name))
+            .collect();
+
+        assert!(
+            expuestos.is_empty(),
+            "commands de escritura fiscal expuestos al asistente: {expuestos:?}"
+        );
+    }
 }
