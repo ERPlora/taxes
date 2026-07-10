@@ -646,7 +646,7 @@ mod tests {
     /// no tiene acceso a internet, así que un `bulk_create` invocado por el LLM sólo puede
     /// responder desde su memoria de entrenamiento. Sólo se le permite CALCULAR, nunca escribir.
     #[test]
-    fn ningun_command_de_escritura_fiscal_se_expone_al_asistente() {
+    fn no_fiscal_write_command_is_exposed_to_the_assistant() {
         const AI_PERMITIDOS: [&str; 1] = ["taxes.calculate"];
 
         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../module.json");
