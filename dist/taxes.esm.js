@@ -3291,11 +3291,13 @@ var ErpTaxesCategories = class extends i3 {
   }
   static {
     this.styles = i`
-    :host { display:block; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
-    header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
-    h2 { margin:0; font-size:1.15rem; flex:1; }
-    .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1.25rem; }
-    .form ion-input { flex:1 1 11rem; min-width:9rem; }
+    :host { display:flex; flex-direction:column; height:100%; min-height:0; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
+    /* La vista llena el alto: el data-table ocupa todo (scroll interno, pie fijo). */
+    .page { display:flex; flex-direction:column; min-height:0; flex:1 1 auto; }
+    .page > ok-data-table { flex:1 1 auto; min-height:0; }
+    /* El alta vive en el panel lateral de la tabla (estrecho): los campos van APILADOS. */
+    .form { display:flex; flex-direction:column; gap:.7rem; }
+    .form ion-button { align-self:flex-end; }
     .err { color:#d9480f; font-weight:600; }
   `;
   }
@@ -3338,6 +3340,10 @@ var ErpTaxesCategories = class extends i3 {
       }
     ];
   }
+  // Referencia al ok-data-table para abrir/cerrar su panel lateral (el alta se proyecta dentro).
+  dataTable() {
+    return this.renderRoot.querySelector("ok-data-table");
+  }
   async connectedCallback() {
     super.connectedCallback();
     window.addEventListener("erplora:locale-changed", this.onLocaleChange);
@@ -3371,6 +3377,7 @@ var ErpTaxesCategories = class extends i3 {
       this.newKey = "";
       this.newName = "";
       this.newDescription = "";
+      this.dataTable()?.close();
       await this.ctrl.load();
     } catch (e5) {
       this.formError = e5 instanceof Error ? e5.message : erplora2().t(CATALOG2, "ui.errCreateCategory");
@@ -3378,21 +3385,22 @@ var ErpTaxesCategories = class extends i3 {
       this.saving = false;
     }
   }
+  // El título de la vista lo pinta el topbar del shell: repetirlo aquí lo duplicaba en pantalla.
   render() {
     const t5 = (k2) => erplora2().t(CATALOG2, k2);
-    return b2`<div>
-        <header>
-          <h2>${t5("ui.categoriesTitle")}</h2>
-        </header>
-        <form class="form" @submit=${(e5) => this.createCategory(e5)}>
-          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colKey")} placeholder=${t5("ui.phKey")} .value=${this.newKey} @ionInput=${(e5) => this.newKey = e5.target.value}></ion-input>
-          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colName")} placeholder=${t5("ui.phName")} .value=${this.newName} @ionInput=${(e5) => this.newName = e5.target.value}></ion-input>
-          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colDescription")} placeholder=${t5("ui.phDescription")} .value=${this.newDescription} @ionInput=${(e5) => this.newDescription = e5.target.value}></ion-input>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newKey || !this.newName}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
-        </form>
+    return b2`<div class="page">
         ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
         ${this.ctrl?.error ? b2`<p class="err">${this.ctrl.error}</p>` : A}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchKeyName")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyCategories")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchKeyName")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyCategories")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}>
+          <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
+               el «+» de la barra desplegaría un panel vacío. -->
+          <form slot="create" class="form" @submit=${(e5) => this.createCategory(e5)}>
+            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colKey")} placeholder=${t5("ui.phKey")} .value=${this.newKey} @ionInput=${(e5) => this.newKey = e5.target.value}></ion-input>
+            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colName")} placeholder=${t5("ui.phName")} .value=${this.newName} @ionInput=${(e5) => this.newName = e5.target.value}></ion-input>
+            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colDescription")} placeholder=${t5("ui.phDescription")} .value=${this.newDescription} @ionInput=${(e5) => this.newDescription = e5.target.value}></ion-input>
+            <ion-button type="submit" ?disabled=${this.saving || !this.newKey || !this.newName}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
+          </form>
+        </ok-data-table>
       </div>`;
   }
 };
@@ -3435,17 +3443,19 @@ var ErpTaxesRules = class extends i3 {
     this.newParentId = "";
     this.newComponentLabel = "";
     this.saving = false;
+    this.categories = [];
     this.onLocaleChange = () => this.requestUpdate();
   }
   static {
     this.styles = i`
-    :host { display:block; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
-    header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
-    h2 { margin:0; font-size:1.15rem; flex:1; }
-    .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1.25rem; }
-    .form ion-input, .form ion-select { flex:1 1 9rem; min-width:7rem; }
-    .form .narrow { flex:1 1 6rem; min-width:5rem; }
-    .hint { color:#6b675e; font-size:.85rem; margin:.25rem 0 .5rem; }
+    :host { display:flex; flex-direction:column; height:100%; min-height:0; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
+    /* La vista llena el alto: el data-table ocupa todo (scroll interno, pie fijo). */
+    .page { display:flex; flex-direction:column; min-height:0; flex:1 1 auto; }
+    .page > ok-data-table { flex:1 1 auto; min-height:0; }
+    /* El alta vive en el panel lateral de la tabla (estrecho): los campos van APILADOS. */
+    .form { display:flex; flex-direction:column; gap:.7rem; }
+    .form ion-button { align-self:flex-end; }
+    .hint { color:#6b675e; font-size:.85rem; margin:0; }
     .err { color:#d9480f; font-weight:600; }
   `;
   }
@@ -3457,7 +3467,9 @@ var ErpTaxesRules = class extends i3 {
         header: t5("ui.colCategory"),
         sortable: true,
         filterable: true,
-        filterType: "text",
+        // Dominio cerrado (las categorías del hub) y el servidor lo declara `op: eq` → select.
+        filterType: "select",
+        options: this.categories.map((c5) => ({ value: c5.key, label: `${c5.name} (${c5.key})` })),
         format: (r6) => {
           const key = String(r6.tax_category_key ?? "") || "\u2014";
           const label = String(r6.component_label ?? "");
@@ -3523,6 +3535,7 @@ var ErpTaxesRules = class extends i3 {
       dir: "asc"
     });
     await this.ctrl.load();
+    await this.loadCategories();
     try {
       const offs = [
         erplora3().on("taxes.rule.created", () => this.ctrl.load()),
@@ -3536,6 +3549,20 @@ var ErpTaxesRules = class extends i3 {
     window.removeEventListener("erplora:locale-changed", this.onLocaleChange);
     super.disconnectedCallback();
     this.unsub?.();
+  }
+  // TODAS las categorías (no una página): el desplegable del alta y el filtro de la columna las
+  // necesitan enteras. Best-effort: si falla, el alta sigue (el runtime revalida la FK).
+  async loadCategories() {
+    try {
+      const rows = await erplora3().queryAll("taxes.categories.list", { sort: "name", dir: "asc" });
+      this.categories = Array.isArray(rows) ? rows : [];
+    } catch {
+      this.categories = [];
+    }
+  }
+  // Referencia al ok-data-table para abrir/cerrar su panel lateral (el alta se proyecta dentro).
+  dataTable() {
+    return this.renderRoot.querySelector("ok-data-table");
   }
   async createRule(ev) {
     ev.preventDefault();
@@ -3564,6 +3591,7 @@ var ErpTaxesRules = class extends i3 {
       this.newValidTo = "";
       this.newParentId = "";
       this.newComponentLabel = "";
+      this.dataTable()?.close();
       await this.ctrl.load();
     } catch (e5) {
       this.formError = e5 instanceof Error ? e5.message : erplora3().t(CATALOG3, "ui.errCreateRule");
@@ -3571,28 +3599,33 @@ var ErpTaxesRules = class extends i3 {
       this.saving = false;
     }
   }
+  // El título de la vista lo pinta el topbar del shell: repetirlo aquí lo duplicaba en pantalla.
   render() {
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
-    return b2`<div>
-        <header>
-          <h2>${t5("ui.rulesTitle")}</h2>
-        </header>
-        <form class="form" @submit=${(e5) => this.createRule(e5)}>
-          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t5("ui.colCountry")} placeholder=${t5("ui.phCountry")} maxlength="2" .value=${this.newCountry} @ionInput=${(e5) => this.newCountry = e5.target.value}></ion-input>
-          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t5("ui.colRegion")} placeholder=${t5("ui.phRegion")} .value=${this.newRegion} @ionInput=${(e5) => this.newRegion = e5.target.value}></ion-input>
-          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colCategory")} placeholder=${t5("ui.phCategoryKey")} .value=${this.newCategoryKey} @ionInput=${(e5) => this.newCategoryKey = e5.target.value}></ion-input>
-          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t5("ui.colRate")} type="number" step="0.01" placeholder=${t5("ui.phPercent")} .value=${this.newRatePct} @ionInput=${(e5) => this.newRatePct = e5.target.value}></ion-input>
-          <ion-select fill="outline" label-placement="floating" label=${t5("ui.colType")} .value=${this.newTaxType} @ionChange=${(e5) => this.newTaxType = e5.target.value}>${TAX_TYPES.map((v3) => b2`<ion-select-option .value=${v3}>${t5(`ui.taxType_${v3}`)}</ion-select-option>`)}</ion-select>
-          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t5("ui.colValidFrom")} type="date" .value=${this.newValidFrom} @ionInput=${(e5) => this.newValidFrom = e5.target.value}></ion-input>
-          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t5("ui.colValidTo")} type="date" .value=${this.newValidTo} @ionInput=${(e5) => this.newValidTo = e5.target.value}></ion-input>
-          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t5("ui.colParentId")} placeholder=${t5("ui.phParentId")} .value=${this.newParentId} @ionInput=${(e5) => this.newParentId = e5.target.value}></ion-input>
-          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colComponentLabel")} placeholder=${t5("ui.phComponentLabel")} .value=${this.newComponentLabel} @ionInput=${(e5) => this.newComponentLabel = e5.target.value}></ion-input>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCountry || !this.newCategoryKey || this.newRatePct === ""}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
-        </form>
-        <p class="hint">${t5("ui.rulesHint")}</p>
+    return b2`<div class="page">
         ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
         ${this.ctrl?.error ? b2`<p class="err">${this.ctrl.error}</p>` : A}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCategoryCountry")} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCategoryCountry")} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}>
+          <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
+               el «+» de la barra desplegaría un panel vacío. -->
+          <form slot="create" class="form" @submit=${(e5) => this.createRule(e5)}>
+            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colCountry")} placeholder=${t5("ui.phCountry")} maxlength="2" .value=${this.newCountry} @ionInput=${(e5) => this.newCountry = e5.target.value}></ion-input>
+            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colRegion")} placeholder=${t5("ui.phRegion")} .value=${this.newRegion} @ionInput=${(e5) => this.newRegion = e5.target.value}></ion-input>
+            <!-- La categoría se ELIGE: la FK (hub_id, tax_category_key) la valida, y una clave mal
+                 tecleada era una regla que nunca se aplicaba (o un command rechazado). -->
+            <ion-select fill="outline" label-placement="floating" label=${t5("ui.colCategory")} placeholder=${t5("ui.phCategoryKey")} .value=${this.newCategoryKey} @ionChange=${(e5) => this.newCategoryKey = e5.target.value}>
+              ${this.categories.map((c5) => b2`<ion-select-option .value=${c5.key}>${c5.name} (${c5.key})</ion-select-option>`)}
+            </ion-select>
+            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colRate")} type="number" step="0.01" placeholder=${t5("ui.phPercent")} .value=${this.newRatePct} @ionInput=${(e5) => this.newRatePct = e5.target.value}></ion-input>
+            <ion-select fill="outline" label-placement="floating" label=${t5("ui.colType")} .value=${this.newTaxType} @ionChange=${(e5) => this.newTaxType = e5.target.value}>${TAX_TYPES.map((v3) => b2`<ion-select-option .value=${v3}>${t5(`ui.taxType_${v3}`)}</ion-select-option>`)}</ion-select>
+            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colValidFrom")} type="date" .value=${this.newValidFrom} @ionInput=${(e5) => this.newValidFrom = e5.target.value}></ion-input>
+            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colValidTo")} type="date" .value=${this.newValidTo} @ionInput=${(e5) => this.newValidTo = e5.target.value}></ion-input>
+            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colParentId")} placeholder=${t5("ui.phParentId")} .value=${this.newParentId} @ionInput=${(e5) => this.newParentId = e5.target.value}></ion-input>
+            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colComponentLabel")} placeholder=${t5("ui.phComponentLabel")} .value=${this.newComponentLabel} @ionInput=${(e5) => this.newComponentLabel = e5.target.value}></ion-input>
+            <p class="hint">${t5("ui.rulesHint")}</p>
+            <ion-button type="submit" ?disabled=${this.saving || !this.newCountry || !this.newCategoryKey || this.newRatePct === ""}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
+          </form>
+        </ok-data-table>
       </div>`;
   }
 };
@@ -3629,4 +3662,7 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "saving", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "categories", 2);
 define("erp-taxes-rules", ErpTaxesRules);

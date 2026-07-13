@@ -13,6 +13,9 @@ const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
 interface ErploraClientLike extends ListClient {
   query<T = unknown>(name: string, params?: Record<string, unknown>): Promise<T>;
+  /** TODAS las filas, sin tope. El viejo `page_size` NO era un parámetro del runtime: truncaba a
+   *  50 en silencio, y un hub con 60 categorías fiscales perdía 10 del desplegable. */
+  queryAll<T = unknown>(name: string, params?: Record<string, unknown>): Promise<T[]>;
   queryPage<R = unknown>(name: string, params: ListParams): Promise<ListPage<R>>;
   command<T = unknown>(name: string, payload?: Record<string, unknown>): Promise<T>;
   on(event: string, cb: (payload: unknown) => void): () => void;
@@ -39,6 +42,14 @@ interface TaxRule {
   is_active: number;
 }
 
+// Fila de `taxes.categories.list`: la categoría es la identidad enlazable (ADR-0085) y la FK
+// (hub_id, tax_category_key) → taxes_category la valida, así que se ELIGE, no se teclea.
+interface TaxCategory {
+  id: string;
+  key: string;
+  name: string;
+}
+
 const TAX_TYPES = ['vat', 'surcharge', 'sales_tax', 'withholding', 'excise', 'import_duty'] as const;
 
 function erplora(): ErploraClientLike {
@@ -49,13 +60,14 @@ function erplora(): ErploraClientLike {
 
 export class ErpTaxesRules extends LitElement {
   static styles = css`
-    :host { display:block; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
-    header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
-    h2 { margin:0; font-size:1.15rem; flex:1; }
-    .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1.25rem; }
-    .form ion-input, .form ion-select { flex:1 1 9rem; min-width:7rem; }
-    .form .narrow { flex:1 1 6rem; min-width:5rem; }
-    .hint { color:#6b675e; font-size:.85rem; margin:.25rem 0 .5rem; }
+    :host { display:flex; flex-direction:column; height:100%; min-height:0; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
+    /* La vista llena el alto: el data-table ocupa todo (scroll interno, pie fijo). */
+    .page { display:flex; flex-direction:column; min-height:0; flex:1 1 auto; }
+    .page > ok-data-table { flex:1 1 auto; min-height:0; }
+    /* El alta vive en el panel lateral de la tabla (estrecho): los campos van APILADOS. */
+    .form { display:flex; flex-direction:column; gap:.7rem; }
+    .form ion-button { align-self:flex-end; }
+    .hint { color:#6b675e; font-size:.85rem; margin:0; }
     .err { color:#d9480f; font-weight:600; }
   `;
 
@@ -82,6 +94,9 @@ export class ErpTaxesRules extends LitElement {
 
   @state() saving = false;
 
+  // Categorías fiscales del hub: pueblan el selector del alta y el filtro de la columna.
+  @state() private categories: TaxCategory[] = [];
+
   private ctrl!: ListController<TaxRule>;
 
   private unsub?: () => void;
@@ -94,7 +109,9 @@ export class ErpTaxesRules extends LitElement {
         header: t('ui.colCategory'),
         sortable: true,
         filterable: true,
-        filterType: 'text',
+        // Dominio cerrado (las categorías del hub) y el servidor lo declara `op: eq` → select.
+        filterType: 'select',
+        options: this.categories.map((c) => ({ value: c.key, label: `${c.name} (${c.key})` })),
         format: (r) => {
           const key = String(r.tax_category_key ?? '') || '—';
           const label = String(r.component_label ?? '');
@@ -165,6 +182,7 @@ export class ErpTaxesRules extends LitElement {
       dir: 'asc',
     });
     await this.ctrl.load();
+    await this.loadCategories();
     try {
       const offs = [
         erplora().on('taxes.rule.created', () => this.ctrl.load()),
@@ -180,6 +198,24 @@ export class ErpTaxesRules extends LitElement {
     window.removeEventListener('erplora:locale-changed', this.onLocaleChange);
     super.disconnectedCallback();
     this.unsub?.();
+  }
+
+  // TODAS las categorías (no una página): el desplegable del alta y el filtro de la columna las
+  // necesitan enteras. Best-effort: si falla, el alta sigue (el runtime revalida la FK).
+  private async loadCategories(): Promise<void> {
+    try {
+      const rows = await erplora().queryAll<TaxCategory>('taxes.categories.list', { sort: 'name', dir: 'asc' });
+      this.categories = Array.isArray(rows) ? rows : [];
+    } catch {
+      this.categories = [];
+    }
+  }
+
+  // Referencia al ok-data-table para abrir/cerrar su panel lateral (el alta se proyecta dentro).
+  private dataTable(): { open(p?: 'filters' | 'create'): void; close(): void } | null {
+    return this.renderRoot.querySelector('ok-data-table') as
+      | { open(p?: 'filters' | 'create'): void; close(): void }
+      | null;
   }
 
   private async createRule(ev: Event) {
@@ -209,6 +245,7 @@ export class ErpTaxesRules extends LitElement {
       this.newValidTo = '';
       this.newParentId = '';
       this.newComponentLabel = '';
+      this.dataTable()?.close(); // el panel de alta se cierra solo tras crear
       await this.ctrl.load();
     } catch (e) {
       this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errCreateRule');
@@ -217,28 +254,33 @@ export class ErpTaxesRules extends LitElement {
     }
   }
 
+  // El título de la vista lo pinta el topbar del shell: repetirlo aquí lo duplicaba en pantalla.
   render() {
     const t = (k: string): string => erplora().t(CATALOG, k);
-    return html`<div>
-        <header>
-          <h2>${t('ui.rulesTitle')}</h2>
-        </header>
-        <form class="form" @submit=${(e) => this.createRule(e)}>
-          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t('ui.colCountry')} placeholder=${t('ui.phCountry')} maxlength="2" .value=${this.newCountry} @ionInput=${(e: any) => (this.newCountry = e.target.value)}></ion-input>
-          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t('ui.colRegion')} placeholder=${t('ui.phRegion')} .value=${this.newRegion} @ionInput=${(e: any) => (this.newRegion = e.target.value)}></ion-input>
-          <ion-input fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategoryKey')} .value=${this.newCategoryKey} @ionInput=${(e: any) => (this.newCategoryKey = e.target.value)}></ion-input>
-          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t('ui.colRate')} type="number" step="0.01" placeholder=${t('ui.phPercent')} .value=${this.newRatePct} @ionInput=${(e: any) => (this.newRatePct = e.target.value)}></ion-input>
-          <ion-select fill="outline" label-placement="floating" label=${t('ui.colType')} .value=${this.newTaxType} @ionChange=${(e: any) => (this.newTaxType = e.target.value)}>${TAX_TYPES.map((v) => html`<ion-select-option .value=${v}>${t(`ui.taxType_${v}`)}</ion-select-option>`)}</ion-select>
-          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t('ui.colValidFrom')} type="date" .value=${this.newValidFrom} @ionInput=${(e: any) => (this.newValidFrom = e.target.value)}></ion-input>
-          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t('ui.colValidTo')} type="date" .value=${this.newValidTo} @ionInput=${(e: any) => (this.newValidTo = e.target.value)}></ion-input>
-          <ion-input class="narrow" fill="outline" label-placement="floating" label=${t('ui.colParentId')} placeholder=${t('ui.phParentId')} .value=${this.newParentId} @ionInput=${(e: any) => (this.newParentId = e.target.value)}></ion-input>
-          <ion-input fill="outline" label-placement="floating" label=${t('ui.colComponentLabel')} placeholder=${t('ui.phComponentLabel')} .value=${this.newComponentLabel} @ionInput=${(e: any) => (this.newComponentLabel = e.target.value)}></ion-input>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newCountry || !this.newCategoryKey || this.newRatePct === ''}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
-        </form>
-        <p class="hint">${t('ui.rulesHint')}</p>
+    return html`<div class="page">
         ${this.formError ? html`<p class="err">${this.formError}</p>` : nothing}
         ${this.ctrl?.error ? html`<p class="err">${this.ctrl.error}</p>` : nothing}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCategoryCountry')} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRules')} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCategoryCountry')} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRules')} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}>
+          <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
+               el «+» de la barra desplegaría un panel vacío. -->
+          <form slot="create" class="form" @submit=${(e: Event) => this.createRule(e)}>
+            <ion-input fill="outline" label-placement="floating" label=${t('ui.colCountry')} placeholder=${t('ui.phCountry')} maxlength="2" .value=${this.newCountry} @ionInput=${(e: any) => (this.newCountry = e.target.value)}></ion-input>
+            <ion-input fill="outline" label-placement="floating" label=${t('ui.colRegion')} placeholder=${t('ui.phRegion')} .value=${this.newRegion} @ionInput=${(e: any) => (this.newRegion = e.target.value)}></ion-input>
+            <!-- La categoría se ELIGE: la FK (hub_id, tax_category_key) la valida, y una clave mal
+                 tecleada era una regla que nunca se aplicaba (o un command rechazado). -->
+            <ion-select fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategoryKey')} .value=${this.newCategoryKey} @ionChange=${(e: any) => (this.newCategoryKey = e.target.value)}>
+              ${this.categories.map((c) => html`<ion-select-option .value=${c.key}>${c.name} (${c.key})</ion-select-option>`)}
+            </ion-select>
+            <ion-input fill="outline" label-placement="floating" label=${t('ui.colRate')} type="number" step="0.01" placeholder=${t('ui.phPercent')} .value=${this.newRatePct} @ionInput=${(e: any) => (this.newRatePct = e.target.value)}></ion-input>
+            <ion-select fill="outline" label-placement="floating" label=${t('ui.colType')} .value=${this.newTaxType} @ionChange=${(e: any) => (this.newTaxType = e.target.value)}>${TAX_TYPES.map((v) => html`<ion-select-option .value=${v}>${t(`ui.taxType_${v}`)}</ion-select-option>`)}</ion-select>
+            <ion-input fill="outline" label-placement="floating" label=${t('ui.colValidFrom')} type="date" .value=${this.newValidFrom} @ionInput=${(e: any) => (this.newValidFrom = e.target.value)}></ion-input>
+            <ion-input fill="outline" label-placement="floating" label=${t('ui.colValidTo')} type="date" .value=${this.newValidTo} @ionInput=${(e: any) => (this.newValidTo = e.target.value)}></ion-input>
+            <ion-input fill="outline" label-placement="floating" label=${t('ui.colParentId')} placeholder=${t('ui.phParentId')} .value=${this.newParentId} @ionInput=${(e: any) => (this.newParentId = e.target.value)}></ion-input>
+            <ion-input fill="outline" label-placement="floating" label=${t('ui.colComponentLabel')} placeholder=${t('ui.phComponentLabel')} .value=${this.newComponentLabel} @ionInput=${(e: any) => (this.newComponentLabel = e.target.value)}></ion-input>
+            <p class="hint">${t('ui.rulesHint')}</p>
+            <ion-button type="submit" ?disabled=${this.saving || !this.newCountry || !this.newCategoryKey || this.newRatePct === ''}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
+          </form>
+        </ok-data-table>
       </div>`;
   }
 }
