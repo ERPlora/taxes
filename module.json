@@ -95,7 +95,7 @@
             "op": "eq"
           },
           "name": {
-            "op": "eq"
+            "op": "like"
           },
           "is_system": {
             "op": "eq"
@@ -198,7 +198,7 @@
         "default_dir": "asc",
         "filters": {
           "alias": {
-            "op": "eq"
+            "op": "like"
           },
           "tax_category_key": {
             "op": "eq"
