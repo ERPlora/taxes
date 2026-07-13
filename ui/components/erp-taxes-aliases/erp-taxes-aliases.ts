@@ -46,11 +46,13 @@ function erplora(): ErploraClientLike {
 
 export class ErpTaxesAliases extends LitElement {
   static styles = css`
-    :host { display:block; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
-    header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
-    h2 { margin:0; font-size:1.15rem; flex:1; }
-    .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1.25rem; }
-    .form ion-input, .form ion-select { flex:1 1 11rem; min-width:9rem; }
+    :host { display:flex; flex-direction:column; height:100%; min-height:0; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
+    /* La vista llena el alto: el data-table ocupa todo (scroll interno, pie fijo). */
+    .page { display:flex; flex-direction:column; min-height:0; flex:1 1 auto; }
+    .page > ok-data-table { flex:1 1 auto; min-height:0; }
+    /* El alta vive en el panel lateral de la tabla (estrecho): los campos van APILADOS. */
+    .form { display:flex; flex-direction:column; gap:.7rem; }
+    .form ion-button { align-self:flex-end; }
     .err { color:#d9480f; font-weight:600; }
   `;
 
@@ -74,7 +76,17 @@ export class ErpTaxesAliases extends LitElement {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
       { key: 'alias', header: t('ui.colAlias'), sortable: true, filterable: true, filterType: 'text' },
-      { key: 'tax_category_key', header: t('ui.colCategory'), sortable: true, filterable: true, filterType: 'text' },
+      {
+        key: 'tax_category_key',
+        header: t('ui.colCategory'),
+        sortable: true,
+        filterable: true,
+        // Dominio cerrado: las categorías fiscales del hub. Se ELIGE (el servidor la filtra por
+        // `eq`, así que el `value` es la `key` canónica), no se teclea: una key mal escrita en un
+        // alias mete el IVA equivocado en el import.
+        filterType: 'select',
+        options: this.categories.map((c) => ({ value: c.key, label: `${c.key} · ${c.name}` })),
+      },
       {
         key: 'source',
         header: t('ui.colSource'),
@@ -126,6 +138,11 @@ export class ErpTaxesAliases extends LitElement {
     this.unsub?.();
   }
 
+  /** Referencia a la tabla para cerrar su panel lateral (el del «+») tras el alta. */
+  private dataTable(): (HTMLElement & { close: () => void }) | null {
+    return this.renderRoot.querySelector('ok-data-table') as (HTMLElement & { close: () => void }) | null;
+  }
+
   private async loadAux() {
     try {
       const page = await erplora().queryPage<TaxCategoryRef>('taxes.categories.list', { limit: 200, offset: 0, sort: 'key', dir: 'asc' });
@@ -150,6 +167,7 @@ export class ErpTaxesAliases extends LitElement {
       this.newAlias = '';
       this.newCategoryKey = '';
       this.newSource = 'learned';
+      this.dataTable()?.close(); // cierra el panel de alta tras crear
       await this.ctrl.load();
     } catch (e) {
       this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errCreateAlias');
@@ -160,22 +178,21 @@ export class ErpTaxesAliases extends LitElement {
 
   render() {
     const t = (k: string): string => erplora().t(CATALOG, k);
-    return html`<div>
-        <header>
-          <h2>${t('ui.aliasesTitle')}</h2>
-        </header>
-        <form class="form" @submit=${(e) => this.createAlias(e)}>
-          <ion-input fill="outline" label-placement="floating" label=${t('ui.colAlias')} placeholder=${t('ui.phAlias')} .value=${this.newAlias} @ionInput=${(e: any) => (this.newAlias = e.target.value)}></ion-input>
-          <ion-select fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategoryKey')} .value=${this.newCategoryKey} @ionChange=${(e: any) => (this.newCategoryKey = e.target.value)}>${this.categories.map((c) => html`<ion-select-option .value=${c.key}>${c.key} · ${c.name}</ion-select-option>`)}</ion-select>
-          <ion-select fill="outline" label-placement="floating" label=${t('ui.colSource')} .value=${this.newSource} @ionChange=${(e: any) => (this.newSource = e.target.value)}>
-            <ion-select-option value="learned">${t('ui.srcLearned')}</ion-select-option>
-            <ion-select-option value="shipped">${t('ui.srcShipped')}</ion-select-option>
-          </ion-select>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newAlias || !this.newCategoryKey}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
-        </form>
+    return html`<div class="page">
         ${this.formError ? html`<p class="err">${this.formError}</p>` : nothing}
         ${this.ctrl?.error ? html`<p class="err">${this.ctrl.error}</p>` : nothing}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchAlias')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyAliases')} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchAlias')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyAliases')} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}>
+          <!-- Alta de alias: el botón «+» de la tabla despliega este panel. -->
+          <form slot="create" class="form" @submit=${(e: Event) => this.createAlias(e)}>
+            <ion-input fill="outline" label-placement="floating" label=${t('ui.colAlias')} placeholder=${t('ui.phAlias')} .value=${this.newAlias} @ionInput=${(e: any) => (this.newAlias = e.target.value)}></ion-input>
+            <ion-select fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategoryKey')} .value=${this.newCategoryKey} @ionChange=${(e: any) => (this.newCategoryKey = e.target.value)}>${this.categories.map((c) => html`<ion-select-option .value=${c.key}>${c.key} · ${c.name}</ion-select-option>`)}</ion-select>
+            <ion-select fill="outline" label-placement="floating" label=${t('ui.colSource')} .value=${this.newSource} @ionChange=${(e: any) => (this.newSource = e.target.value)}>
+              <ion-select-option value="learned">${t('ui.srcLearned')}</ion-select-option>
+              <ion-select-option value="shipped">${t('ui.srcShipped')}</ion-select-option>
+            </ion-select>
+            <ion-button type="submit" ?disabled=${this.saving || !this.newAlias || !this.newCategoryKey}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
+          </form>
+        </ok-data-table>
       </div>`;
   }
 }

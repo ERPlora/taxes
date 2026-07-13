@@ -3144,11 +3144,13 @@ var ErpTaxesAliases = class extends i3 {
   }
   static {
     this.styles = i`
-    :host { display:block; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
-    header { display:flex; gap:.5rem; align-items:center; margin-bottom:.75rem; }
-    h2 { margin:0; font-size:1.15rem; flex:1; }
-    .form { display:flex; gap:.75rem; flex-wrap:wrap; align-items:end; margin:.5rem 0 1.25rem; }
-    .form ion-input, .form ion-select { flex:1 1 11rem; min-width:9rem; }
+    :host { display:flex; flex-direction:column; height:100%; min-height:0; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
+    /* La vista llena el alto: el data-table ocupa todo (scroll interno, pie fijo). */
+    .page { display:flex; flex-direction:column; min-height:0; flex:1 1 auto; }
+    .page > ok-data-table { flex:1 1 auto; min-height:0; }
+    /* El alta vive en el panel lateral de la tabla (estrecho): los campos van APILADOS. */
+    .form { display:flex; flex-direction:column; gap:.7rem; }
+    .form ion-button { align-self:flex-end; }
     .err { color:#d9480f; font-weight:600; }
   `;
   }
@@ -3156,7 +3158,17 @@ var ErpTaxesAliases = class extends i3 {
     const t5 = (k2) => erplora().t(CATALOG, k2);
     return [
       { key: "alias", header: t5("ui.colAlias"), sortable: true, filterable: true, filterType: "text" },
-      { key: "tax_category_key", header: t5("ui.colCategory"), sortable: true, filterable: true, filterType: "text" },
+      {
+        key: "tax_category_key",
+        header: t5("ui.colCategory"),
+        sortable: true,
+        filterable: true,
+        // Dominio cerrado: las categorías fiscales del hub. Se ELIGE (el servidor la filtra por
+        // `eq`, así que el `value` es la `key` canónica), no se teclea: una key mal escrita en un
+        // alias mete el IVA equivocado en el import.
+        filterType: "select",
+        options: this.categories.map((c5) => ({ value: c5.key, label: `${c5.key} \xB7 ${c5.name}` }))
+      },
       {
         key: "source",
         header: t5("ui.colSource"),
@@ -3202,6 +3214,10 @@ var ErpTaxesAliases = class extends i3 {
     super.disconnectedCallback();
     this.unsub?.();
   }
+  /** Referencia a la tabla para cerrar su panel lateral (el del «+») tras el alta. */
+  dataTable() {
+    return this.renderRoot.querySelector("ok-data-table");
+  }
   async loadAux() {
     try {
       const page = await erplora().queryPage("taxes.categories.list", { limit: 200, offset: 0, sort: "key", dir: "asc" });
@@ -3224,6 +3240,7 @@ var ErpTaxesAliases = class extends i3 {
       this.newAlias = "";
       this.newCategoryKey = "";
       this.newSource = "learned";
+      this.dataTable()?.close();
       await this.ctrl.load();
     } catch (e5) {
       this.formError = e5 instanceof Error ? e5.message : erplora().t(CATALOG, "ui.errCreateAlias");
@@ -3233,22 +3250,21 @@ var ErpTaxesAliases = class extends i3 {
   }
   render() {
     const t5 = (k2) => erplora().t(CATALOG, k2);
-    return b2`<div>
-        <header>
-          <h2>${t5("ui.aliasesTitle")}</h2>
-        </header>
-        <form class="form" @submit=${(e5) => this.createAlias(e5)}>
-          <ion-input fill="outline" label-placement="floating" label=${t5("ui.colAlias")} placeholder=${t5("ui.phAlias")} .value=${this.newAlias} @ionInput=${(e5) => this.newAlias = e5.target.value}></ion-input>
-          <ion-select fill="outline" label-placement="floating" label=${t5("ui.colCategory")} placeholder=${t5("ui.phCategoryKey")} .value=${this.newCategoryKey} @ionChange=${(e5) => this.newCategoryKey = e5.target.value}>${this.categories.map((c5) => b2`<ion-select-option .value=${c5.key}>${c5.key} · ${c5.name}</ion-select-option>`)}</ion-select>
-          <ion-select fill="outline" label-placement="floating" label=${t5("ui.colSource")} .value=${this.newSource} @ionChange=${(e5) => this.newSource = e5.target.value}>
-            <ion-select-option value="learned">${t5("ui.srcLearned")}</ion-select-option>
-            <ion-select-option value="shipped">${t5("ui.srcShipped")}</ion-select-option>
-          </ion-select>
-          <ion-button type="submit" size="small" ?disabled=${this.saving || !this.newAlias || !this.newCategoryKey}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
-        </form>
+    return b2`<div class="page">
         ${this.formError ? b2`<p class="err">${this.formError}</p>` : A}
         ${this.ctrl?.error ? b2`<p class="err">${this.ctrl.error}</p>` : A}
-        <ok-data-table .serverSide=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchAlias")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyAliases")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}></ok-data-table>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchAlias")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyAliases")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}>
+          <!-- Alta de alias: el botón «+» de la tabla despliega este panel. -->
+          <form slot="create" class="form" @submit=${(e5) => this.createAlias(e5)}>
+            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colAlias")} placeholder=${t5("ui.phAlias")} .value=${this.newAlias} @ionInput=${(e5) => this.newAlias = e5.target.value}></ion-input>
+            <ion-select fill="outline" label-placement="floating" label=${t5("ui.colCategory")} placeholder=${t5("ui.phCategoryKey")} .value=${this.newCategoryKey} @ionChange=${(e5) => this.newCategoryKey = e5.target.value}>${this.categories.map((c5) => b2`<ion-select-option .value=${c5.key}>${c5.key} · ${c5.name}</ion-select-option>`)}</ion-select>
+            <ion-select fill="outline" label-placement="floating" label=${t5("ui.colSource")} .value=${this.newSource} @ionChange=${(e5) => this.newSource = e5.target.value}>
+              <ion-select-option value="learned">${t5("ui.srcLearned")}</ion-select-option>
+              <ion-select-option value="shipped">${t5("ui.srcShipped")}</ion-select-option>
+            </ion-select>
+            <ion-button type="submit" ?disabled=${this.saving || !this.newAlias || !this.newCategoryKey}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
+          </form>
+        </ok-data-table>
       </div>`;
   }
 };

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "module": "taxes",
+  "consumes": {
+    "queries": [
+      "taxes.aliases.list",
+      "taxes.categories.list",
+      "taxes.rules.list"
+    ],
+    "optional_queries": [],
+    "commands": [
+      "taxes.aliases.create",
+      "taxes.categories.create",
+      "taxes.rules.create",
+      "taxes.rules.deactivate"
+    ],
+    "events": [
+      "taxes.alias.created",
+      "taxes.category.created",
+      "taxes.rule.created",
+      "taxes.rule.deactivated"
+    ],
+    "slots": []
+  }
+}
