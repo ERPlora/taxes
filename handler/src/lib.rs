@@ -27,7 +27,10 @@
 //! `tax_category_key`, `tax_rate_pct` (combinado), `tax_country_code`, `tax_region_code`,
 //! `tax_rule_id` (id de la regla raíz, nullable).
 
+use erplora_guest_sdk::money;
 use erplora_guest_sdk::{Event, Operation, Output};
+use rust_decimal::prelude::FromPrimitive;
+use rust_decimal::Decimal;
 use serde::Serialize;
 use serde_json::{json, Map, Value};
 
@@ -103,11 +106,14 @@ fn payload_or_context(payload: &Value, context: &Value, k: &str) -> String {
     if p.is_empty() { field(context, k) } else { p }
 }
 
-/// Redondeo HALF_UP a **céntimos enteros** (ADR-0007: el dinero viaja en céntimos). Epsilon
-/// para compensar la representación binaria (paridad SQLite↔Postgres).
-fn round2_half_up(x: f64) -> f64 {
-    let sign = if x < 0.0 { -1.0 } else { 1.0 };
-    sign * (x.abs() + 0.5 + 1e-9).floor()
+// El redondeo del dinero es el ÚNICO del hub: `money::round` (HALF_UP sobre Decimal exacto,
+// ADR-0123 §4). El `round2_half_up(f64)` con epsilon 1e-9 que vivía aquí era el mayor foco
+// de coma flotante calculando IVA de todo el sistema — el patrón Odoo que el ADR prohíbe.
+
+/// La tasa de un componente como Decimal exacto (una tasa NO es dinero, pero el producto
+/// base × tasa sí: el intermedio va en Decimal, nunca f64).
+fn rate_dec(pct: f64) -> Decimal {
+    Decimal::from_f64(pct).unwrap_or(Decimal::ZERO)
 }
 
 /// ¿Está la fila vigente en `date` (YYYY-MM-DD)? Fechas ISO comparan como string.
@@ -249,12 +255,13 @@ pub fn calculate_tax_pure(input: Value) -> Result<CalcOutput, String> {
     let payload = input.get("payload").cloned().unwrap_or(Value::Null);
     let context = input.get("context").cloned().unwrap_or(Value::Null);
 
-    let amount = match payload.get("amount") {
-        Some(v) if !v.is_null() => as_f64(v, f64::NAN),
-        _ => f64::NAN,
+    // El importe llega en CÉNTIMOS ENTEROS (ADR-0123 §1); un float ya no es dinero válido.
+    let amount: i64 = match payload.get("amount") {
+        Some(v) if !v.is_null() => money::from_json(v, i64::MIN),
+        _ => i64::MIN,
     };
-    if !amount.is_finite() {
-        return Err("payload.amount requerido (número)".to_string());
+    if amount == i64::MIN {
+        return Err("payload.amount requerido (céntimos enteros)".to_string());
     }
     let tax_included = payload.get("tax_included").map(as_bool).unwrap_or(false);
 
@@ -293,23 +300,39 @@ pub fn calculate_tax_pure(input: Value) -> Result<CalcOutput, String> {
 
     // Tasa combinada = suma de los componentes (un componente para regla simple; 0 si no hay).
     let combined_pct: f64 = components.iter().map(|c| c.rate_pct).sum();
+    let combined: Decimal = components.iter().map(|c| rate_dec(c.rate_pct)).sum();
+    let hundred = Decimal::from(100);
 
-    // Base imponible (común a todos los componentes). Bruto (tax_included) → se desglosa con la
-    // tasa combinada; neto → la base es el propio importe.
-    let base = if tax_included {
-        round2_half_up(amount / (1.0 + combined_pct / 100.0))
+    // Dinero en enteros de céntimos con UN redondeo por magnitud (ADR-0123 §2/§4):
+    // * neto (tax_excluded): base = amount; cuota por componente = HALF_UP(base × tasa);
+    //   total = base + Σcuotas — cuadra por construcción.
+    // * bruto (tax_included, TPV B2C): base = HALF_UP(total / (1 + tasa combinada)) y la CUOTA
+    //   POR DIFERENCIA (total − base): lo cobrado NO se mueve ni un céntimo. En el desglose,
+    //   cada componente redondea HALF_UP y el ÚLTIMO absorbe el céntimo de ajuste para que la
+    //   suma sea exactamente la cuota (issue #8: el bruto compuesto se preservaba mal).
+    let (base, tax, quotas): (i64, i64, Vec<i64>) = if tax_included {
+        let base = money::round(Decimal::from(amount) * hundred / (hundred + combined));
+        let tax = amount - base;
+        let mut quotas: Vec<i64> = components.iter().map(|c| money::percent_of(base, rate_dec(c.rate_pct))).collect();
+        if let Some(n) = quotas.len().checked_sub(1) {
+            let others: i64 = quotas[..n].iter().sum();
+            quotas[n] = tax - others;
+        }
+        (base, tax, quotas)
     } else {
-        round2_half_up(amount)
+        let quotas: Vec<i64> = components.iter().map(|c| money::percent_of(amount, rate_dec(c.rate_pct))).collect();
+        let tax = quotas.iter().sum();
+        (amount, tax, quotas)
     };
+    let total = base + tax;
 
-    // Cuota por componente sobre la misma base (HALF_UP por componente); la cuota total es la suma.
     let breakdown: Vec<Value> = components
         .iter()
-        .map(|c| {
-            let comp_tax = round2_half_up(base * (c.rate_pct / 100.0));
+        .zip(quotas.iter())
+        .map(|(c, q)| {
             json!({
-                "base": base,
-                "tax": comp_tax,
+                "base": base,          // céntimos (entero)
+                "tax": q,              // céntimos (entero)
                 "rate_pct": c.rate_pct,
                 "rule_id": c.rule_id,
                 "label": c.label,
@@ -317,8 +340,6 @@ pub fn calculate_tax_pure(input: Value) -> Result<CalcOutput, String> {
             })
         })
         .collect();
-    let tax: f64 = breakdown.iter().map(|c| as_f64(&c["tax"], 0.0)).sum();
-    let total = round2_half_up(base + tax);
 
     Ok(CalcOutput {
         operations: vec![], // cálculo puro: sin escritura
@@ -444,7 +465,7 @@ pub fn bulk_create_rules_pure(input: Value) -> Output {
         json!({ "created": created, "errors": errors }),
     ));
 
-    Output { operations: ops, events, result: Value::Null }
+    Output { operations: ops, events }
 }
 
 #[cfg(test)]
@@ -480,9 +501,9 @@ mod tests {
         let payload = json!({ "amount": 10000, "tax_category_key": "restaurant.food", "country_code": "ES" });
         let out = calculate_tax_pure(calc_input(payload, rules)).unwrap();
         let r = &out.result;
-        assert_eq!(r["base"], json!(10000.0));
-        assert_eq!(r["tax"], json!(1000.0));
-        assert_eq!(r["total"], json!(11000.0));
+        assert_eq!(r["base"], json!(10000));
+        assert_eq!(r["tax"], json!(1000));
+        assert_eq!(r["total"], json!(11000));
         // snapshot ADR-0085
         assert_eq!(r["tax_category_key"], json!("restaurant.food"));
         assert_eq!(r["tax_rate_pct"], json!(10.0));
@@ -505,7 +526,7 @@ mod tests {
             "context": { "country_code": "ES", "region_code": null, "reads": { "taxes.rules.list": rules } }
         });
         let out = calculate_tax_pure(input).unwrap();
-        assert_eq!(out.result["tax"], json!(2100.0));
+        assert_eq!(out.result["tax"], json!(2100));
         assert_eq!(out.result["tax_country_code"], json!("ES"));
     }
 
@@ -521,7 +542,7 @@ mod tests {
         let payload = json!({ "amount": 10000, "tax_category_key": "product.generic", "country_code": "ES", "region_code": "ES-CN" });
         let out = calculate_tax_pure(calc_input(payload, rules)).unwrap();
         assert_eq!(out.result["tax_rule_id"], json!("r-cn"));
-        assert_eq!(out.result["tax"], json!(700.0));
+        assert_eq!(out.result["tax"], json!(700));
     }
 
     #[test]
@@ -539,15 +560,15 @@ mod tests {
         let r = &out.result;
         assert_eq!(r["tax_rule_id"], json!("r-iva"));
         assert_eq!(r["tax_rate_pct"], json!(26.2));
-        assert_eq!(r["tax"], json!(2620.0));
-        assert_eq!(r["total"], json!(12620.0));
+        assert_eq!(r["tax"], json!(2620));
+        assert_eq!(r["total"], json!(12620));
         let comps = r["components"].as_array().unwrap();
         assert_eq!(comps.len(), 2);
         assert_eq!(comps[0]["rule_id"], json!("r-iva"));
-        assert_eq!(comps[0]["tax"], json!(2100.0));
+        assert_eq!(comps[0]["tax"], json!(2100));
         assert_eq!(comps[0]["label"], json!("IVA"));
         assert_eq!(comps[1]["rule_id"], json!("c-re"));
-        assert_eq!(comps[1]["tax"], json!(520.0));
+        assert_eq!(comps[1]["tax"], json!(520));
         assert_eq!(comps[1]["label"], json!("Recargo de equivalencia"));
     }
 
@@ -562,9 +583,66 @@ mod tests {
         ]);
         let payload = json!({ "amount": 12620, "tax_category_key": "product.generic", "country_code": "ES", "tax_included": true });
         let out = calculate_tax_pure(calc_input(payload, rules)).unwrap();
-        assert_eq!(out.result["base"], json!(10000.0));
-        assert_eq!(out.result["tax"], json!(2620.0));
-        assert_eq!(out.result["total"], json!(12620.0));
+        assert_eq!(out.result["base"], json!(10000));
+        assert_eq!(out.result["tax"], json!(2620));
+        assert_eq!(out.result["total"], json!(12620));
+    }
+
+    #[test]
+    fn money_in_result_is_integer_cents() {
+        // ADR-0123 §1: el dinero en JSON es ENTERO de céntimos — no 10000.0. El cálculo
+        // interno es Decimal exacto del SDK, no f64 con epsilon.
+        let rules = json!([
+            { "id": "r", "country_code": "ES", "region_code": null, "tax_category_key": "product.generic",
+              "rate_pct": 21.0, "tax_type": "vat", "parent_id": null, "is_active": 1 }
+        ]);
+        let payload = json!({ "amount": 250, "tax_category_key": "product.generic", "country_code": "ES" });
+        let out = calculate_tax_pure(calc_input(payload, rules)).unwrap();
+        // 250 × 21 % = 52,5 → HALF_UP → 53. Y como ENTEROS JSON (json! distingue 53 de 53.0).
+        assert_eq!(out.result["base"], json!(250));
+        assert_eq!(out.result["tax"], json!(53));
+        assert_eq!(out.result["total"], json!(303));
+    }
+
+    #[test]
+    fn tax_included_keeps_charged_amount_by_difference() {
+        // ADR-0123 §4 (TPV B2C, IVA incluido): base = round(total/(1+tipo)) y CUOTA POR
+        // DIFERENCIA (total − base) — lo cobrado no se mueve NI UN CÉNTIMO. Con cuota
+        // recalculada por componente, 101 se rompía: base=83, round(83×21%)=17 y
+        // base+cuota=100 ≠ 101.
+        let rules = json!([
+            { "id": "r", "country_code": "ES", "region_code": null, "tax_category_key": "product.generic",
+              "rate_pct": 21.0, "tax_type": "vat", "parent_id": null, "is_active": 1 }
+        ]);
+        let payload = json!({ "amount": 101, "tax_category_key": "product.generic", "country_code": "ES", "tax_included": true });
+        let out = calculate_tax_pure(calc_input(payload, rules)).unwrap();
+        assert_eq!(out.result["base"], json!(83));   // round(101/1,21) = round(83,47)
+        assert_eq!(out.result["tax"], json!(18));    // 101 − 83, por diferencia
+        assert_eq!(out.result["total"], json!(101), "lo cobrado NO se mueve");
+    }
+
+    #[test]
+    fn tax_included_composite_last_component_absorbs_the_cent() {
+        // Multi-componente con IVA incluido (issue #8): la suma de cuotas debe ser EXACTAMENTE
+        // total − base. Cada componente redondea HALF_UP y el ÚLTIMO absorbe el céntimo de
+        // ajuste. 12621 con 21+5,2: base=round(12621/1,262)=10001; cuota=2620;
+        // IVA=round(10001×21%)=2100 → RE=2620−2100=520.
+        let rules = json!([
+            { "id": "r-iva", "country_code": "ES", "region_code": null, "tax_category_key": "product.generic",
+              "rate_pct": 21.0, "tax_type": "vat", "parent_id": null, "is_active": 1 },
+            { "id": "c-re", "country_code": "ES", "region_code": null, "tax_category_key": "product.generic",
+              "rate_pct": 5.2, "tax_type": "surcharge", "parent_id": "r-iva", "is_active": 1 }
+        ]);
+        let payload = json!({ "amount": 12621, "tax_category_key": "product.generic", "country_code": "ES", "tax_included": true });
+        let out = calculate_tax_pure(calc_input(payload, rules)).unwrap();
+        let r = &out.result;
+        assert_eq!(r["total"], json!(12621), "lo cobrado NO se mueve");
+        let base = r["base"].as_i64().unwrap();
+        let tax = r["tax"].as_i64().unwrap();
+        assert_eq!(base + tax, 12621, "base + cuota = total, por construcción");
+        let comps = r["components"].as_array().unwrap();
+        let comp_sum: i64 = comps.iter().map(|c| c["tax"].as_i64().unwrap()).sum();
+        assert_eq!(comp_sum, tax, "el desglose SUMA la cuota exacta (el último absorbe)");
     }
 
     #[test]
@@ -576,7 +654,7 @@ mod tests {
         let mut p = payload;
         p["allow_missing_rate"] = json!(true);
         let out = calculate_tax_pure(calc_input(p, rules)).unwrap();
-        assert_eq!(out.result["tax"], json!(0.0));
+        assert_eq!(out.result["tax"], json!(0));
         assert_eq!(out.result["tax_rule_id"], Value::Null);
     }
 
@@ -592,7 +670,7 @@ mod tests {
         let payload = json!({ "amount": 10000, "tax_category_key": "product.generic", "country_code": "ES", "date": "2026-06-27" });
         let out = calculate_tax_pure(calc_input(payload, rules)).unwrap();
         assert_eq!(out.result["tax_rule_id"], json!("new"));
-        assert_eq!(out.result["tax"], json!(2100.0));
+        assert_eq!(out.result["tax"], json!(2100));
     }
 
     // ── bulk_create_rules ────────────────────────────────────────────────────
