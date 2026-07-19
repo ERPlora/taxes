@@ -1,7 +1,7 @@
 {
   "id": "taxes",
   "name": "Taxes",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "agent": {
     "description": "Manages fiscal categories (the linkable tax_category_key), per-jurisdiction tax rules (the % by country+region+category, with multi-tax components like surcharge), and category aliases for CSV import. Resolves the applicable tax for a sale line by category.",
     "keywords": [
