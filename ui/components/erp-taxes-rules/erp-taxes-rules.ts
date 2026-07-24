@@ -95,6 +95,8 @@ export class ErpTaxesRules extends LitElement {
 
   @state() saving = false;
 
+  @state() private pendingDeactivate: TaxRule | null = null;
+
   // Categorías fiscales del hub: pueblan el selector del alta y el filtro de la columna.
   @state() private categories: TaxCategory[] = [];
 
@@ -159,10 +161,17 @@ export class ErpTaxesRules extends LitElement {
     return [{ id: 'deactivate', label: t('ui.actionDeactivate'), icon: 'ban-outline', color: 'danger' }];
   }
 
-  private async onRowAction(ev: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) {
+  private onRowAction(ev: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) {
     const { actionId, row } = ev.detail;
     if (actionId !== 'deactivate') return;
     if (!Number(row.is_active)) return;
+    this.pendingDeactivate = row as unknown as TaxRule;
+  }
+
+  private async onDeactivateDismiss(ev: CustomEvent<{ role?: string }>) {
+    const row = this.pendingDeactivate;
+    this.pendingDeactivate = null;
+    if (ev.detail?.role !== 'confirm' || !row) return;
     this.formError = '';
     try {
       await erplora().command('taxes.rules.deactivate', { rule_id: row.id });
@@ -261,7 +270,7 @@ export class ErpTaxesRules extends LitElement {
     return html`<div class="page">
         ${this.formError ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
         ${this.ctrl?.error ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
-        <ok-data-table .serverSide=${true} .fill=${true} .addable=${true} .views=${true} .cardTitle=${(row: Record<string, unknown>) => String(row.tax_category_key ?? row.country_code ?? '')} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCategoryCountry')} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRules')} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${true} .views=${true} .defaultView=${window.innerWidth <= 834 ? 'cards' : 'table'} .cardTitle=${(row: Record<string, unknown>) => String(row.tax_category_key ?? row.country_code ?? '')} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCategoryCountry')} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRules')} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
           <form slot="create" class="form" @submit=${(e: Event) => this.createRule(e)}>
@@ -282,6 +291,16 @@ export class ErpTaxesRules extends LitElement {
             <ion-button type="submit" ?disabled=${this.saving || !this.newCountry || !this.newCategoryKey || this.newRatePct === ''}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
           </form>
         </ok-data-table>
+        <ion-alert
+          .isOpen=${this.pendingDeactivate !== null}
+          header=${t('ui.deactivateConfirmTitle')}
+          message=${t('ui.deactivateConfirmMessage')}
+          .buttons=${[
+            { text: t('ui.cancel'), role: 'cancel' },
+            { text: t('ui.deactivateConfirmAction'), role: 'confirm', cssClass: 'alert-button-danger' },
+          ]}
+          @ionAlertDidDismiss=${(e: CustomEvent<{ role?: string }>) => this.onDeactivateDismiss(e)}
+        ></ion-alert>
       </div>`;
   }
 }

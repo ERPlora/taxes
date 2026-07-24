@@ -3321,6 +3321,10 @@ var es_default = {
     emptyRules: "Sin reglas fiscales.",
     emptyAliases: "Sin alias de categor\xEDas.",
     actionDeactivate: "Desactivar",
+    cancel: "Cancelar",
+    deactivateConfirmTitle: "Desactivar regla fiscal",
+    deactivateConfirmMessage: "La regla dejar\xE1 de aplicarse a operaciones nuevas. Los documentos fiscales ya emitidos no se modifican.",
+    deactivateConfirmAction: "Desactivar regla",
     rulesHint: "Cada regla fija el % para una categor\xEDa en un pa\xEDs (y opcionalmente una regi\xF3n). Para multi-tributo (p.ej. recargo de equivalencia), indica el ID de una regla ra\xEDz en \xABID regla ra\xEDz\xBB y una \xABEtiqueta componente\xBB.",
     errCreateCategory: "No se pudo crear la categor\xEDa",
     errCreateRule: "No se pudo crear la regla",
@@ -3395,6 +3399,10 @@ var en_default = {
     emptyRules: "No tax rules.",
     emptyAliases: "No category aliases.",
     actionDeactivate: "Deactivate",
+    cancel: "Cancel",
+    deactivateConfirmTitle: "Deactivate tax rule",
+    deactivateConfirmMessage: "The rule will no longer apply to new transactions. Previously issued fiscal documents will not change.",
+    deactivateConfirmAction: "Deactivate rule",
     rulesHint: "Each rule sets the % for a category in a country (and optionally a region). For multi-tax (e.g. equivalence surcharge), enter a root rule ID in \u201CRoot rule ID\u201D and a \u201CComponent label\u201D.",
     errCreateCategory: "Could not create the category",
     errCreateRule: "Could not create the rule",
@@ -3738,6 +3746,7 @@ var ErpTaxesRules = class extends i3 {
     this.newParentId = "";
     this.newComponentLabel = "";
     this.saving = false;
+    this.pendingDeactivate = null;
     this.categories = [];
     this.onLocaleChange = () => this.requestUpdate();
   }
@@ -3809,10 +3818,16 @@ var ErpTaxesRules = class extends i3 {
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return [{ id: "deactivate", label: t5("ui.actionDeactivate"), icon: "ban-outline", color: "danger" }];
   }
-  async onRowAction(ev) {
+  onRowAction(ev) {
     const { actionId, row } = ev.detail;
     if (actionId !== "deactivate") return;
     if (!Number(row.is_active)) return;
+    this.pendingDeactivate = row;
+  }
+  async onDeactivateDismiss(ev) {
+    const row = this.pendingDeactivate;
+    this.pendingDeactivate = null;
+    if (ev.detail?.role !== "confirm" || !row) return;
     this.formError = "";
     try {
       await erplora3().command("taxes.rules.deactivate", { rule_id: row.id });
@@ -3900,7 +3915,7 @@ var ErpTaxesRules = class extends i3 {
     return b2`<div class="page">
         ${this.formError ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
         ${this.ctrl?.error ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
-        <ok-data-table .serverSide=${true} .fill=${true} .addable=${true} .views=${true} .cardTitle=${(row) => String(row.tax_category_key ?? row.country_code ?? "")} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCategoryCountry")} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${true} .views=${true} .defaultView=${window.innerWidth <= 834 ? "cards" : "table"} .cardTitle=${(row) => String(row.tax_category_key ?? row.country_code ?? "")} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCategoryCountry")} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
           <form slot="create" class="form" @submit=${(e5) => this.createRule(e5)}>
@@ -3921,6 +3936,16 @@ var ErpTaxesRules = class extends i3 {
             <ion-button type="submit" ?disabled=${this.saving || !this.newCountry || !this.newCategoryKey || this.newRatePct === ""}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
           </form>
         </ok-data-table>
+        <ion-alert
+          .isOpen=${this.pendingDeactivate !== null}
+          header=${t5("ui.deactivateConfirmTitle")}
+          message=${t5("ui.deactivateConfirmMessage")}
+          .buttons=${[
+      { text: t5("ui.cancel"), role: "cancel" },
+      { text: t5("ui.deactivateConfirmAction"), role: "confirm", cssClass: "alert-button-danger" }
+    ]}
+          @ionAlertDidDismiss=${(e5) => this.onDeactivateDismiss(e5)}
+        ></ion-alert>
       </div>`;
   }
 };
@@ -3957,6 +3982,9 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "saving", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "pendingDeactivate", 2);
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "categories", 2);
