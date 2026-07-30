@@ -11,5 +11,7 @@ con `:hub_id`/`:now`/`:current_user_id` inyectados. Garantiza que **todo hub nue
 
 Idempotente por la clave natural (`WHERE NOT EXISTS` sobre `(hub_id, key)` / `(hub_id, alias)` /
 `(hub_id, country, category, parent NULL, region NULL)`): se re-ejecuta en cada install/rehydrate
-sin duplicar. **IVA por país más allá de ES** = columna humano (añadir reglas de otro país aquí o
-vía el seed por país de ADR-0072).
+sin duplicar. **IVA por país más allá de ES:** añadir reglas de otro país requiere verificar los
+tipos reales de ese país (fiscal, alto riesgo de error si están mal) — no es un ejercicio
+mecánico de seed, verifícalo con fuentes oficiales antes de commitear (añadir reglas aquí o vía
+el seed por país de ADR-0072).
