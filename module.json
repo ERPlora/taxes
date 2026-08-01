@@ -310,7 +310,10 @@
         "function": "calculate_tax"
       },
       "reads": [
-        "taxes.rules.list"
+        {
+          "query": "taxes.rules.list",
+          "required": true
+        }
       ],
       "ai": {
         "description": "Resolves and calculates the applicable tax for an amount by fiscal category (country/region from the hub's fiscal identity)"
