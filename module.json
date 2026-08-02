@@ -1,7 +1,7 @@
 {
   "id": "taxes",
   "name": "Taxes",
-  "version": "2.1.10",
+  "version": "2.2.0",
   "description": "Fiscal categories and per-jurisdiction tax rules, plus the engine that resolves the rate at sale time.",
   "agent": {
     "description": "Manages fiscal categories (the linkable tax_category_key), per-jurisdiction tax rules (the % by country+region+category, with multi-tax components like surcharge), and category aliases for CSV import. Resolves the applicable tax for a sale line by category.",
@@ -58,7 +58,8 @@
   ],
   "migrations": {
     "postgres": [
-      "migrations/postgres/001_init.sql"
+      "migrations/postgres/001_init.sql",
+      "migrations/postgres/002_fiscal_qualification.sql"
     ]
   },
   "seed": {
@@ -121,7 +122,8 @@
         "search": [
           "country_code",
           "region_code",
-          "tax_category_key"
+          "tax_category_key",
+          "operation_class"
         ],
         "sort": [
           "id",
@@ -132,7 +134,9 @@
           "tax_type",
           "valid_from",
           "valid_to",
-          "is_active"
+          "is_active",
+          "operation_class",
+          "regime_key"
         ],
         "default_sort": "tax_category_key",
         "default_dir": "asc",
@@ -157,12 +161,18 @@
           },
           "is_active": {
             "op": "eq"
+          },
+          "operation_class": {
+            "op": "eq"
+          },
+          "regime_key": {
+            "op": "eq"
           }
         },
         "page_size": 50
       },
       "ai": {
-        "description": "Lists all tax rules (rates by country+region+category, including multi-tax components)"
+        "description": "Lists all tax rules (rate + fiscal qualification by country+region+category, including multi-tax components). The qualification says whether the operation is subject, exempt or not subject, under which regime, and — when exempt — the exemption cause."
       },
       "expose_api": true
     },
@@ -247,7 +257,7 @@
         "taxes.rule.created"
       ],
       "ai": {
-        "description": "Creates a tax rule (the % for a country+region+category). Pass parent_id to add a multi-tax component (e.g. surcharge) to a root rule."
+        "description": "Creates a tax rule (the % for a country+region+category) with its fiscal qualification (operation_class / regime_key / exempt_reason). Pass parent_id to add a multi-tax component (e.g. surcharge) to a root rule."
       }
     },
     "taxes.rules.bulk_create": {
@@ -313,7 +323,7 @@
         "taxes.rules.list"
       ],
       "ai": {
-        "description": "Resolves and calculates the applicable tax for an amount by fiscal category (country/region from the hub's fiscal identity)"
+        "description": "Resolves and calculates the applicable tax for an amount by fiscal category (country/region from the hub's fiscal identity), returning the rate AND the fiscal qualification of the operation"
       }
     }
   },

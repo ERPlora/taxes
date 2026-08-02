@@ -3,7 +3,9 @@
   "title": "taxes.rules.bulk_create",
   "type": "object",
   "additionalProperties": false,
-  "required": ["rules"],
+  "required": [
+    "rules"
+  ],
   "properties": {
     "rules": {
       "type": "array",
@@ -12,17 +14,107 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["country_code", "tax_category_key", "rate_pct"],
+        "required": [
+          "country_code",
+          "tax_category_key",
+          "rate_pct"
+        ],
         "properties": {
-          "country_code": { "type": "string", "minLength": 2, "maxLength": 2 },
-          "region_code": { "type": ["string", "null"], "default": null, "maxLength": 10 },
-          "tax_category_key": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[a-z][a-z0-9_.]*$" },
-          "rate_pct": { "type": "number", "minimum": 0 },
-          "tax_type": { "type": "string", "enum": ["vat", "surcharge", "sales_tax", "withholding", "excise", "import_duty"], "default": "vat" },
-          "parent_id": { "type": ["string", "null"], "default": null },
-          "component_label": { "type": ["string", "null"], "default": null, "maxLength": 120 },
-          "valid_from": { "type": ["string", "null"], "format": "date", "default": null },
-          "valid_to": { "type": ["string", "null"], "format": "date", "default": null }
+          "country_code": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 2
+          },
+          "region_code": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null,
+            "maxLength": 10
+          },
+          "tax_category_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^[a-z][a-z0-9_.]*$"
+          },
+          "rate_pct": {
+            "type": "number",
+            "minimum": 0
+          },
+          "tax_type": {
+            "type": "string",
+            "enum": [
+              "vat",
+              "igic",
+              "ipsi",
+              "surcharge",
+              "sales_tax",
+              "withholding",
+              "excise",
+              "import_duty"
+            ],
+            "default": "vat"
+          },
+          "parent_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          },
+          "component_label": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null,
+            "maxLength": 120
+          },
+          "valid_from": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "default": null
+          },
+          "valid_to": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "default": null
+          },
+          "operation_class": {
+            "type": "string",
+            "enum": [
+              "subject",
+              "subject_reverse",
+              "exempt",
+              "not_subject",
+              "not_subject_location"
+            ],
+            "default": "subject"
+          },
+          "exempt_reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null,
+            "maxLength": 10
+          },
+          "regime_key": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null,
+            "maxLength": 10
+          }
         }
       }
     }

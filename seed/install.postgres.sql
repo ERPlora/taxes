@@ -110,3 +110,44 @@ WHERE NOT EXISTS (SELECT 1 FROM taxes_rule WHERE hub_id = :hub_id AND country_co
 INSERT INTO taxes_rule (id, hub_id, country_code, region_code, tax_category_key, rate_pct, tax_type, parent_id, component_label, valid_from, valid_to, is_active, is_deleted, created_by, updated_by, created_at, updated_at)
 SELECT (:hub_id || '|taxrule|ES|restaurant.alcohol'), :hub_id, 'ES', NULL, 'restaurant.alcohol', 21, 'vat', NULL, NULL, '2012-09-01', NULL, 1, 0, :current_user_id, :current_user_id, :now, :now
 WHERE NOT EXISTS (SELECT 1 FROM taxes_rule WHERE hub_id = :hub_id AND country_code = 'ES' AND tax_category_key = 'restaurant.alcohol' AND parent_id IS NULL AND region_code IS NULL);
+
+-- ── Servicios EXENTOS de IVA en España (hub#292 / ADR-0185) ──────────────────────────────────
+-- El vertical de estética los factura a diario y hasta ahora no tenían forma de declararse: una
+-- categoría al 0 % sale a la AEAT como «sujeta y no exenta al 0 %», que es otra cosa. Ahora la
+-- regla lleva su calificación (`exempt`) y la causa en el vocabulario de la AEAT (`E1` = exenta
+-- por el artículo 20 de la Ley 37/1992).
+--
+-- Ojo: la exención es de la PRESTACIÓN, no del negocio — el art. 20.Uno.3º exime los servicios de
+-- asistencia sanitaria prestados por profesionales médicos o sanitarios, y el 20.Uno.9º la
+-- enseñanza reglada. Un corte de pelo o una venta de producto NO están exentos: siguen al 21 %
+-- por `service.generic`/`product.generic`. Por eso son categorías APARTE y no un cambio de las
+-- que ya existen.
+INSERT INTO taxes_category (id, hub_id, key, name, description, is_system, is_active, is_deleted, created_by, updated_by, created_at, updated_at)
+SELECT (:hub_id || '|taxcat|service.health'), :hub_id, 'service.health', 'Service — healthcare (VAT exempt)', 'Assistance provided by medical or health professionals — art. 20.Uno.3 (ES)', 1, 1, 0, :current_user_id, :current_user_id, :now, :now
+WHERE NOT EXISTS (SELECT 1 FROM taxes_category WHERE hub_id = :hub_id AND key = 'service.health');
+
+INSERT INTO taxes_category (id, hub_id, key, name, description, is_system, is_active, is_deleted, created_by, updated_by, created_at, updated_at)
+SELECT (:hub_id || '|taxcat|service.education'), :hub_id, 'service.education', 'Service — education (VAT exempt)', 'Regulated teaching and training — art. 20.Uno.9 (ES)', 1, 1, 0, :current_user_id, :current_user_id, :now, :now
+WHERE NOT EXISTS (SELECT 1 FROM taxes_category WHERE hub_id = :hub_id AND key = 'service.education');
+
+INSERT INTO taxes_rule (id, hub_id, country_code, region_code, tax_category_key, rate_pct, tax_type, operation_class, exempt_reason, regime_key, parent_id, component_label, valid_from, valid_to, is_active, is_deleted, created_by, updated_by, created_at, updated_at)
+SELECT (:hub_id || '|taxrule|ES|service.health'), :hub_id, 'ES', NULL, 'service.health', 0, 'vat', 'exempt', 'E1', '01', NULL, NULL, '2012-09-01', NULL, 1, 0, :current_user_id, :current_user_id, :now, :now
+WHERE NOT EXISTS (SELECT 1 FROM taxes_rule WHERE hub_id = :hub_id AND country_code = 'ES' AND tax_category_key = 'service.health' AND parent_id IS NULL AND region_code IS NULL);
+
+INSERT INTO taxes_rule (id, hub_id, country_code, region_code, tax_category_key, rate_pct, tax_type, operation_class, exempt_reason, regime_key, parent_id, component_label, valid_from, valid_to, is_active, is_deleted, created_by, updated_by, created_at, updated_at)
+SELECT (:hub_id || '|taxrule|ES|service.education'), :hub_id, 'ES', NULL, 'service.education', 0, 'vat', 'exempt', 'E1', '01', NULL, NULL, '2012-09-01', NULL, 1, 0, :current_user_id, :current_user_id, :now, :now
+WHERE NOT EXISTS (SELECT 1 FROM taxes_rule WHERE hub_id = :hub_id AND country_code = 'ES' AND tax_category_key = 'service.education' AND parent_id IS NULL AND region_code IS NULL);
+
+-- Alias de fábrica para la importación por CSV.
+INSERT INTO taxes_category_alias (id, hub_id, alias, tax_category_key, source, is_active, is_deleted, created_by, updated_by, created_at, updated_at)
+SELECT (:hub_id || '|taxalias|health'), :hub_id, 'health', 'service.health', 'shipped', 1, 0, :current_user_id, :current_user_id, :now, :now
+WHERE NOT EXISTS (SELECT 1 FROM taxes_category_alias WHERE hub_id = :hub_id AND alias = 'health');
+
+INSERT INTO taxes_category_alias (id, hub_id, alias, tax_category_key, source, is_active, is_deleted, created_by, updated_by, created_at, updated_at)
+SELECT (:hub_id || '|taxalias|training'), :hub_id, 'training', 'service.education', 'shipped', 1, 0, :current_user_id, :current_user_id, :now, :now
+WHERE NOT EXISTS (SELECT 1 FROM taxes_category_alias WHERE hub_id = :hub_id AND alias = 'training');
+
+-- NO se siembran reglas de IGIC (Canarias) ni de IPSI (Ceuta/Melilla): el módulo ya sabe
+-- expresarlas (`tax_type` = 'igic'/'ipsi' + `region_code`), pero los tipos concretos por categoría
+-- dependen del negocio y de su epígrafe, y sembrar un número inventado es peor que no sembrar
+-- ninguno — el hub lo daría por bueno y lo declararía. Se crean desde Ajustes → Impuestos.
