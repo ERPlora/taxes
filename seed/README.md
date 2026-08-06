@@ -19,6 +19,15 @@ Idempotente por la clave natural (`WHERE NOT EXISTS` sobre `(hub_id, key)` / `(h
 sin duplicar y **sin pisar filas existentes** (una edición manual del hub sobrevive — contrato
 del que depende el backfill de taxes#18). IVA de otros países = seed por país de ADR-0072.
 
-**Test**: `seed/install.postgres.test.sh` — contra un Postgres real en Docker
+**Hubs YA instalados** (taxes#18): la misma baseline les llega por la **migración append-only**
+`migrations/postgres/003_backfill_es_vat_baseline.sql`, que se aplica al actualizar el módulo.
+Las migraciones no reciben `:hub_id`, así que deriva los hubs de las propias tablas del módulo;
+mismas guardas (`WHERE NOT EXISTS`) y mismos ids estables que este seed, nunca hace UPDATE
+(ediciones manuales, soft-deletes y alias reapuntados sobreviven), y en un hub nuevo es no-op
+(las tablas están vacías al migrar; siembra el seed justo después, sin duplicar).
+
+**Tests**: `seed/install.postgres.test.sh` — contra un Postgres real en Docker
 (`erplora-test-pg-5433` por defecto; BD scratch que se borra al final). Verifica la baseline
-21/10/4/exentas, el contrato de ids y la idempotencia sin clobber.
+21/10/4/exentas, el contrato de ids y la idempotencia sin clobber. Y
+`seed/backfill.postgres.test.sh` — el contrato del backfill (taxes#18): hub existente con
+personalizaciones recibe las exentas sin clobber, BD multi-hub legacy, hub nuevo sin duplicados.

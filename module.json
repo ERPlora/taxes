@@ -59,7 +59,8 @@
   "migrations": {
     "postgres": [
       "migrations/postgres/001_init.sql",
-      "migrations/postgres/002_fiscal_qualification.sql"
+      "migrations/postgres/002_fiscal_qualification.sql",
+      "migrations/postgres/003_backfill_es_vat_baseline.sql"
     ]
   },
   "seed": {
