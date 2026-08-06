@@ -27,6 +27,7 @@ on:
       - 'queries/**'
       - 'commands/**'
       - 'migrations/**'
+      - 'seed/**'
       - 'handler/**'
       - 'schemas/**'
       - 'locales/**'
