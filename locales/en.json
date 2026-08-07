@@ -11,6 +11,10 @@
       "label": "Aliases"
     }
   },
+  "setup": {
+    "title": "Your taxes",
+    "description": "Set the VAT rates for the country you sell in, so the till can price a sale."
+  },
   "ui": {
     "colKey": "Key",
     "colName": "Name",
