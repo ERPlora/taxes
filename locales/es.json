@@ -11,6 +11,10 @@
       "label": "Alias"
     }
   },
+  "setup": {
+    "title": "Tus impuestos",
+    "description": "Configura los tipos de IVA del país en el que vendes para que el TPV pueda calcular el precio de una venta."
+  },
   "ui": {
     "colKey": "Clave",
     "colName": "Nombre",

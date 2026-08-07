@@ -230,6 +230,13 @@
         "description": "Resolves an external alias text to a canonical tax_category_key"
       },
       "expose_api": true
+    },
+    "taxes.rules.status": {
+      "permission": "taxes.view_tax",
+      "sql": "queries/setup_status.sql",
+      "ai": {
+        "description": "Configuration state of the tax module: how many active, currently valid root tax rules match the hub's fiscal country. Zero means the sale engine cannot resolve a rate for what this hub sells, so the till would fall back to a guessed one."
+      }
     }
   },
   "commands": {
@@ -330,5 +337,22 @@
   },
   "ui": {
     "entry": "dist/taxes.esm.js"
+  },
+  "setup": {
+    "query": "taxes.rules.status",
+    "configured_when": [
+      {
+        "field": "matching_rules",
+        "truthy": true
+      }
+    ],
+    "title": "Your taxes",
+    "description": "Set the VAT rates for the country you sell in, so the till can price a sale.",
+    "icon": "receipt-outline",
+    "route": "/m/taxes/rules",
+    "permission": "taxes.manage_tax",
+    "countries": [],
+    "order": 20,
+    "required": true
   }
 }
