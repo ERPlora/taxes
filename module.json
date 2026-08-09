@@ -341,6 +341,16 @@
       }
     }
   },
+  "events": {
+    "listen": {},
+    "emits": [
+      "taxes.alias.created",
+      "taxes.category.created",
+      "taxes.rule.created",
+      "taxes.rule.deactivated",
+      "taxes.rules.bulk_create.report"
+    ]
+  },
   "ui": {
     "entry": "dist/taxes.esm.js"
   },
