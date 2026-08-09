@@ -260,6 +260,12 @@
       "sql": [
         "commands/rule_create.sql"
       ],
+      "expect_rows": {
+        "op": "min",
+        "n": 1,
+        "error": "taxes.rule_incoherent",
+        "message": "That rule could not be created: a component must hang from a root rule of this business with the same country, region and tax category, and its validity range cannot run backwards."
+      },
       "schema": "schemas/rule_create.json",
       "emit": [
         "taxes.rule.created"
