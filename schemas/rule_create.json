@@ -30,7 +30,9 @@
     },
     "rate_pct": {
       "type": "number",
-      "minimum": 0
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Tasa en % (0..100). El tope es real: un tipo por encima de 100 no es un tipo, y sin él un 500 pasaba el schema (taxes#9). La tasa COMBINADA (IVA + recargo) la calcula el resolutor sumando componentes; no se guarda aquí."
     },
     "tax_type": {
       "type": "string",
