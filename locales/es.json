@@ -1,5 +1,6 @@
 {
   "name": "Impuestos",
+  "description": "Categorías fiscales y reglas de impuestos por territorio, con el motor que resuelve el tipo en el momento de la venta.",
   "navigation": {
     "categories": {
       "label": "Categorías"
