@@ -79,6 +79,18 @@
     "phParentRule": "Elige una regla raíz",
     "phParentRuleNone": "No hay regla raíz compatible para ese país/región/categoría",
     "optNoParent": "Ninguna (es una regla raíz)",
-    "readOnlyHint": "Puedes consultar las reglas fiscales pero no modificarlas."
+    "readOnlyHint": "Puedes consultar las reglas fiscales pero no modificarlas.",
+    "taxType_igic": "IGIC (Canarias)",
+    "taxType_ipsi": "IPSI (Ceuta/Melilla)",
+    "colOperationClass": "Calificación",
+    "opClass_subject": "Sujeta",
+    "opClass_subject_reverse": "Inversión del sujeto pasivo",
+    "opClass_exempt": "Exenta",
+    "opClass_not_subject": "No sujeta",
+    "opClass_not_subject_location": "No sujeta (reglas de localización)",
+    "colExemptReason": "Causa de exención",
+    "phExemptReason": "p. ej. E1 (código de la jurisdicción)",
+    "colRegimeKey": "Régimen",
+    "phRegimeKey": "opcional (código de la jurisdicción, p. ej. 01)"
   }
 }

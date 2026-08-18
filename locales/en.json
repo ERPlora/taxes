@@ -78,6 +78,18 @@
     "phParentRule": "Choose a root rule",
     "phParentRuleNone": "No compatible root rule for this country/region/category",
     "optNoParent": "None (this is a root rule)",
-    "readOnlyHint": "You can view the tax rules but not change them."
+    "readOnlyHint": "You can view the tax rules but not change them.",
+    "taxType_igic": "IGIC (Canary Islands)",
+    "taxType_ipsi": "IPSI (Ceuta/Melilla)",
+    "colOperationClass": "Qualification",
+    "opClass_subject": "Subject",
+    "opClass_subject_reverse": "Reverse charge",
+    "opClass_exempt": "Exempt",
+    "opClass_not_subject": "Not subject",
+    "opClass_not_subject_location": "Not subject (place of supply)",
+    "colExemptReason": "Exemption reason",
+    "phExemptReason": "e.g. E1 (jurisdiction code)",
+    "colRegimeKey": "Regime",
+    "phRegimeKey": "optional (jurisdiction code, e.g. 01)"
   }
 }
