@@ -26,6 +26,10 @@
     "admin": [
       "*"
     ],
+    "cashier": [
+      "taxes.view_tax",
+      "taxes.calculate_tax"
+    ],
     "manager": [
       "taxes.view_tax",
       "taxes.manage_tax",
