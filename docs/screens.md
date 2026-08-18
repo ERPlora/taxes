@@ -55,8 +55,10 @@ The list includes **components** as well as root rules — see [concepts.md](con
    `import_duty`. Default `vat`.
 6. Optionally set **valid from** and **valid to** dates. Leaving them empty means "always".
 7. Optionally set the **fiscal qualification**: whether the operation is `subject` (the default),
-   `subject_reverse`, `exempt`, `not_subject` or `not_subject_location`, plus an exemption reason
-   and a regime key if the jurisdiction needs them.
+   `subject_reverse`, `exempt`, `not_subject` or `not_subject_location`. The **exemption reason**
+   field only appears for an exempt rule (an opaque code of the jurisdiction, e.g. `E1` in Spain);
+   the **regime** is optional. The list shows the qualification next to the rate, and can be
+   filtered by it.
 8. Save.
 
 Requires `taxes.manage_tax`.
@@ -76,6 +78,24 @@ VAT, for example.
 
 Both then apply to the same base and the sale shows a combined rate. Components must be created one
 at a time.
+
+### Set up a Canary Islands (IGIC) or Ceuta / Melilla (IPSI) hub
+
+Nothing is seeded for these territories on purpose: the per-category rates depend on the business
+and its heading, and a made-up number would be taken as valid and declared. They are created from
+this screen (Settings → Taxes → Tax Rules), one rule per category the hub sells:
+
+1. Make sure the hub's **fiscal identity** (Settings → Business) has country `ES` and region
+   `ES-CN` (Canary Islands), `ES-CE` (Ceuta) or `ES-ML` (Melilla) — the engine resolves the rule
+   with the region the hub sells from, and a regional rule wins over the national one.
+2. Create a rule per category with **country** `ES`, the same **region** code, the **rate** the
+   territory applies (e.g. IGIC general 7 %, reduced 3 %, zero 0 %) and **tax type** `igic` (or
+   `ipsi`). Leave the qualification as *Subject* unless the operation is exempt.
+3. Do **not** delete or deactivate the national VAT rules: they simply never match a hub whose
+   region is set, and they keep working if the region is cleared.
+
+Whoever files the return then sees IGIC/IPSI, not VAT, on every line — the tax type travels with the
+snapshot the sale freezes.
 
 ### Create a whole country's rates at once
 
