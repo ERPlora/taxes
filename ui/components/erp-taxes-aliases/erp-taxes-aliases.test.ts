@@ -99,3 +99,19 @@ describe('el alta sigue mandando el comando correcto', () => {
     expect(alta!.payload).toMatchObject({ alias: 'IVA 21', tax_category_key: 'standard', source: 'learned' });
   });
 });
+
+// taxes#11 — the «+» follows the effective permission (`erplora.hasPermission`, same pattern as
+// customers/inventory): a viewer (taxes.view_tax only) gets a read-only table.
+describe('effective permission (taxes#11)', () => {
+  it('hides the «+» when the user cannot manage taxes', async () => {
+    (globalThis as Record<string, any>).erplora.hasPermission = () => false;
+    const el = await montar();
+    expect(tabla(el)?.addable, 'a viewer still sees the «+»').toBe(false);
+  });
+
+  it('keeps the «+» when the user can manage taxes', async () => {
+    (globalThis as Record<string, any>).erplora.hasPermission = (p: string) => p === 'taxes.manage_tax';
+    const el = await montar();
+    expect(tabla(el)?.addable).toBe(true);
+  });
+});

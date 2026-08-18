@@ -28,7 +28,6 @@
     "colType": "Type",
     "colValidFrom": "Valid from",
     "colValidTo": "Valid to",
-    "colParentId": "Root rule ID",
     "colComponentLabel": "Component label",
     "colAlias": "Alias",
     "colSource": "Source",
@@ -54,7 +53,6 @@
     "phRegion": "optional",
     "phCategoryKey": "restaurant.food",
     "phPercent": "21",
-    "phParentId": "optional",
     "phComponentLabel": "Equivalence surcharge",
     "phAlias": "food",
     "btnSaving": "Saving…",
@@ -71,10 +69,15 @@
     "deactivateConfirmTitle": "Deactivate tax rule",
     "deactivateConfirmMessage": "The rule will no longer apply to new transactions. Previously issued fiscal documents will not change.",
     "deactivateConfirmAction": "Deactivate rule",
-    "rulesHint": "Each rule sets the % for a category in a country (and optionally a region). For multi-tax (e.g. equivalence surcharge), enter a root rule ID in “Root rule ID” and a “Component label”.",
+    "rulesHint": "Each rule sets the % for a category in a country (and optionally a region). For multi-tax (e.g. equivalence surcharge), choose the root rule it hangs from in “Root rule” and give it a “Component label”.",
     "errCreateCategory": "Could not create the category",
     "errCreateRule": "Could not create the rule",
     "errDeactivateRule": "Could not deactivate the rule",
-    "errCreateAlias": "Could not create the alias"
+    "errCreateAlias": "Could not create the alias",
+    "colParentRule": "Root rule (component of)",
+    "phParentRule": "Choose a root rule",
+    "phParentRuleNone": "No compatible root rule for this country/region/category",
+    "optNoParent": "None (this is a root rule)",
+    "readOnlyHint": "You can view the tax rules but not change them."
   }
 }

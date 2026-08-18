@@ -31,6 +31,11 @@ A new category has no rate until you create a rule for it. Requires `taxes.manag
 
 Where the percentage lives (`taxes.rules.list`, 50 rows per page). Requires `taxes.view_tax`.
 
+The three screens follow the effective permission: with `taxes.view_tax` only (the `employee` role)
+they are **read-only** — no «+» in the bar, no *Deactivate* action, and a short notice explains why.
+`taxes.manage_tax` (manager/admin) turns the full surface on. The runtime enforces the same
+permission on every command regardless of what the screen shows.
+
 - **Search** by country, region or category.
 - **Sort** by country, region, category, rate, tax type, validity dates or active flag. Default:
   category, ascending.
@@ -62,8 +67,11 @@ Some jurisdictions charge two taxes on the same amount — Spanish *recargo de e
 VAT, for example.
 
 1. Create the main rule first (VAT 21 %). That is the **root**.
-2. Create a second rule for the same country, region and category, set its **parent** to the root
-   rule, its type to `surcharge` and its rate to the extra percentage (5,2 %).
+2. Create a second rule for the same country, region and category. Once those three are set, the
+   **Root rule** selector offers the root rules that match them and are valid today — pick the
+   VAT 21 % one. Set the type to `surcharge` and the rate to the extra percentage (5,2 %). Ids are
+   never typed: a rule that would be rejected by the server (other country, region or category,
+   or already a component) is simply not offered.
 3. Give it a **component label** so the breakdown can name it.
 
 Both then apply to the same base and the sale shows a combined rate. Components must be created one
