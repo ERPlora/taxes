@@ -3396,7 +3396,19 @@ var es_default = {
     phParentRule: "Elige una regla ra\xEDz",
     phParentRuleNone: "No hay regla ra\xEDz compatible para ese pa\xEDs/regi\xF3n/categor\xEDa",
     optNoParent: "Ninguna (es una regla ra\xEDz)",
-    readOnlyHint: "Puedes consultar las reglas fiscales pero no modificarlas."
+    readOnlyHint: "Puedes consultar las reglas fiscales pero no modificarlas.",
+    taxType_igic: "IGIC (Canarias)",
+    taxType_ipsi: "IPSI (Ceuta/Melilla)",
+    colOperationClass: "Calificaci\xF3n",
+    opClass_subject: "Sujeta",
+    opClass_subject_reverse: "Inversi\xF3n del sujeto pasivo",
+    opClass_exempt: "Exenta",
+    opClass_not_subject: "No sujeta",
+    opClass_not_subject_location: "No sujeta (reglas de localizaci\xF3n)",
+    colExemptReason: "Causa de exenci\xF3n",
+    phExemptReason: "p. ej. E1 (c\xF3digo de la jurisdicci\xF3n)",
+    colRegimeKey: "R\xE9gimen",
+    phRegimeKey: "opcional (c\xF3digo de la jurisdicci\xF3n, p. ej. 01)"
   }
 };
 
@@ -3481,7 +3493,19 @@ var en_default = {
     phParentRule: "Choose a root rule",
     phParentRuleNone: "No compatible root rule for this country/region/category",
     optNoParent: "None (this is a root rule)",
-    readOnlyHint: "You can view the tax rules but not change them."
+    readOnlyHint: "You can view the tax rules but not change them.",
+    taxType_igic: "IGIC (Canary Islands)",
+    taxType_ipsi: "IPSI (Ceuta/Melilla)",
+    colOperationClass: "Qualification",
+    opClass_subject: "Subject",
+    opClass_subject_reverse: "Reverse charge",
+    opClass_exempt: "Exempt",
+    opClass_not_subject: "Not subject",
+    opClass_not_subject_location: "Not subject (place of supply)",
+    colExemptReason: "Exemption reason",
+    phExemptReason: "e.g. E1 (jurisdiction code)",
+    colRegimeKey: "Regime",
+    phRegimeKey: "optional (jurisdiction code, e.g. 01)"
   }
 };
 
@@ -3808,7 +3832,8 @@ define("erp-taxes-categories", ErpTaxesCategories);
 
 // modules/taxes/ui/components/erp-taxes-rules/erp-taxes-rules.ts
 var CATALOG3 = { es: es_default, en: en_default };
-var TAX_TYPES = ["vat", "surcharge", "sales_tax", "withholding", "excise", "import_duty"];
+var TAX_TYPES = ["vat", "igic", "ipsi", "surcharge", "sales_tax", "withholding", "excise", "import_duty"];
+var OPERATION_CLASSES = ["subject", "subject_reverse", "exempt", "not_subject", "not_subject_location"];
 function can3(permission) {
   return erplora3().hasPermission?.(permission) ?? true;
 }
@@ -3835,6 +3860,9 @@ var ErpTaxesRules = class extends i3 {
     this.newCategoryKey = "";
     this.newRatePct = "";
     this.newTaxType = "vat";
+    this.newOperationClass = "subject";
+    this.newExemptReason = "";
+    this.newRegimeKey = "";
     this.newValidFrom = "";
     this.newValidTo = "";
     this.newParentId = "";
@@ -3892,6 +3920,19 @@ var ErpTaxesRules = class extends i3 {
         filterType: "select",
         options: TAX_TYPES.map((v3) => ({ value: v3, label: t5(`ui.taxType_${v3}`) })),
         format: (r6) => t5(`ui.taxType_${String(r6.tax_type)}`)
+      },
+      {
+        key: "operation_class",
+        header: t5("ui.colOperationClass"),
+        sortable: true,
+        filterable: true,
+        filterType: "select",
+        options: OPERATION_CLASSES.map((v3) => ({ value: v3, label: t5(`ui.opClass_${v3}`) })),
+        format: (r6) => {
+          const cls = String(r6.operation_class ?? "") || "subject";
+          const reason = String(r6.exempt_reason ?? "");
+          return cls === "exempt" && reason ? `${t5(`ui.opClass_${cls}`)} \xB7 ${reason}` : t5(`ui.opClass_${cls}`);
+        }
       },
       { key: "valid_from", header: t5("ui.colValidFrom"), sortable: true, format: (r6) => String(r6.valid_from ?? "") || "\u2014" },
       { key: "valid_to", header: t5("ui.colValidTo"), sortable: true, format: (r6) => String(r6.valid_to ?? "") || "\u2014" },
@@ -3999,6 +4040,9 @@ var ErpTaxesRules = class extends i3 {
         tax_type: this.newTaxType || "vat"
       };
       if (this.newRegion.trim()) payload.region_code = this.newRegion.trim().toUpperCase();
+      if (this.newOperationClass && this.newOperationClass !== "subject") payload.operation_class = this.newOperationClass;
+      if (this.newOperationClass === "exempt" && this.newExemptReason.trim()) payload.exempt_reason = this.newExemptReason.trim().toUpperCase();
+      if (this.newRegimeKey.trim()) payload.regime_key = this.newRegimeKey.trim();
       if (this.newValidFrom.trim()) payload.valid_from = this.newValidFrom.trim();
       if (this.newValidTo.trim()) payload.valid_to = this.newValidTo.trim();
       if (this.newParentId.trim()) payload.parent_id = this.newParentId.trim();
@@ -4009,6 +4053,9 @@ var ErpTaxesRules = class extends i3 {
       this.newCategoryKey = "";
       this.newRatePct = "";
       this.newTaxType = "vat";
+      this.newOperationClass = "subject";
+      this.newExemptReason = "";
+      this.newRegimeKey = "";
       this.newValidFrom = "";
       this.newValidTo = "";
       this.newParentId = "";
@@ -4041,6 +4088,10 @@ var ErpTaxesRules = class extends i3 {
             </ion-select>
             <ion-input fill="outline" label-placement="floating" label=${t5("ui.colRate")} type="number" step="0.01" placeholder=${t5("ui.phPercent")} .value=${this.newRatePct} @ionInput=${(e5) => this.newRatePct = e5.target.value}></ion-input>
             <ion-select fill="outline" label-placement="floating" label=${t5("ui.colType")} .value=${this.newTaxType} @ionChange=${(e5) => this.newTaxType = e5.target.value}>${TAX_TYPES.map((v3) => b2`<ion-select-option .value=${v3}>${t5(`ui.taxType_${v3}`)}</ion-select-option>`)}</ion-select>
+            <!-- Fiscal qualification (ADR-0186, taxes#22): the reason only when exempt; regime optional. -->
+            <ion-select fill="outline" label-placement="floating" label=${t5("ui.colOperationClass")} .value=${this.newOperationClass} @ionChange=${(e5) => this.newOperationClass = e5.target.value ?? "subject"}>${OPERATION_CLASSES.map((v3) => b2`<ion-select-option .value=${v3}>${t5(`ui.opClass_${v3}`)}</ion-select-option>`)}</ion-select>
+            ${this.newOperationClass === "exempt" ? b2`<ion-input fill="outline" label-placement="floating" label=${t5("ui.colExemptReason")} placeholder=${t5("ui.phExemptReason")} maxlength="10" .value=${this.newExemptReason} @ionInput=${(e5) => this.newExemptReason = e5.target.value}></ion-input>` : A}
+            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colRegimeKey")} placeholder=${t5("ui.phRegimeKey")} maxlength="10" .value=${this.newRegimeKey} @ionInput=${(e5) => this.newRegimeKey = e5.target.value}></ion-input>
             <ion-input fill="outline" label-placement="floating" label=${t5("ui.colValidFrom")} type="date" .value=${this.newValidFrom} @ionInput=${(e5) => this.newValidFrom = e5.target.value}></ion-input>
             <ion-input fill="outline" label-placement="floating" label=${t5("ui.colValidTo")} type="date" .value=${this.newValidTo} @ionInput=${(e5) => this.newValidTo = e5.target.value}></ion-input>
             <!-- Parent rule (multi-tax component): CHOSEN among the root rules compatible with the
@@ -4085,6 +4136,15 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "newTaxType", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "newOperationClass", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "newExemptReason", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "newRegimeKey", 2);
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "newValidFrom", 2);
