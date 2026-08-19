@@ -10,6 +10,9 @@ import type { ListController, ListClient, ListParams, ListPage } from '@erplora/
 // internos se resuelven con `erplora.t(CATALOG, 'ui.clave')` (idioma activo, fallback locale→en→clave).
 import esLocale from '../../../locales/es.json';
 import enLocale from '../../../locales/en.json';
+// Capa de PRESENTACIÓN del nombre de la categoría (taxes#30): el seed lo guarda en inglés canónico
+// (ADR-0055) y aquí se traduce por su `key`, sin tocar el dato. Lo que crea el usuario pasa tal cual.
+import { taxCategoryDisplayDescription, taxCategoryDisplayName } from '../../lib/tax-category-name';
 const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
 interface ErploraClientLike extends ListClient {
@@ -77,14 +80,14 @@ export class ErpTaxesCategories extends LitElement {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
       { key: 'key', header: t('ui.colKey'), sortable: true, filterable: true, filterType: 'text' },
-      { key: 'name', header: t('ui.colName'), sortable: true, filterable: true, filterType: 'text' },
+      { key: 'name', header: t('ui.colName'), sortable: true, filterable: true, filterType: 'text', format: (r) => taxCategoryDisplayName(r as TaxCategory, t) },
       {
         key: 'description',
         header: t('ui.colDescription'),
         sortable: true,
         filterable: true,
         filterType: 'text',
-        format: (r) => (r.description as string) || '—',
+        format: (r) => taxCategoryDisplayDescription(r as TaxCategory, t) || '—',
       },
       {
         key: 'is_system',
@@ -174,7 +177,7 @@ export class ErpTaxesCategories extends LitElement {
         ${can('taxes.manage_tax') ? nothing : html`<ok-inline-feedback tone="info" icon="lock-closed-outline">${t('ui.readOnlyHint')}</ok-inline-feedback>`}
         ${this.formError ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
         ${this.ctrl?.error ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
-        <ok-data-table .serverSide=${true} .fill=${true} .addable=${can('taxes.manage_tax')} .views=${true} .cardTitle=${(row: Record<string, unknown>) => String(row.name ?? row.key ?? '')} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchKeyName')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyCategories')} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${can('taxes.manage_tax')} .views=${true} .cardTitle=${(row: Record<string, unknown>) => taxCategoryDisplayName(row as TaxCategory, t) || String(row.key ?? '')} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchKeyName')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyCategories')} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
           <form slot="create" class="form" @submit=${(e: Event) => this.createCategory(e)}>

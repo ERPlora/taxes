@@ -87,6 +87,21 @@ Also, a rule points at a category with a **restrict** rule: you cannot remove a 
 has rules. Components, on the other hand, disappear with their root — deleting a root cascades to the
 taxes hanging off it.
 
+## A category's key is its identity; its name is only a label
+
+Two different things live on a category. The **key** (`restaurant.food`) is what products, rules,
+aliases and the till point at — stable, unique in the hub, never translated. The **name** is the
+label a human reads, and nothing depends on it.
+
+System categories are seeded with an English name because English is the source language of the data
+(ADR-0055), and the screens translate that label from the key: a Spanish hub shows «Producto —
+general» for `product.generic`, and the two VAT-exempt categories also show their legal note in
+Spanish, with the article reference kept as written. Nothing rewrites the stored row — change the
+hub's language and the labels follow, because they were never data in the first place.
+
+Categories you create have no canonical key, so there is nothing to translate: they show the text you
+typed. That is the rule in one line — **the module translates its own vocabulary, never yours.**
+
 ## Gross or net: the amount charged never moves
 
 When you compute tax on a **net** amount, the base is the amount and the tax is added on top, so

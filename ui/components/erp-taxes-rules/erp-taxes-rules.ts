@@ -10,6 +10,9 @@ import type { ListController, ListClient, ListParams, ListPage } from '@erplora/
 // internos se resuelven con `erplora.t(CATALOG, 'ui.clave')` (idioma activo, fallback locale→en→clave).
 import esLocale from '../../../locales/es.json';
 import enLocale from '../../../locales/en.json';
+// Capa de PRESENTACIÓN del nombre de la categoría (taxes#30): el seed lo guarda en inglés canónico
+// (ADR-0055) y aquí se traduce por su `key`, sin tocar el dato. Lo que crea el usuario pasa tal cual.
+import { taxCategoryDisplayDescription, taxCategoryDisplayName } from '../../lib/tax-category-name';
 const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
 interface ErploraClientLike extends ListClient {
@@ -163,7 +166,7 @@ export class ErpTaxesRules extends LitElement {
         filterable: true,
         // Dominio cerrado (las categorías del hub) y el servidor lo declara `op: eq` → select.
         filterType: 'select',
-        options: this.categories.map((c) => ({ value: c.key, label: `${c.name} (${c.key})` })),
+        options: this.categories.map((c) => ({ value: c.key, label: `${taxCategoryDisplayName(c, t)} (${c.key})` })),
         format: (r) => {
           const key = String(r.tax_category_key ?? '') || '—';
           const label = String(r.component_label ?? '');
@@ -369,7 +372,7 @@ export class ErpTaxesRules extends LitElement {
             <!-- La categoría se ELIGE: la FK (hub_id, tax_category_key) la valida, y una clave mal
                  tecleada era una regla que nunca se aplicaba (o un command rechazado). -->
             <ion-select fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategoryKey')} .value=${this.newCategoryKey} @ionChange=${(e: any) => (this.newCategoryKey = e.target.value)}>
-              ${this.categories.map((c) => html`<ion-select-option .value=${c.key}>${c.name} (${c.key})</ion-select-option>`)}
+              ${this.categories.map((c) => html`<ion-select-option .value=${c.key}>${taxCategoryDisplayName(c, t)} (${c.key})</ion-select-option>`)}
             </ion-select>
             <ion-input fill="outline" label-placement="floating" label=${t('ui.colRate')} type="number" step="0.01" placeholder=${t('ui.phPercent')} .value=${this.newRatePct} @ionInput=${(e: any) => (this.newRatePct = e.target.value)}></ion-input>
             <ion-select fill="outline" label-placement="floating" label=${t('ui.colType')} .value=${this.newTaxType} @ionChange=${(e: any) => (this.newTaxType = e.target.value)}>${TAX_TYPES.map((v) => html`<ion-select-option .value=${v}>${t(`ui.taxType_${v}`)}</ion-select-option>`)}</ion-select>

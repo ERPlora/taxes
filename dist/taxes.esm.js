@@ -3408,7 +3408,31 @@ var es_default = {
     colExemptReason: "Causa de exenci\xF3n",
     phExemptReason: "p. ej. E1 (c\xF3digo de la jurisdicci\xF3n)",
     colRegimeKey: "R\xE9gimen",
-    phRegimeKey: "opcional (c\xF3digo de la jurisdicci\xF3n, p. ej. 01)"
+    phRegimeKey: "opcional (c\xF3digo de la jurisdicci\xF3n, p. ej. 01)",
+    taxCategory: {
+      restaurant: {
+        food: "Restauraci\xF3n \u2014 comida",
+        drink: "Restauraci\xF3n \u2014 bebida",
+        alcohol: "Restauraci\xF3n \u2014 alcohol",
+        delivery: "Restauraci\xF3n \u2014 reparto a domicilio"
+      },
+      service: {
+        generic: "Servicio \u2014 general",
+        health: "Servicio \u2014 sanitario (exento de IVA)",
+        education: "Servicio \u2014 ense\xF1anza (exento de IVA)"
+      },
+      product: {
+        generic: "Producto \u2014 general",
+        reduced: "Producto \u2014 reducido (alimentos b\xE1sicos, farmacia)",
+        super_reduced: "Producto \u2014 superreducido (pan, libros, b\xE1sicos)"
+      }
+    },
+    taxCategoryDesc: {
+      service: {
+        health: "Asistencia prestada por profesionales m\xE9dicos o sanitarios \u2014 art. 20.Uno.3 (ES)",
+        education: "Ense\xF1anza y formaci\xF3n regladas \u2014 art. 20.Uno.9 (ES)"
+      }
+    }
   }
 };
 
@@ -3505,9 +3529,70 @@ var en_default = {
     colExemptReason: "Exemption reason",
     phExemptReason: "e.g. E1 (jurisdiction code)",
     colRegimeKey: "Regime",
-    phRegimeKey: "optional (jurisdiction code, e.g. 01)"
+    phRegimeKey: "optional (jurisdiction code, e.g. 01)",
+    taxCategory: {
+      restaurant: {
+        food: "Restaurant \u2014 food",
+        drink: "Restaurant \u2014 drink",
+        alcohol: "Restaurant \u2014 alcohol",
+        delivery: "Restaurant \u2014 delivery"
+      },
+      service: {
+        generic: "Service \u2014 generic",
+        health: "Service \u2014 healthcare (VAT exempt)",
+        education: "Service \u2014 education (VAT exempt)"
+      },
+      product: {
+        generic: "Product \u2014 generic",
+        reduced: "Product \u2014 reduced (food staples, pharmacy)",
+        super_reduced: "Product \u2014 super-reduced (bread, books, basics)"
+      }
+    },
+    taxCategoryDesc: {
+      service: {
+        health: "Assistance provided by medical or health professionals \u2014 art. 20.Uno.3 (ES)",
+        education: "Regulated teaching and training \u2014 art. 20.Uno.9 (ES)"
+      }
+    }
   }
 };
+
+// modules/taxes/ui/lib/tax-category-name.ts
+var KEY_TO_LABEL = {
+  "restaurant.food": "ui.taxCategory.restaurant.food",
+  "restaurant.drink": "ui.taxCategory.restaurant.drink",
+  "restaurant.alcohol": "ui.taxCategory.restaurant.alcohol",
+  "restaurant.delivery": "ui.taxCategory.restaurant.delivery",
+  "service.generic": "ui.taxCategory.service.generic",
+  "service.health": "ui.taxCategory.service.health",
+  "service.education": "ui.taxCategory.service.education",
+  "product.generic": "ui.taxCategory.product.generic",
+  "product.reduced": "ui.taxCategory.product.reduced",
+  "product.super_reduced": "ui.taxCategory.product.super_reduced"
+};
+var KEY_TO_DESCRIPTION = {
+  "service.health": "ui.taxCategoryDesc.service.health",
+  "service.education": "ui.taxCategoryDesc.service.education"
+};
+var SYSTEM_TAX_CATEGORY_KEYS = Object.keys(KEY_TO_LABEL);
+function taxCategoryDisplayName(category, t5) {
+  const key = (category.key || "").trim();
+  const labelKey = KEY_TO_LABEL[key];
+  if (labelKey) {
+    const label = t5(labelKey);
+    if (label && label !== labelKey) return label;
+  }
+  return (category.name || "").trim() || key;
+}
+function taxCategoryDisplayDescription(category, t5) {
+  const key = (category.key || "").trim();
+  const descKey = KEY_TO_DESCRIPTION[key];
+  if (descKey) {
+    const text = t5(descKey);
+    if (text && text !== descKey) return text;
+  }
+  return (category.description || "").trim();
+}
 
 // modules/taxes/ui/components/erp-taxes-aliases/erp-taxes-aliases.ts
 var CATALOG = { es: es_default, en: en_default };
@@ -3555,7 +3640,7 @@ var ErpTaxesAliases = class extends i3 {
         // `eq`, así que el `value` es la `key` canónica), no se teclea: una key mal escrita en un
         // alias mete el IVA equivocado en el import.
         filterType: "select",
-        options: this.categories.map((c5) => ({ value: c5.key, label: `${c5.key} \xB7 ${c5.name}` }))
+        options: this.categories.map((c5) => ({ value: c5.key, label: `${c5.key} \xB7 ${taxCategoryDisplayName(c5, t5)}` }))
       },
       {
         key: "source",
@@ -3646,7 +3731,7 @@ var ErpTaxesAliases = class extends i3 {
           <!-- Alta de alias: el botón «+» de la tabla despliega este panel. -->
           <form slot="create" class="form" @submit=${(e5) => this.createAlias(e5)}>
             <ion-input fill="outline" label-placement="floating" label=${t5("ui.colAlias")} placeholder=${t5("ui.phAlias")} .value=${this.newAlias} @ionInput=${(e5) => this.newAlias = e5.target.value}></ion-input>
-            <ion-select fill="outline" label-placement="floating" label=${t5("ui.colCategory")} placeholder=${t5("ui.phCategoryKey")} .value=${this.newCategoryKey} @ionChange=${(e5) => this.newCategoryKey = e5.target.value}>${this.categories.map((c5) => b2`<ion-select-option .value=${c5.key}>${c5.key} · ${c5.name}</ion-select-option>`)}</ion-select>
+            <ion-select fill="outline" label-placement="floating" label=${t5("ui.colCategory")} placeholder=${t5("ui.phCategoryKey")} .value=${this.newCategoryKey} @ionChange=${(e5) => this.newCategoryKey = e5.target.value}>${this.categories.map((c5) => b2`<ion-select-option .value=${c5.key}>${c5.key} · ${taxCategoryDisplayName(c5, t5)}</ion-select-option>`)}</ion-select>
             <ion-select fill="outline" label-placement="floating" label=${t5("ui.colSource")} .value=${this.newSource} @ionChange=${(e5) => this.newSource = e5.target.value}>
               <ion-select-option value="learned">${t5("ui.srcLearned")}</ion-select-option>
               <ion-select-option value="shipped">${t5("ui.srcShipped")}</ion-select-option>
@@ -3713,14 +3798,14 @@ var ErpTaxesCategories = class extends i3 {
     const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return [
       { key: "key", header: t5("ui.colKey"), sortable: true, filterable: true, filterType: "text" },
-      { key: "name", header: t5("ui.colName"), sortable: true, filterable: true, filterType: "text" },
+      { key: "name", header: t5("ui.colName"), sortable: true, filterable: true, filterType: "text", format: (r6) => taxCategoryDisplayName(r6, t5) },
       {
         key: "description",
         header: t5("ui.colDescription"),
         sortable: true,
         filterable: true,
         filterType: "text",
-        format: (r6) => r6.description || "\u2014"
+        format: (r6) => taxCategoryDisplayDescription(r6, t5) || "\u2014"
       },
       {
         key: "is_system",
@@ -3800,7 +3885,7 @@ var ErpTaxesCategories = class extends i3 {
         ${can2("taxes.manage_tax") ? A : b2`<ok-inline-feedback tone="info" icon="lock-closed-outline">${t5("ui.readOnlyHint")}</ok-inline-feedback>`}
         ${this.formError ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
         ${this.ctrl?.error ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
-        <ok-data-table .serverSide=${true} .fill=${true} .addable=${can2("taxes.manage_tax")} .views=${true} .cardTitle=${(row) => String(row.name ?? row.key ?? "")} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchKeyName")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyCategories")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${can2("taxes.manage_tax")} .views=${true} .cardTitle=${(row) => taxCategoryDisplayName(row, t5) || String(row.key ?? "")} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchKeyName")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyCategories")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
           <form slot="create" class="form" @submit=${(e5) => this.createCategory(e5)}>
@@ -3896,7 +3981,7 @@ var ErpTaxesRules = class extends i3 {
         filterable: true,
         // Dominio cerrado (las categorías del hub) y el servidor lo declara `op: eq` → select.
         filterType: "select",
-        options: this.categories.map((c5) => ({ value: c5.key, label: `${c5.name} (${c5.key})` })),
+        options: this.categories.map((c5) => ({ value: c5.key, label: `${taxCategoryDisplayName(c5, t5)} (${c5.key})` })),
         format: (r6) => {
           const key = String(r6.tax_category_key ?? "") || "\u2014";
           const label = String(r6.component_label ?? "");
@@ -4084,7 +4169,7 @@ var ErpTaxesRules = class extends i3 {
             <!-- La categoría se ELIGE: la FK (hub_id, tax_category_key) la valida, y una clave mal
                  tecleada era una regla que nunca se aplicaba (o un command rechazado). -->
             <ion-select fill="outline" label-placement="floating" label=${t5("ui.colCategory")} placeholder=${t5("ui.phCategoryKey")} .value=${this.newCategoryKey} @ionChange=${(e5) => this.newCategoryKey = e5.target.value}>
-              ${this.categories.map((c5) => b2`<ion-select-option .value=${c5.key}>${c5.name} (${c5.key})</ion-select-option>`)}
+              ${this.categories.map((c5) => b2`<ion-select-option .value=${c5.key}>${taxCategoryDisplayName(c5, t5)} (${c5.key})</ion-select-option>`)}
             </ion-select>
             <ion-input fill="outline" label-placement="floating" label=${t5("ui.colRate")} type="number" step="0.01" placeholder=${t5("ui.phPercent")} .value=${this.newRatePct} @ionInput=${(e5) => this.newRatePct = e5.target.value}></ion-input>
             <ion-select fill="outline" label-placement="floating" label=${t5("ui.colType")} .value=${this.newTaxType} @ionChange=${(e5) => this.newTaxType = e5.target.value}>${TAX_TYPES.map((v3) => b2`<ion-select-option .value=${v3}>${t5(`ui.taxType_${v3}`)}</ion-select-option>`)}</ion-select>
