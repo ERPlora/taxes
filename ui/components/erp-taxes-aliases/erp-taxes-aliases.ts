@@ -10,6 +10,9 @@ import type { ListController, ListClient, ListParams, ListPage } from '@erplora/
 // internos se resuelven con `erplora.t(CATALOG, 'ui.clave')` (idioma activo, fallback locale→en→clave).
 import esLocale from '../../../locales/es.json';
 import enLocale from '../../../locales/en.json';
+// Capa de PRESENTACIÓN del nombre de la categoría (taxes#30): el seed lo guarda en inglés canónico
+// (ADR-0055) y aquí se traduce por su `key`, sin tocar el dato. Lo que crea el usuario pasa tal cual.
+import { taxCategoryDisplayDescription, taxCategoryDisplayName } from '../../lib/tax-category-name';
 const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
 interface ErploraClientLike extends ListClient {
@@ -93,7 +96,7 @@ export class ErpTaxesAliases extends LitElement {
         // `eq`, así que el `value` es la `key` canónica), no se teclea: una key mal escrita en un
         // alias mete el IVA equivocado en el import.
         filterType: 'select',
-        options: this.categories.map((c) => ({ value: c.key, label: `${c.key} · ${c.name}` })),
+        options: this.categories.map((c) => ({ value: c.key, label: `${c.key} · ${taxCategoryDisplayName(c, t)}` })),
       },
       {
         key: 'source',
@@ -194,7 +197,7 @@ export class ErpTaxesAliases extends LitElement {
           <!-- Alta de alias: el botón «+» de la tabla despliega este panel. -->
           <form slot="create" class="form" @submit=${(e: Event) => this.createAlias(e)}>
             <ion-input fill="outline" label-placement="floating" label=${t('ui.colAlias')} placeholder=${t('ui.phAlias')} .value=${this.newAlias} @ionInput=${(e: any) => (this.newAlias = e.target.value)}></ion-input>
-            <ion-select fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategoryKey')} .value=${this.newCategoryKey} @ionChange=${(e: any) => (this.newCategoryKey = e.target.value)}>${this.categories.map((c) => html`<ion-select-option .value=${c.key}>${c.key} · ${c.name}</ion-select-option>`)}</ion-select>
+            <ion-select fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategoryKey')} .value=${this.newCategoryKey} @ionChange=${(e: any) => (this.newCategoryKey = e.target.value)}>${this.categories.map((c) => html`<ion-select-option .value=${c.key}>${c.key} · ${taxCategoryDisplayName(c, t)}</ion-select-option>`)}</ion-select>
             <ion-select fill="outline" label-placement="floating" label=${t('ui.colSource')} .value=${this.newSource} @ionChange=${(e: any) => (this.newSource = e.target.value)}>
               <ion-select-option value="learned">${t('ui.srcLearned')}</ion-select-option>
               <ion-select-option value="shipped">${t('ui.srcShipped')}</ion-select-option>

@@ -17,12 +17,19 @@ Each row shows the **key** — the stable string such as `restaurant.food` that 
 references — plus its name and whether it is a **system** category (seeded at install, not
 deletable) or one this hub added.
 
+**System categories are shown in the hub's language.** They are seeded with an English name because
+that is the source language of the data (ADR-0055), and the screens translate that label from the
+category's key: a Spanish hub reads «Producto — general», never «Product — generic». The stored name
+is not touched, and neither are the categories you create — those are yours and show exactly the text
+you typed.
+
 ### Add a category
 
 1. Open **Categories** and create a new one.
 2. Give it a **key**: lowercase, starting with a letter, using letters, digits, dots and
    underscores — for example `product.books`. It must be unique in the hub.
-3. Give it a readable name and, optionally, a description.
+3. Give it a readable name and, optionally, a description. Yours are shown exactly as you type
+   them: only the seeded system categories carry a translated label.
 4. Save.
 
 A new category has no rate until you create a rule for it. Requires `taxes.manage_tax`.
