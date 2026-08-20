@@ -90,30 +90,6 @@
     "colExemptReason": "Exemption reason",
     "phExemptReason": "e.g. E1 (jurisdiction code)",
     "colRegimeKey": "Regime",
-    "phRegimeKey": "optional (jurisdiction code, e.g. 01)",
-    "taxCategory": {
-      "restaurant": {
-        "food": "Restaurant — food",
-        "drink": "Restaurant — drink",
-        "alcohol": "Restaurant — alcohol",
-        "delivery": "Restaurant — delivery"
-      },
-      "service": {
-        "generic": "Service — generic",
-        "health": "Service — healthcare (VAT exempt)",
-        "education": "Service — education (VAT exempt)"
-      },
-      "product": {
-        "generic": "Product — generic",
-        "reduced": "Product — reduced (food staples, pharmacy)",
-        "super_reduced": "Product — super-reduced (bread, books, basics)"
-      }
-    },
-    "taxCategoryDesc": {
-      "service": {
-        "health": "Assistance provided by medical or health professionals — art. 20.Uno.3 (ES)",
-        "education": "Regulated teaching and training — art. 20.Uno.9 (ES)"
-      }
-    }
+    "phRegimeKey": "optional (jurisdiction code, e.g. 01)"
   }
 }

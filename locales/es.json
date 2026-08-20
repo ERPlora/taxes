@@ -91,30 +91,6 @@
     "colExemptReason": "Causa de exención",
     "phExemptReason": "p. ej. E1 (código de la jurisdicción)",
     "colRegimeKey": "Régimen",
-    "phRegimeKey": "opcional (código de la jurisdicción, p. ej. 01)",
-    "taxCategory": {
-      "restaurant": {
-        "food": "Restauración — comida",
-        "drink": "Restauración — bebida",
-        "alcohol": "Restauración — alcohol",
-        "delivery": "Restauración — reparto a domicilio"
-      },
-      "service": {
-        "generic": "Servicio — general",
-        "health": "Servicio — sanitario (exento de IVA)",
-        "education": "Servicio — enseñanza (exento de IVA)"
-      },
-      "product": {
-        "generic": "Producto — general",
-        "reduced": "Producto — reducido (alimentos básicos, farmacia)",
-        "super_reduced": "Producto — superreducido (pan, libros, básicos)"
-      }
-    },
-    "taxCategoryDesc": {
-      "service": {
-        "health": "Asistencia prestada por profesionales médicos o sanitarios — art. 20.Uno.3 (ES)",
-        "education": "Enseñanza y formación regladas — art. 20.Uno.9 (ES)"
-      }
-    }
+    "phRegimeKey": "opcional (código de la jurisdicción, p. ej. 01)"
   }
 }

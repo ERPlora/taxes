@@ -65,7 +65,8 @@
       "migrations/postgres/001_init.sql",
       "migrations/postgres/002_fiscal_qualification.sql",
       "migrations/postgres/003_backfill_es_vat_baseline.sql",
-      "migrations/postgres/004_taxes_rule_natural_key.sql"
+      "migrations/postgres/004_taxes_rule_natural_key.sql",
+      "migrations/postgres/005_category_labels.sql"
     ]
   },
   "seed": {
@@ -81,14 +82,16 @@
         "search": [
           "key",
           "name",
-          "description"
+          "description",
+          "display_name"
         ],
         "sort": [
           "id",
           "key",
           "name",
           "is_system",
-          "is_active"
+          "is_active",
+          "display_name"
         ],
         "default_sort": "key",
         "default_dir": "asc",
@@ -104,6 +107,9 @@
           },
           "is_active": {
             "op": "eq"
+          },
+          "display_name": {
+            "op": "like"
           }
         },
         "page_size": 50
