@@ -1,36 +1,52 @@
-// Un hub en español NO enseña «Product — generic» en ninguna de las tres pantallas (taxes#30).
+// Un hub en español NO enseña «Product — generic» en ninguna de las tres pantallas (taxes#30),
+// y desde taxes#38 lo que pinta es lo que RESOLVIÓ LA QUERY, no un mapa que vive en este bundle.
 //
 // Las 10 categorías canónicas se siembran con el nombre en inglés (ADR-0055: el dato nace en el
 // idioma fuente). Sin capa de presentación, ese literal salía tal cual en /m/taxes/categories, en
 // el filtro y el alta de reglas y en el alta de alias — y, por la misma puerta, en el selector
 // «Departamento (IVA)» del TPV, en la línea del carrito y en el TIQUE IMPRESO del cliente.
 //
-// Estos tests montan los tres componentes con el catálogo REAL del módulo (no con el `t` de juguete
-// que devuelve la clave: con ése el fallback al `name` del dato es correcto y no probaría nada) y
-// comprueban que el literal inglés no aparece por ninguna parte. El control de positivo va incluido:
-// con `locale: 'en'` el mismo texto SÍ aparece, así que la comprobación detecta lo que busca.
+// taxes#30 lo tapó con un mapa clave→etiqueta en el cliente, que solo alcanzaba a estas tres
+// pantallas: ningún módulo importa el código de otro (ADR-0043) ni ve su catálogo i18n, así que
+// `inventory` y `sales` seguían en inglés y copiarles el mapa habría dejado N listas de las claves
+// canónicas en N repos. taxes#38 lo mueve a la query: `taxes.categories.list` devuelve
+// `display_name`/`display_description` ya resueltos, y estos componentes solo los PINTAN.
 //
-// Lo que se deja pasar tal cual: las categorías que crea el usuario. No tienen clave canónica, su
-// texto es suyo y ni se traduce ni se toca.
+// Estos tests montan los tres componentes con las filas TAL Y COMO LAS DEVUELVE la query en un hub
+// en español y comprueban que el literal inglés no aparece por ninguna parte — incluida una
+// categoría canónica que el mapa del cliente nunca conoció, que es el fallo silencioso que motivó
+// la issue. El control de positivo va incluido: una fila cuyo `display_name` ES el inglés sí sale en
+// inglés, así que la comprobación detecta lo que busca.
+//
+// Lo que se deja pasar tal cual: las categorías que crea el usuario. No tienen etiqueta que
+// resolver, su texto es suyo y ni se traduce ni se toca.
 import { beforeEach, describe, expect, it } from 'vitest';
 import enLocale from '../../locales/en.json';
 import esLocale from '../../locales/es.json';
 
 const CATALOG: Record<string, unknown> = { en: enLocale, es: esLocale };
 
-/** Las de sistema tal y como salen del seed, más una del usuario que NO se debe tocar. */
+/** Las filas tal y como las devuelve `taxes.categories.list` en un hub en español: el `name`
+ *  sembrado en inglés sigue viajando y `display_name` trae el texto ya resuelto (taxes#38). La
+ *  última la creó el usuario: no hay etiqueta que resolver, así que la query devuelve su nombre. */
 const CATEGORIES = [
-  { id: 'c1', key: 'product.generic', name: 'Product — generic', description: '', is_system: 1, is_active: 1 },
-  { id: 'c2', key: 'restaurant.alcohol', name: 'Restaurant — alcohol', description: '', is_system: 1, is_active: 1 },
+  { id: 'c1', key: 'product.generic', name: 'Product — generic', display_name: 'Producto — general', description: '', display_description: '', is_system: 1, is_active: 1 },
+  { id: 'c2', key: 'restaurant.alcohol', name: 'Restaurant — alcohol', display_name: 'Restauración — alcohol', description: '', display_description: '', is_system: 1, is_active: 1 },
   {
     id: 'c3',
     key: 'service.education',
     name: 'Service — education (VAT exempt)',
+    display_name: 'Servicio — enseñanza (exento de IVA)',
     description: 'Regulated teaching and training — art. 20.Uno.9 (ES)',
+    display_description: 'Enseñanza y formación regladas — art. 20.Uno.9 (ES)',
     is_system: 1,
     is_active: 1,
   },
-  { id: 'c4', key: 'catering_bodas', name: 'Catering de bodas', description: 'Solo banquetes', is_system: 0, is_active: 1 },
+  { id: 'c4', key: 'catering_bodas', name: 'Catering de bodas', display_name: 'Catering de bodas', description: 'Solo banquetes', display_description: 'Solo banquetes', is_system: 0, is_active: 1 },
+  // La categoría canónica que se añadirá MAÑANA: ningún mapa de este bundle la conoce. Con la
+  // traducción viviendo en el cliente salía en inglés y nadie se enteraba; viniendo de la query,
+  // sale traducida el día que `taxes` la siembre, aquí y en `inventory` y `sales` a la vez.
+  { id: 'c5', key: 'product.newly_added', name: 'Product — newly added', display_name: 'Producto — recién añadida', description: '', display_description: '', is_system: 1, is_active: 1 },
 ];
 
 const RULES = [
@@ -43,6 +59,8 @@ const ALIASES = [
 
 /** El literal inglés del seed que el cliente NO debe leer en un hub español. */
 const INGLES_DEL_SEED = 'Product — generic';
+/** El de la categoría que ningún mapa del cliente conoce: el fallo silencioso de taxes#38. */
+const INGLES_DE_LA_NUEVA = 'Product — newly added';
 
 function stubShell(locale: 'es' | 'en') {
   (globalThis as Record<string, unknown>).erplora = {
@@ -110,15 +128,22 @@ describe('/m/taxes/categories — la tabla de categorías', () => {
 
   it('no pinta el nombre inglés del seed en la columna «Nombre»', async () => {
     const el = await montar('erp-taxes-categories');
-    const col = columnas(el).find((c) => c.key === 'name')!;
+    const col = columnas(el).find((c) => c.key === 'display_name')!;
     expect(col.format, 'la columna «Nombre» pinta el dato crudo: no tiene capa de presentación').toBeTruthy();
     expect(col.format!(CATEGORIES[0] as unknown as Record<string, unknown>)).toBe('Producto — general');
     expect(col.format!(CATEGORIES[1] as unknown as Record<string, unknown>)).toBe('Restauración — alcohol');
   });
 
+  it('una categoría canónica que este bundle no conocía TAMBIÉN sale traducida', async () => {
+    const el = await montar('erp-taxes-categories');
+    const col = columnas(el).find((c) => c.key === 'display_name')!;
+    expect(col.format!(CATEGORIES[4] as unknown as Record<string, unknown>)).toBe('Producto — recién añadida');
+    expect(textoVisible(el)).not.toContain(INGLES_DE_LA_NUEVA);
+  });
+
   it('traduce también la descripción LEGAL de las exentas', async () => {
     const el = await montar('erp-taxes-categories');
-    const col = columnas(el).find((c) => c.key === 'description')!;
+    const col = columnas(el).find((c) => c.key === 'display_description')!;
     const shown = col.format!(CATEGORIES[2] as unknown as Record<string, unknown>);
     expect(shown, 'la descripción legal sigue en inglés').not.toContain('Regulated teaching');
     expect(shown, 'se perdió la cita del artículo, que es lo que la hace útil').toContain('art. 20.Uno.9');
@@ -135,8 +160,8 @@ describe('/m/taxes/categories — la tabla de categorías', () => {
 
   it('la categoría del USUARIO sale con su texto tal cual, sin inventarle traducción', async () => {
     const el = await montar('erp-taxes-categories');
-    const nombre = columnas(el).find((c) => c.key === 'name')!;
-    const desc = columnas(el).find((c) => c.key === 'description')!;
+    const nombre = columnas(el).find((c) => c.key === 'display_name')!;
+    const desc = columnas(el).find((c) => c.key === 'display_description')!;
     expect(nombre.format!(CATEGORIES[3] as unknown as Record<string, unknown>)).toBe('Catering de bodas');
     expect(desc.format!(CATEGORIES[3] as unknown as Record<string, unknown>)).toBe('Solo banquetes');
   });
@@ -163,10 +188,11 @@ describe('/m/taxes/aliases — alta de alias', () => {
 });
 
 describe('control de positivo: en INGLÉS el mismo texto sí sale', () => {
-  it('con `locale: en` la tabla de categorías devuelve el nombre fuente — la comprobación detecta lo que busca', async () => {
+  it('una fila cuyo `display_name` ES el inglés se pinta en inglés — la comprobación detecta lo que busca', async () => {
     stubShell('en');
     const el = await montar('erp-taxes-categories');
-    const col = columnas(el).find((c) => c.key === 'name')!;
-    expect(col.format!(CATEGORIES[0] as unknown as Record<string, unknown>)).toBe(INGLES_DEL_SEED);
+    const col = columnas(el).find((c) => c.key === 'display_name')!;
+    const enHub = { ...CATEGORIES[0], display_name: INGLES_DEL_SEED };
+    expect(col.format!(enHub as unknown as Record<string, unknown>)).toBe(INGLES_DEL_SEED);
   });
 });
