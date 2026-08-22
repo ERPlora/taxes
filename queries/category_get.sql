@@ -13,7 +13,8 @@ WITH caller_lang AS (
                  WHERE p.hub_id = :hub_id AND p.user_id = CAST(:current_user_id AS TEXT)), ''),
         NULLIF((SELECT TRIM(s.value) FROM hub_settings s
                  WHERE s.hub_id = :hub_id AND s.key = 'language'), ''),
-        'en') AS lang
+        -- The CORE's default for `language`, not the source language. See the note above (taxes#40).
+        'es') AS lang
 )
 SELECT c.id, c.key, c.name, c.description, c.is_system, c.is_active,
        COALESCE(NULLIF(l.label, ''), NULLIF(len.label, ''), c.name)                AS display_name,

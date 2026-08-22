@@ -25,9 +25,17 @@
 #   · the stored value never changes: `key` is still the identity, `name` still travels untouched.
 #
 # LANGUAGE RESOLUTION mirrors the shell (`apps/web/src/i18n/index.ts#bootHubLanguage`): the
-# personal override in `hub_user_pref` wins, then the hub default in `hub_settings.language`, then
-# English as the source language (ADR-0055). Resolving it server-side is what lets a consumer read
-# a column instead of carrying a catalogue.
+# personal override in `hub_user_pref` wins, then the hub default in `hub_settings.language`, and
+# then — the step taxes#40 got wrong — the CORE'S DEFAULT for that setting, which is `es`
+# (`hub/crates/runtime/src/settings.rs`, key `language`). Resolving it server-side is what lets a
+# consumer read a column instead of carrying a catalogue.
+#
+# THE STATE THIS TEST EXISTS FOR (taxes#40): a hub that was just provisioned has NO row in
+# `hub_settings` for `language` — the settings layer applies the default when READING, it never
+# writes it — and no `hub_user_pref` row either. That is every hub on its first day, and it was the
+# one case not covered here: the assertion that used to sit below expected English for it, which is
+# precisely the regression. `/api/hub/context` answers `"language":"es"` for that same hub, so
+# English was the one answer nobody in the product agreed with.
 #
 # Usage: tests/category-display-name.postgres.test.sh
 #   Uses the `erplora-test-pg-5433` container by default (override: TAXES_TEST_PG_CONTAINER).
@@ -41,6 +49,8 @@ HUB_ID="hub-test"
 USER_ES="u-spanish"
 USER_EN="u-english"
 USER_NONE="u-no-preference"
+# Nobody ever opened Settings for this one: it gets NO `hub_user_pref` row (taxes#40).
+USER_FRESH="u-never-opened-settings"
 NOW="2026-08-18T12:00:00Z"
 
 psql_db() { docker exec -i "$CONTAINER" psql -v ON_ERROR_STOP=1 -U postgres -d "$DB" "$@"; }
@@ -129,8 +139,25 @@ assert_eq "no-pref user follows the Spanish hub" "Producto — general" "$(cat_c
 psql_db -qc "UPDATE hub_settings SET value='en' WHERE hub_id='$HUB_ID' AND key='language';"
 assert_eq "the hub switches to English and so does the column" "Product — generic" "$(cat_col "$USER_NONE" display_name product.generic)"
 assert_eq "the personal override still wins" "Producto — general" "$(cat_col "$USER_ES" display_name product.generic)"
+
+echo "== a BRAND-NEW hub: no language row anywhere, and the catalogue is STILL not in English (taxes#40) =="
+# The state of every hub on its first day. `hub_settings` has no `language` row (the core applies
+# its default `es` when reading, it never persists it) and `$USER_FRESH` has no `hub_user_pref` row
+# either. Answering English here is what put the Spanish shell and the fiscal catalogue in two
+# different languages on the same screen.
 psql_db -qc "DELETE FROM hub_settings WHERE hub_id='$HUB_ID' AND key='language';"
-assert_eq "a hub that never stated a language falls back to the source language" "Product — generic" "$(cat_col "$USER_NONE" display_name product.generic)"
+assert_eq "fresh hub · categories.list" "Producto — general" "$(cat_col "$USER_FRESH" display_name product.generic)"
+assert_eq "fresh hub · the legal description too" \
+  "Asistencia prestada por profesionales médicos o sanitarios — art. 20.Uno.3 (ES)" \
+  "$(cat_col "$USER_FRESH" display_description service.health)"
+FRESH_UNTRANSLATED="$(run_query queries/categories_list.sql "$USER_FRESH" "count(*)" "WHERE sub.is_system = 1 AND sub.display_name = sub.name")"
+assert_eq "fresh hub · canonical categories still reading in English" 0 "$FRESH_UNTRANSLATED"
+assert_eq "fresh hub · categories.get (the importer's FK check)" "Producto — general" \
+  "$(run_query queries/category_get.sql "$USER_FRESH" display_name)"
+assert_eq "fresh hub · rules.list (what inventory and sales read)" "Producto — general" \
+  "$(run_query queries/rules_list.sql "$USER_FRESH" "DISTINCT sub.tax_category_display_name" "WHERE sub.tax_category_key = 'product.generic'")"
+assert_eq "fresh hub · a personal override still outranks the default" "Product — generic" \
+  "$(cat_col "$USER_EN" display_name product.generic)"
 psql_db -qc "INSERT INTO hub_settings (hub_id, key, value, updated_at, updated_by) VALUES ('$HUB_ID','language','es','$NOW','system');"
 
 echo "== every canonical category is translated: not one comes out in the seeded English =="
