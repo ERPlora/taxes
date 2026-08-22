@@ -19,7 +19,8 @@ WITH caller_lang AS (
                  WHERE p.hub_id = :hub_id AND p.user_id = CAST(:current_user_id AS TEXT)), ''),
         NULLIF((SELECT TRIM(s.value) FROM hub_settings s
                  WHERE s.hub_id = :hub_id AND s.key = 'language'), ''),
-        'en') AS lang
+        -- The CORE's default for `language`, not the source language. See the note above (taxes#40).
+        'es') AS lang
 )
 SELECT r.id, r.country_code, r.region_code, r.tax_category_key, r.rate_pct, r.tax_type,
        r.operation_class, r.exempt_reason, r.regime_key,
