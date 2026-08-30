@@ -199,3 +199,40 @@ describe('la tabla manda el tamaño de página', () => {
     expect(ctrl.state.pageSize, 'la tabla no propaga el tamaño de página').toBe(25);
   });
 });
+
+describe('ergonomía y seguridad de las acciones fiscales', () => {
+  it('abre en tarjetas a 390/834 y conserva tabla en escritorio', async () => {
+    const previousWidth = window.innerWidth;
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
+    const mobile = await montar();
+    expect((tabla(mobile) as unknown as { defaultView?: string })?.defaultView).toBe('cards');
+
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1440 });
+    const desktop = await montar();
+    expect((tabla(desktop) as unknown as { defaultView?: string })?.defaultView).toBe('table');
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: previousWidth });
+  });
+
+  it('no desactiva hasta confirmar y explica el impacto', async () => {
+    const el = await montar();
+    tabla(el)!.dispatchEvent(new CustomEvent('rowAction', {
+      detail: { actionId: 'deactivate', row: REGLA },
+    }));
+    await (el as unknown as { updateComplete: Promise<unknown> }).updateComplete;
+
+    const alert = el.shadowRoot.querySelector('ion-alert') as HTMLElement & {
+      isOpen: boolean;
+    };
+    expect(alert.isOpen).toBe(true);
+    expect(alert.getAttribute('message')).toContain('ui.deactivateConfirmMessage');
+    expect(comandos).toEqual([]);
+
+    await (el as unknown as {
+      onDeactivateDismiss: (ev: CustomEvent<{ role: string }>) => Promise<void>;
+    }).onDeactivateDismiss(new CustomEvent('dismiss', { detail: { role: 'confirm' } }));
+    expect(comandos).toContainEqual({
+      name: 'taxes.rules.deactivate',
+      payload: { rule_id: REGLA.id },
+    });
+  });
+});

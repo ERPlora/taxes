@@ -1,5 +1,6 @@
 {
   "name": "Impuestos",
+  "description": "Categorías fiscales y reglas de impuestos por territorio, con el motor que resuelve el tipo en el momento de la venta.",
   "navigation": {
     "categories": {
       "label": "Categorías"
@@ -10,6 +11,10 @@
     "aliases": {
       "label": "Alias"
     }
+  },
+  "setup": {
+    "title": "Tus impuestos",
+    "description": "Configura los tipos de IVA del país en el que vendes para que el TPV pueda calcular el precio de una venta."
   },
   "ui": {
     "colKey": "Clave",
@@ -24,7 +29,6 @@
     "colType": "Tipo",
     "colValidFrom": "Vigente desde",
     "colValidTo": "Vigente hasta",
-    "colParentId": "ID regla raíz",
     "colComponentLabel": "Etiqueta componente",
     "colAlias": "Alias",
     "colSource": "Origen",
@@ -50,7 +54,6 @@
     "phRegion": "opcional",
     "phCategoryKey": "restaurant.food",
     "phPercent": "21",
-    "phParentId": "opcional",
     "phComponentLabel": "Recargo de equivalencia",
     "phAlias": "comida",
     "btnSaving": "Guardando…",
@@ -63,10 +66,31 @@
     "emptyRules": "Sin reglas fiscales.",
     "emptyAliases": "Sin alias de categorías.",
     "actionDeactivate": "Desactivar",
-    "rulesHint": "Cada regla fija el % para una categoría en un país (y opcionalmente una región). Para multi-tributo (p.ej. recargo de equivalencia), indica el ID de una regla raíz en «ID regla raíz» y una «Etiqueta componente».",
+    "cancel": "Cancelar",
+    "deactivateConfirmTitle": "Desactivar regla fiscal",
+    "deactivateConfirmMessage": "La regla dejará de aplicarse a operaciones nuevas. Los documentos fiscales ya emitidos no se modifican.",
+    "deactivateConfirmAction": "Desactivar regla",
+    "rulesHint": "Cada regla fija el % de una categoría en un país (y opcionalmente una región). Para multi-tributo (p. ej. recargo de equivalencia), elige en «Regla raíz» la regla de la que cuelga y dale una «Etiqueta del componente».",
     "errCreateCategory": "No se pudo crear la categoría",
     "errCreateRule": "No se pudo crear la regla",
     "errDeactivateRule": "No se pudo desactivar la regla",
-    "errCreateAlias": "No se pudo crear el alias"
+    "errCreateAlias": "No se pudo crear el alias",
+    "colParentRule": "Regla raíz (componente de)",
+    "phParentRule": "Elige una regla raíz",
+    "phParentRuleNone": "No hay regla raíz compatible para ese país/región/categoría",
+    "optNoParent": "Ninguna (es una regla raíz)",
+    "readOnlyHint": "Puedes consultar las reglas fiscales pero no modificarlas.",
+    "taxType_igic": "IGIC (Canarias)",
+    "taxType_ipsi": "IPSI (Ceuta/Melilla)",
+    "colOperationClass": "Calificación",
+    "opClass_subject": "Sujeta",
+    "opClass_subject_reverse": "Inversión del sujeto pasivo",
+    "opClass_exempt": "Exenta",
+    "opClass_not_subject": "No sujeta",
+    "opClass_not_subject_location": "No sujeta (reglas de localización)",
+    "colExemptReason": "Causa de exención",
+    "phExemptReason": "p. ej. E1 (código de la jurisdicción)",
+    "colRegimeKey": "Régimen",
+    "phRegimeKey": "opcional (código de la jurisdicción, p. ej. 01)"
   }
 }

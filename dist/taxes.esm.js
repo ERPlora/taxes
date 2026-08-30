@@ -9,7 +9,7 @@ var __decorateClass = (decorators, target, key, kind) => {
   return result;
 };
 
-// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
+// ../../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/lib/element-internals.js
 var ElementInternalsShim = class ElementInternals {
   get shadowRoot() {
     return this.__host.__shadowRoot;
@@ -88,7 +88,7 @@ var ElementInternalsShim = class ElementInternals {
   }
 };
 
-// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/events.js
+// ../../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/lib/events.js
 var __classPrivateFieldSet = function(receiver, state, value, kind, f3) {
   if (kind === "m") throw new TypeError("Private method is not writable");
   if (kind === "a" && !f3) throw new TypeError("Private accessor was defined without a setter");
@@ -246,7 +246,7 @@ Object.defineProperties(CustomEventShim.prototype, {
 var EventShimWithRealType = EventShim;
 var CustomEventShimWithRealType = CustomEventShim;
 
-// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/lib/css.js
+// ../../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/lib/css.js
 var _a2;
 var CSSRuleShim = (_a2 = class CSSRule {
   constructor() {
@@ -277,7 +277,7 @@ var CSSRuleShim = (_a2 = class CSSRule {
   }
 }, _a2.STYLE_RULE = 1, _a2.CHARSET_RULE = 2, _a2.IMPORT_RULE = 3, _a2.MEDIA_RULE = 4, _a2.FONT_FACE_RULE = 5, _a2.PAGE_RULE = 6, _a2.NAMESPACE_RULE = 10, _a2.KEYFRAMES_RULE = 7, _a2.KEYFRAME_RULE = 8, _a2.SUPPORTS_RULE = 12, _a2.COUNTER_STYLE_RULE = 11, _a2.FONT_FEATURE_VALUES_RULE = 14, _a2.MARGIN_RULE = 9, _a2);
 
-// node_modules/.pnpm/@lit-labs+ssr-dom-shim@1.6.0/node_modules/@lit-labs/ssr-dom-shim/index.js
+// ../../../module-toolkit/node_modules/@lit-labs/ssr-dom-shim/index.js
 globalThis.Event ??= EventShimWithRealType;
 globalThis.CustomEvent ??= CustomEventShimWithRealType;
 var constructionToken = Symbol();
@@ -462,7 +462,7 @@ var attributesForElement = (element) => {
   }
   return attrs;
 };
-var NodeShim = class Node extends EventTarget {
+var NodeShim = class Node2 extends EventTarget {
   getRootNode(options) {
     if (options?.composed) {
       return document2;
@@ -674,7 +674,7 @@ var CustomElementRegistryShimWithRealType = CustomElementRegistry;
 var customElements2 = new CustomElementRegistryShimWithRealType();
 var windowShim = new WindowShim(constructionToken);
 
-// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/css-tag.js
+// ../../../module-toolkit/node_modules/@lit/reactive-element/node/css-tag.js
 var t = globalThis;
 var e = t.ShadowRoot && (void 0 === t.ShadyCSS || t.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype;
 var s = Symbol();
@@ -719,7 +719,7 @@ var c = e || void 0 === t.CSSStyleSheet ? (t5) => t5 : (t5) => t5 instanceof CSS
   return r(e5);
 })(t5) : t5;
 
-// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/reactive-element.js
+// ../../../module-toolkit/node_modules/@lit/reactive-element/node/reactive-element.js
 var { is: h, defineProperty: r2, getOwnPropertyDescriptor: o2, getOwnPropertyNames: n2, getOwnPropertySymbols: a, getPrototypeOf: c2 } = Object;
 var l = globalThis;
 l.customElements ??= customElements2;
@@ -942,7 +942,7 @@ var g = class extends (globalThis.HTMLElement ?? HTMLElementShimWithRealType) {
 };
 g.elementStyles = [], g.shadowRootOptions = { mode: "open" }, g[f("elementProperties")] = /* @__PURE__ */ new Map(), g[f("finalized")] = /* @__PURE__ */ new Map(), u?.({ ReactiveElement: g }), (l.reactiveElementVersions ??= []).push("2.1.2");
 
-// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/lit-html.js
+// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/lit-html.js
 var t2 = globalThis;
 var i2 = (t5) => t5;
 var s2 = t2.trustedTypes;
@@ -1197,7 +1197,7 @@ var D = (t5, i7, s5) => {
   return h4._$AI(t5), h4;
 };
 
-// node_modules/.pnpm/lit-element@4.2.2/node_modules/lit-element/lit-element.js
+// ../../node_modules/.pnpm/lit-element@4.2.2/node_modules/lit-element/lit-element.js
 var s3 = globalThis;
 var i3 = class extends g {
   constructor() {
@@ -1226,7 +1226,7 @@ var o4 = s3.litElementPolyfillSupport;
 o4?.({ LitElement: i3 });
 (s3.litElementVersions ??= []).push("4.2.2");
 
-// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/decorators/property.js
+// ../../../module-toolkit/node_modules/@lit/reactive-element/node/decorators/property.js
 var o5 = { attribute: true, type: String, converter: b, reflect: false, hasChanged: m };
 var r4 = (t5 = o5, e5, r6) => {
   const { kind: n6, metadata: i7 } = r6;
@@ -1256,19 +1256,19 @@ function n4(t5) {
   })(t5, e5, o7);
 }
 
-// node_modules/.pnpm/@lit+reactive-element@2.1.2/node_modules/@lit/reactive-element/node/decorators/state.js
+// ../../../module-toolkit/node_modules/@lit/reactive-element/node/decorators/state.js
 function r5(r6) {
   return n4({ ...r6, state: true, attribute: false });
 }
 
-// node_modules/.pnpm/@erplora+outfitkit@file+..+outfitkit/node_modules/@erplora/outfitkit/dist/define.js
+// ../../../outfitkit/dist/define.js
 function define(tag, ctor) {
   if (typeof customElements !== "undefined" && !customElements.get(tag)) {
     customElements.define(tag, ctor);
   }
 }
 
-// node_modules/.pnpm/@erplora+outfitkit@file+..+outfitkit/node_modules/@erplora/outfitkit/dist/shared/icons.js
+// ../../../outfitkit/dist/shared/icons.js
 var rawAdd = '<svg viewBox="0 0 512 512" width="1.2em" height="1.2em" ><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M256 112v288m144-144H112"/></svg>';
 var rawAlertCircle = '<svg viewBox="0 0 512 512" width="1.2em" height="1.2em" ><path fill="currentColor" d="M256 48C141.31 48 48 141.31 48 256s93.31 208 208 208s208-93.31 208-208S370.69 48 256 48m0 319.91a20 20 0 1 1 20-20a20 20 0 0 1-20 20m21.72-201.15l-5.74 122a16 16 0 0 1-32 0l-5.74-121.94v-.05a21.74 21.74 0 1 1 43.44 0Z"/></svg>';
 var rawAlertCircleOutline = '<svg viewBox="0 0 512 512" width="1.2em" height="1.2em" ><path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32" d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192s192-86 192-192Z"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M250.26 166.05L256 288l5.73-121.95a5.74 5.74 0 0 0-5.79-6h0a5.74 5.74 0 0 0-5.68 6"/><path fill="currentColor" d="M256 367.91a20 20 0 1 1 20-20a20 20 0 0 1-20 20"/></svg>';
@@ -1416,7 +1416,7 @@ function okIcon(value) {
   return BY_NAME[value] ?? value;
 }
 
-// node_modules/.pnpm/@erplora+outfitkit@file+..+outfitkit/node_modules/@erplora/outfitkit/dist/ok-inline-feedback.js
+// ../../../outfitkit/dist/ok-inline-feedback.js
 var __defProp2 = Object.defineProperty;
 var __decorateClass2 = (decorators, target, key, kind) => {
   var result = void 0;
@@ -1633,7 +1633,7 @@ __decorateClass2([
 ], OkInlineFeedback.prototype, "hasActions");
 define("ok-inline-feedback", OkInlineFeedback);
 
-// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive.js
+// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive.js
 var t3 = { ATTRIBUTE: 1, CHILD: 2, PROPERTY: 3, BOOLEAN_ATTRIBUTE: 4, EVENT: 5, ELEMENT: 6 };
 var e4 = (t5) => (...e5) => ({ _$litDirective$: t5, values: e5 });
 var i4 = class {
@@ -1653,7 +1653,7 @@ var i4 = class {
   }
 };
 
-// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive-helpers.js
+// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directive-helpers.js
 var { I: t4 } = j;
 var i5 = (o7) => o7;
 var s4 = () => document.createComment("");
@@ -1686,7 +1686,7 @@ var h3 = (o7) => {
   o7._$AR(), o7._$AA.remove();
 };
 
-// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/repeat.js
+// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/repeat.js
 var u4 = (e5, s5, t5) => {
   const r6 = /* @__PURE__ */ new Map();
   for (let l3 = s5; l3 <= t5; l3++) r6.set(e5[l3], l3);
@@ -1739,7 +1739,7 @@ var c4 = e4(class extends i4 {
   }
 });
 
-// node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/style-map.js
+// ../../node_modules/.pnpm/lit-html@3.3.3/node_modules/lit-html/directives/style-map.js
 var n5 = "important";
 var i6 = " !" + n5;
 var o6 = e4(class extends i4 {
@@ -1768,14 +1768,55 @@ var o6 = e4(class extends i4 {
   }
 });
 
-// node_modules/.pnpm/@erplora+outfitkit@file+..+outfitkit/node_modules/@erplora/outfitkit/dist/ok-data-table.js
+// ../../../outfitkit/dist/ok-data-table.js
 var CSV_BOM = "\uFEFF";
+var WINDOWS_1252_C1 = [
+  8364,
+  129,
+  8218,
+  402,
+  8222,
+  8230,
+  8224,
+  8225,
+  710,
+  8240,
+  352,
+  8249,
+  338,
+  141,
+  381,
+  143,
+  144,
+  8216,
+  8217,
+  8220,
+  8221,
+  8226,
+  8211,
+  8212,
+  732,
+  8482,
+  353,
+  8250,
+  339,
+  157,
+  382,
+  376
+];
+function decodeWindows1252(bytes) {
+  let text = "";
+  for (const byte of bytes) {
+    text += String.fromCharCode(byte >= 128 && byte <= 159 ? WINDOWS_1252_C1[byte - 128] : byte);
+  }
+  return text;
+}
 function decodeCsvBuffer(buf) {
   let text;
   try {
     text = new TextDecoder("utf-8", { fatal: true }).decode(buf);
   } catch {
-    text = new TextDecoder("windows-1252").decode(buf);
+    text = decodeWindows1252(new Uint8Array(buf));
   }
   return text.charCodeAt(0) === 65279 ? text.slice(1) : text;
 }
@@ -1822,9 +1863,47 @@ var DEFAULT_LABELS2 = {
   select: "Select",
   showing: "Showing {from}\u2013{to} of",
   recordSingular: "record",
-  recordPlural: "records"
+  recordPlural: "records",
+  loadMore: "Load more"
 };
-var OkDataTable = class extends i3 {
+var ES_LABELS = {
+  search: "Buscar\u2026",
+  empty: "Sin resultados",
+  filters: "Filtros",
+  clear: "Limpiar",
+  apply: "Aplicar",
+  selected: "{n} seleccionados",
+  importCsv: "Importar CSV",
+  exportCsv: "Exportar CSV",
+  add: "A\xF1adir",
+  moreActions: "M\xE1s acciones",
+  rowsPerPage: "Filas por p\xE1gina",
+  perPageShort: "{n} / p\xE1g.",
+  viewList: "Vista lista",
+  viewCards: "Vista tarjetas",
+  columnsVisible: "Columnas visibles",
+  columns: "Columnas",
+  actions: "Acciones",
+  close: "Cerrar",
+  newRecord: "Nuevo",
+  form: "Formulario",
+  filterPlaceholder: "Filtrar\u2026",
+  from: "Desde",
+  to: "Hasta",
+  fromOf: "{label} desde",
+  toOf: "{label} hasta",
+  gte: "\u2265",
+  lte: "\u2264",
+  noValues: "Sin valores",
+  selectAll: "Seleccionar todo",
+  selectRow: "Seleccionar fila",
+  select: "Seleccionar",
+  showing: "Mostrando {from}\u2013{to} de",
+  recordSingular: "registro",
+  recordPlural: "registros",
+  loadMore: "Cargar m\xE1s"
+};
+var _OkDataTable = class _OkDataTable2 extends i3 {
   constructor() {
     super(...arguments);
     this.columns = [];
@@ -1850,21 +1929,28 @@ var OkDataTable = class extends i3 {
     this.exportable = false;
     this.importable = false;
     this.columnSelector = false;
+    this.rowClickable = false;
     this.selectable = false;
     this.inlineFilters = false;
     this.menuActions = [];
     this.q = "";
     this.clientPage = 0;
     this.clientPageSize = 0;
+    this.mobileShown = 0;
     this.clientSort = "";
     this.clientSortDir = "asc";
     this.clientFilters = {};
     this.filterDraft = {};
     this.panel = "none";
     this.viewMode = "table";
+    this.viewChosenByUser = false;
+    this.isMobile = false;
+    this.xOverflow = false;
     this.hiddenKeys = /* @__PURE__ */ new Set();
     this.internalSelection = /* @__PURE__ */ new Set();
     this.menuOpen = false;
+    this.onLocaleChanged = () => this.requestUpdate();
+    this.onWindowResize = () => this.measureXOverflow();
     this.onSearch = (ev) => {
       const value = ev.target.value ?? "";
       if (this.serverSide) {
@@ -1872,6 +1958,7 @@ var OkDataTable = class extends i3 {
       } else {
         this.q = value;
         this.clientPage = 0;
+        this.mobileShown = 0;
       }
     };
   }
@@ -1912,13 +1999,37 @@ var OkDataTable = class extends i3 {
       box-shadow: none;
     }
 
-    /* Panel lateral derecho (drawer) DENTRO de la tabla: filtros / alta-edición. No empuja contenido. */
+    /* Panel lateral derecho (drawer) DENTRO de la tabla: filtros / alta-edición. Base (sin media):
+       overlay absoluto — es lo que había hasta #75 y lo que ve un navegador sin media queries. */
     .tk-scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.18); z-index: 19; }
     .drawer { position: absolute; top: 0; right: 0; height: 100%; width: 340px; max-width: 88%;
       background: var(--background); border-left: 1px solid var(--border-color);
       display: flex; flex-direction: column; z-index: 20;
       animation: tk-slide-in 0.18s ease; }
     @keyframes tk-slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    /* #75 — El panel EMPUJA en escritorio y es HOJA COMPLETA en móvil; nunca tapa a medias.
+       Medido en el hub (Servicios/Citas): a 1440 el overlay de 340px se pintaba ENCIMA de
+       «Duración», «Acciones» y el selector de columnas, con el 90% de la tabla vacío a la
+       izquierda; a 390 dejaba una tira de 45px de tabla (media lupa, medio «Co…») que hacía
+       parecer el formulario un pop-up mal puesto. Square Dashboard reduce la tabla con un panel
+       fijo; Fresha/Shopify/Odoo abren una hoja a pantalla completa en móvil.
+       ≥ 834px: mientras hay panel, .card pasa a rejilla de DOS columnas (tabla | panel 360px):
+       la tabla se estrecha (ya sabe hacer scroll-x, #67) y nada queda tapado. */
+    @media (min-width: 834px) {
+      .card.has-panel { display: grid; grid-template-columns: minmax(0, 1fr) 360px; grid-template-rows: auto minmax(0, 1fr) auto; }
+      .card.has-panel > .bar { grid-column: 1; grid-row: 1; }
+      .card.has-panel > .scroll, .card.has-panel > .cards-grid, .card.has-panel > .empty { grid-column: 1; grid-row: 2; min-height: 0; overflow: auto; }
+      .card.has-panel > .pager { grid-column: 1; grid-row: 3; }
+      .card.has-panel > .drawer { position: static; grid-column: 2; grid-row: 1 / -1; width: auto; max-width: none; height: auto; min-height: 0; animation: none; }
+      .card.has-panel > .tk-scrim { display: none; }
+    }
+    /* < 834px: hoja a pantalla completa con su cabecera (título + Cerrar); sin tira residual.
+       position:fixed dentro de ion-content se ancla al área de contenido (contain), que es justo el hueco
+       bajo la cabecera de la app: el usuario conserva el título de la página. */
+    @media (max-width: 833.98px) {
+      .drawer { position: fixed; inset: 0; top: var(--ok-sheet-top, 0px); width: 100%; max-width: none; height: auto; border-left: 0; z-index: 1000; }
+      .tk-scrim { display: none; }
+    }
     .drawer .dh { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;
       padding: 0.6rem 0.5rem 0.6rem 1rem; border-bottom: 1px solid var(--border-color); font-size: 1rem; }
     .drawer .db { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.85rem; }
@@ -1985,6 +2096,11 @@ var OkDataTable = class extends i3 {
 
     /* Botón primario (primaryAction) */
     .primary-btn { --background: var(--primary); --color: var(--primary-contrast); }
+    /* #76 — El alta en MÓVIL: botón primario CON etiqueta y área táctil de 44px, en vez del «+»
+       icónico de 36px al final de la barra. Fresha/Square/Shopify POS ponen la acción primaria
+       de la lista como botón visible con texto (o FAB), nunca como icono anónimo. */
+    .add-btn { min-height: 44px; --border-radius: 10px; --padding-start: 0.9rem; --padding-end: 1rem; margin: 0; font-weight: 600; }
+    .add-btn ion-icon { margin-inline-end: 0.35rem; }
 
     /* Selects de la toolbar: fondo + borde visibles (como el buscador y la pastilla de fechas) para
      * que se distingan como controles en claro y oscuro (sin fondo eran invisibles en dark). */
@@ -2015,7 +2131,14 @@ var OkDataTable = class extends i3 {
     .filters-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.6rem; }
 
     /* ── Vista lista en CSS GRID (no <table>): permite ancho por columna ──────────────────── */
+    /* #67 — La barra horizontal es PERMANENTE cuando hay desbordamiento: la overlay de macOS se
+       esconde a los pocos ms y deja la tabla sin ninguna pista de que sigue a la derecha. Al
+       declarar ::-webkit-scrollbar el navegador pinta la clásica, que ocupa sitio y se ve. */
     .scroll { overflow-x: auto; }
+    .scroll::-webkit-scrollbar { height: 10px; }
+    .scroll::-webkit-scrollbar-track { background: transparent; }
+    .scroll::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--color) 25%, transparent); border-radius: 6px; }
+    .scroll::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--color) 40%, transparent); }
     .grid { min-width: max-content; font-size: 14px; }
     .grow { display: grid; align-items: center; gap: 0.5rem; padding: 0 1rem; }
     .ghead { position: sticky; top: 0; z-index: 2; border-bottom: 1px solid var(--border-color);
@@ -2024,6 +2147,17 @@ var OkDataTable = class extends i3 {
     .gcell > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .gcell.right { justify-content: flex-end; text-align: right; }
     .gcell.center { justify-content: center; text-align: center; }
+    /* #67 — COLUMNA DE ACCIONES FIJADA. Con seis columnas o más la rejilla desborda por diseño
+       (min-width: max-content) y el botón que abre el registro se iba fuera de la pantalla: a
+       1440px quedaba a 335px del borde, sin nada que lo delatara. Se queda pegada al borde
+       derecho, como en Zendesk/Freshdesk/Shopify. Con background:inherit la hereda de la fila (que
+       por eso es opaca), así conserva hover y selección sin que se lea nada por debajo. */
+    .gcell.actions-col { position: sticky; right: 0; z-index: 1; background: inherit;
+      margin-right: -1rem; padding-right: 1rem; }
+    /* La sombra solo aparece cuando de verdad hay algo escondido a la izquierda (clase x-overflow);
+       si la tabla cabe entera no se pinta nada. */
+    .scroll.x-overflow .gcell.actions-col { box-shadow: -10px 0 10px -10px color-mix(in srgb, var(--color) 45%, transparent); }
+    .ghead .gcell.actions-col { z-index: 3; }
     .gh { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted); }
     .gh.sortable { cursor: pointer; user-select: none; white-space: nowrap; transition: background-color var(--ok-transition, 150ms ease), color var(--ok-transition, 150ms ease), box-shadow var(--ok-transition, 150ms ease), transform 120ms ease; }
     @media (hover: hover) {
@@ -2032,13 +2166,17 @@ var OkDataTable = class extends i3 {
     /* Caret de orden (3 estados, icono Ionic): neutral atenuado / activo en color primario. */
     .caret { display: inline-flex; align-items: center; margin-left: 0.25rem; flex: 0 0 auto; font-size: 13px; opacity: 0.3; }
     .caret.on { opacity: 1; color: var(--primary); }
-    .grow-data { border-bottom: 1px solid var(--border-color-soft); padding-top: 0.6rem; padding-bottom: 0.6rem; transition: background-color var(--ok-transition, 150ms ease), color var(--ok-transition, 150ms ease), box-shadow var(--ok-transition, 150ms ease), transform 120ms ease; }
+    .grow-data { background: var(--background); border-bottom: 1px solid var(--border-color-soft); padding-top: 0.6rem; padding-bottom: 0.6rem; transition: background-color var(--ok-transition, 150ms ease), color var(--ok-transition, 150ms ease), box-shadow var(--ok-transition, 150ms ease), transform 120ms ease; }
     .grow-data:last-child { border-bottom: 0; }
     @media (hover: hover) {
-      .grow-data:hover { background: var(--row-hover); }
+      .grow-data:hover { background: linear-gradient(var(--row-hover), var(--row-hover)), var(--background); }
     }
     .grow-data:active { transform: scale(0.995); }
-    .grow-data.selected { background: color-mix(in srgb, var(--primary) 10%, transparent); }
+    .grow-data.selected { background: linear-gradient(color-mix(in srgb, var(--primary) 10%, transparent), color-mix(in srgb, var(--primary) 10%, transparent)), var(--background); }
+    /* #67 — Fila clicable (opt-in row-clickable): es lo primero que intenta el usuario y lo que
+       hacen Odoo, Jira SM, Shopify o Square en sus listados. */
+    .grow-data.clickable { cursor: pointer; }
+    .grow-data.clickable:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
     .selcb { display: flex; align-items: center; justify-content: center; }
     .filters-grow { padding-top: 0.4rem; padding-bottom: 0.6rem; }
     .filters-grow input, .filters-grow select { width: 100%; box-sizing: border-box; font: inherit; font-size: 13px; padding: 0.3rem 0.4rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--background); color: var(--color); }
@@ -2059,12 +2197,21 @@ var OkDataTable = class extends i3 {
        que Ionic no trae (cabecera en fila, filas clave-valor, barra de acciones, resalte de selección). */
     ion-card.rcard { margin: 0; } /* la rejilla aporta el gap → sin esto el margin por defecto de ion-card lo duplica */
     ion-card.rcard.selected { outline: 2px solid var(--primary); outline-offset: -2px; }
+    /* #74 — Tarjeta clicable (opt-in row-clickable): la mitad de #67 que faltaba. La vista de
+       tarjetas es la que la tabla elige SOLA en móvil, así que sin esto el registro no se podía
+       abrir desde un teléfono (medido con combos 0.1.4: 0 rowClick a 390px). */
+    ion-card.rcard.clickable { cursor: pointer; }
+    ion-card.rcard.clickable:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
     @media (prefers-reduced-motion: reduce) {
       .gh.sortable:hover, .gh.sortable:active,
       .grow-data:hover, .grow-data:active { transform: none; }
     }
-    /* Cabecera: ion-card-header en fila (icono + título + checkbox); se conserva su padding Ionic. */
-    ion-card-header.rcard-head { display: flex; align-items: center; gap: 0.5rem; }
+    /* Header: ion-card-header as a single row (icon + title + checkbox), keeping Ionic's padding.
+       #79 — flex-direction/flex-wrap are SPELLED OUT on purpose: in ios mode (the mode the Hub
+       shell pins, ADR-0143) Ionic's own host CSS gives ion-card-header a column direction, so a
+       rule that only sets display:flex inherits it and the three children stack on three lines.
+       Under md the same rule looked right, which is why it shipped. */
+    ion-card-header.rcard-head { display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 0.5rem; }
     .rcard-head .rc-icon { display: inline-flex; color: var(--primary); }
     .rcard-head .rc-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
     /* Cuerpo: ion-card-content (padding Ionic por defecto) con las filas clave-valor apiladas. */
@@ -2080,6 +2227,13 @@ var OkDataTable = class extends i3 {
     .empty .empty-ic { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; border-radius: 999px; background: var(--header-background); font-size: 26px; }
 
     .actions { display: flex; gap: 0.25rem; justify-content: flex-end; }
+    /* Las acciones de fila son icon-only y de tamaño small en escritorio. En tablet/móvil se
+     * amplía el host completo (no solo el icono) para que el área táctil alcance 44×44 px. */
+    @media (pointer: coarse), (max-width: 834px) {
+      .actions ion-button { min-width: 44px; min-height: 44px; margin: 0; }
+      .toolbtn { width: 44px; height: 44px; }
+      .pager .nav ion-button { min-width: 44px; min-height: 44px; margin: 0; }
+    }
     /* Spinner de acción en curso (loading): contenido dentro del ion-button small (Ionic lo fija
      * a 28px en el :host, por eso width/height y no font-size). Cubre tabla y tarjetas: los
      * botones de fila siempre van dentro de .actions. */
@@ -2091,6 +2245,11 @@ var OkDataTable = class extends i3 {
     .pager .strong { font-weight: 600; color: var(--color); }
     .psize { font: inherit; font-size: 12.5px; padding: 0.2rem 0.35rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--background); color: var(--color); }
     .pager .nav { display: flex; align-items: center; gap: 0.2rem; }
+    /* #78 — Pie en MÓVIL: un solo control «Cargar más» en lugar del pager numerado (Shopify
+       IndexTable, Fresha, Square y Material hacen lo mismo: nadie pinta botones de página en un
+       teléfono). Sin atributo fill: el sólido por defecto de Ionic es el único que pinta caja en
+       modo ios (outfitkit#82 / ADR-0143). Los 44px son el área táctil mínima. */
+    .pager .load-more { min-height: 44px; margin: 0; --padding-start: 1rem; --padding-end: 1rem; font-size: 13px; }
     .pager .nav .pp { font-weight: 600; color: var(--color); padding: 0 0.25rem; }
     /* Pager numerado: botón por página + «…» en los saltos (look del Hub). */
     .pnum { min-width: 1.75rem; height: 1.75rem; padding: 0 0.4rem; border: 1px solid transparent; border-radius: 8px; background: none; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--color); cursor: pointer; transition: background 0.12s, border-color 0.12s; }
@@ -2100,9 +2259,93 @@ var OkDataTable = class extends i3 {
     ion-button { --box-shadow: none; }
   `;
   }
-  // ── i18n: textos efectivos (default inglés ← overrides de `.labels`) ──────────────────────
+  static {
+    this.MOBILE_BREAKPOINT = 640;
+  }
+  connectedCallback() {
+    super.connectedCallback();
+    if (typeof window !== "undefined") {
+      window.addEventListener("erplora:locale-changed", this.onLocaleChanged);
+      window.addEventListener("resize", this.onWindowResize);
+    }
+    if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
+      this.mq = window.matchMedia(`(max-width: ${_OkDataTable2.MOBILE_BREAKPOINT}px)`);
+      this.isMobile = this.mq.matches;
+      const handler = (e5) => {
+        const matches = "matches" in e5 ? e5.matches : this.mq?.matches ?? false;
+        if (this.isMobile === matches) return;
+        this.isMobile = matches;
+        if (matches && this.cardViewEnabled) this.viewMode = "cards";
+        else if (!matches && this.viewMode === "cards") this.viewMode = "table";
+      };
+      this.mq.addEventListener("change", handler);
+      this._mqHandler = handler;
+    }
+  }
+  /** #67 — Recalcula si la vista lista desborda a lo ancho (`scrollWidth > clientWidth`).
+   *
+   * Se mide después de renderizar, que es cuando el navegador ya conoce los anchos, y solo se
+   * escribe el estado si CAMBIA: asignarlo siempre reprogramaría un render en bucle. */
+  measureXOverflow() {
+    const scroll = this.renderRoot?.querySelector?.(".scroll");
+    const overflow = !!scroll && scroll.scrollWidth > scroll.clientWidth;
+    if (this.xOverflow !== overflow) this.xOverflow = overflow;
+  }
+  /** Engancha el observador al contenedor de scroll del render actual (cambia entre vistas). */
+  observeXOverflow() {
+    if (typeof ResizeObserver === "undefined") return;
+    const scroll = this.renderRoot?.querySelector?.(".scroll");
+    if (!scroll) return;
+    this.xObserver ??= new ResizeObserver(() => this.measureXOverflow());
+    this.xObserver.disconnect();
+    this.xObserver.observe(scroll);
+    const grid = scroll.querySelector(".grid");
+    if (grid) this.xObserver.observe(grid);
+  }
+  updated(changed) {
+    this.observeXOverflow();
+    this.measureXOverflow();
+    if (changed.has("panel")) this.syncSheetTop();
+  }
+  /** #75 — Where the mobile sheet starts. `position: fixed; inset: 0` painted it from y=0 and the
+   *  app's `ion-header` (its own stacking context, above the content) covered the sheet's title and
+   *  its only Close button — measured at 390×844 in the Appointments parity page. CSS inside a
+   *  shadow root cannot know where the content area begins, so on open the table measures the
+   *  closest `ion-content` (walking through shadow hosts) and hands the offset over as a custom
+   *  property; on close it is removed. Without an `ion-content` around, the sheet keeps y=0. */
+  syncSheetTop() {
+    if (this.panel === "none") {
+      this.style.removeProperty("--ok-sheet-top");
+      return;
+    }
+    let node = this;
+    let content = null;
+    while (node && !content) {
+      const parent = node.parentNode ?? node.getRootNode?.()?.host ?? null;
+      if (parent && parent.nodeType === Node.ELEMENT_NODE && parent.tagName === "ION-CONTENT") content = parent;
+      node = parent === node ? null : parent;
+    }
+    const top = content ? Math.max(0, Math.round(content.getBoundingClientRect().top)) : 0;
+    this.style.setProperty("--ok-sheet-top", `${top}px`);
+  }
+  disconnectedCallback() {
+    if (typeof window !== "undefined") {
+      window.removeEventListener("erplora:locale-changed", this.onLocaleChanged);
+      window.removeEventListener("resize", this.onWindowResize);
+    }
+    this.xObserver?.disconnect();
+    this.xObserver = void 0;
+    if (this.mq) {
+      const handler = this._mqHandler;
+      if (handler) this.mq.removeEventListener("change", handler);
+      this.mq = void 0;
+    }
+    super.disconnectedCallback();
+  }
+  // ── i18n: idioma del documento ← overrides explícitos de `.labels` ─────────────────────────
   get t() {
-    return { ...DEFAULT_LABELS2, ...this.labels };
+    const lang = typeof document === "undefined" ? "en" : document.documentElement.lang.toLowerCase();
+    return { ...lang.startsWith("es") ? ES_LABELS : DEFAULT_LABELS2, ...this.labels };
   }
   /** Placeholder efectivo del buscador (prop explícita → label i18n → default inglés). */
   get effSearchPlaceholder() {
@@ -2271,6 +2514,7 @@ var OkDataTable = class extends i3 {
     }
     this.clientFilters = clean;
     this.clientPage = 0;
+    this.mobileShown = 0;
     this.panel = "none";
     this.emit("filterChange", { filters: this.serializeFilters(clean) });
   }
@@ -2391,6 +2635,7 @@ var OkDataTable = class extends i3 {
       this.emit("sortChange", { sort: col.key, dir });
       return;
     }
+    this.mobileShown = 0;
     if (this.clientSort === col.key) {
       this.clientSortDir = this.clientSortDir === "asc" ? "desc" : "asc";
     } else {
@@ -2422,6 +2667,7 @@ var OkDataTable = class extends i3 {
     else next[key] = merged;
     this.clientFilters = next;
     this.clientPage = 0;
+    this.mobileShown = 0;
   }
   // ion-select (select/multiselect) del panel de filtros (renderFilterControl). En servidor emite
   // `filterChange`; en cliente escribe `clientFilters` (multiselect ⇒ filtra por inclusión).
@@ -2455,10 +2701,36 @@ var OkDataTable = class extends i3 {
   // forma robusta de arrancar en tarjetas sin depender de fijar `viewMode` por referencia (que
   // falla si la tabla monta detrás de un `v-if`/loading y el ref aún es null).
   firstUpdated() {
-    if (this.defaultView === "cards" && this.cardViewEnabled) this.viewMode = "cards";
-    else if (this.defaultView === "table") this.viewMode = "table";
+    this.applyInitialView();
+  }
+  /** Re-evalúa la vista inicial cada render mientras el usuario no haya elegido a mano.
+   *
+   * `firstUpdated` NO basta: decide una sola vez, y los consumidores que asignan las props por JS
+   * DESPUÉS de insertar el elemento —lo normal en páginas renderizadas por el servidor— llegan
+   * tarde. En ese momento `cardViewEnabled` aún era `false`, así que no se conmutaba; y el
+   * listener de `matchMedia` solo dispara al CAMBIAR el viewport, cosa que en un móvil no pasa
+   * nunca. La tabla se quedaba con scroll lateral para siempre.
+   *
+   * Medido en Android contra producción el 2026-08-02 con el bundle ya actualizado:
+   *   `views` antes de insertar  → tarjetas
+   *   `views` después de insertar → tabla   ← lo que hace la página
+   */
+  willUpdate(changed) {
+    this.applyInitialView();
+    if (!this.serverSide && changed.has("rows") && this.mobileShown !== 0) this.mobileShown = 0;
+  }
+  applyInitialView() {
+    if (this.viewChosenByUser) return;
+    if (this.isMobile && this.cardViewEnabled) {
+      this.viewMode = "cards";
+    } else if (this.defaultView === "cards" && this.cardViewEnabled) {
+      this.viewMode = "cards";
+    } else if (this.defaultView === "table") {
+      this.viewMode = "table";
+    }
   }
   setViewMode(mode) {
+    this.viewChosenByUser = true;
     if (this.viewMode === mode) return;
     this.viewMode = mode;
     this.emit("viewChange", mode);
@@ -2474,7 +2746,7 @@ var OkDataTable = class extends i3 {
         <ion-select
           label=${col.header}
           label-placement="stacked"
-          fill="outline"
+          fill="outline" mode="md"
           ?multiple=${multi}
           interface="modal"
           .interfaceOptions=${{ cssClass: "ok-overlay" }}
@@ -2493,9 +2765,9 @@ var OkDataTable = class extends i3 {
         <div class="fblock">
           <span class="flabel">${col.header}</span>
           <div class="frange">
-            <ion-input type=${t5} fill="outline" placeholder=${type === "daterange" ? this.t.from : this.t.gte}
+            <ion-input type=${t5} fill="outline" mode="md" placeholder=${type === "daterange" ? this.t.from : this.t.gte}
               @ionInput=${(e5) => onEdge(col, "from", e5)}></ion-input>
-            <ion-input type=${t5} fill="outline" placeholder=${type === "daterange" ? this.t.to : this.t.lte}
+            <ion-input type=${t5} fill="outline" mode="md" placeholder=${type === "daterange" ? this.t.to : this.t.lte}
               @ionInput=${(e5) => onEdge(col, "to", e5)}></ion-input>
           </div>
         </div>
@@ -2505,7 +2777,7 @@ var OkDataTable = class extends i3 {
     return b2`
       <ion-input
         type=${inputType}
-        fill="outline"
+        fill="outline" mode="md"
         label=${col.header}
         label-placement="stacked"
         placeholder=${this.t.filterPlaceholder}
@@ -2603,6 +2875,8 @@ var OkDataTable = class extends i3 {
               color=${a3.color ?? "medium"}
               ?disabled=${disabled}
               aria-disabled=${disabled ? "true" : A}
+              aria-label=${a3.label}
+              title=${a3.label}
               @click=${() => this.emit("rowAction", { actionId: a3.id, row })}
             >
               ${loading ? b2`<ion-spinner slot="icon-only" name="dots"></ion-spinner>` : a3.icon ? b2`<ion-icon slot="icon-only" .icon=${okIcon(a3.icon)}></ion-icon>` : a3.label}
@@ -2664,8 +2938,14 @@ var OkDataTable = class extends i3 {
       count = filtered.length;
       pages = Math.max(1, Math.ceil(filtered.length / ps));
       current = Math.min(this.clientPage, pages - 1);
-      visible = filtered.slice(current * ps, current * ps + ps);
+      visible = this.isMobile ? filtered.slice(0, Math.min(this.mobileShown || ps, count)) : filtered.slice(current * ps, current * ps + ps);
     }
+    const served = this.serverSide ? (current + 1) * ps : Math.min(this.mobileShown || ps, count);
+    const canLoadMore = this.isMobile && served < count;
+    const loadMore = () => {
+      if (this.serverSide) this.emit("pageChange", current + 1);
+      else this.mobileShown = Math.min((this.mobileShown || ps) + ps, count);
+    };
     const goTo = (p4) => {
       if (this.serverSide) this.emit("pageChange", p4);
       else this.clientPage = p4;
@@ -2675,13 +2955,14 @@ var OkDataTable = class extends i3 {
       else {
         this.clientPageSize = n6;
         this.clientPage = 0;
+        this.mobileShown = 0;
       }
     };
     const searchbar = this.serverSide ? b2`<ion-searchbar class="ion-no-border" placeholder=${this.effSearchPlaceholder} debounce="250" @ionInput=${this.onSearch}></ion-searchbar>` : b2`<ion-searchbar class="ion-no-border" .value=${this.q} placeholder=${this.effSearchPlaceholder} debounce="250" @ionInput=${this.onSearch}></ion-searchbar>`;
     const selCount = this.selection.size;
     const showTopbar = !!this.title || this.hasSearch || this.viewToggle || this.effColumnPicker || this.effExport || this.effImport || this.hasFilterRow || this.addable || !!this.primaryAction;
     return b2`
-      <div class="card">
+      <div class=${`card${this.panel !== "none" ? " has-panel" : ""}`}>
         ${showTopbar ? b2`
               <div class="bar">
                 <div class="bar-main">
@@ -2689,7 +2970,7 @@ var OkDataTable = class extends i3 {
                   ${this.hasSearch ? b2`<div class="search">${searchbar}</div>` : A}
                   ${this.inlineFilters ? this.renderInlineFilters() : A}
                   <span class="tk-spacer"></span>
-                    ${this.effColumnPicker ? b2`
+                    ${this.effColumnPicker && !this.isMobile ? b2`
                           <ion-select
                             class="tk-cols"
                             multiple
@@ -2702,7 +2983,7 @@ var OkDataTable = class extends i3 {
                             ${this.columns.map((c5) => b2`<ion-select-option value=${c5.key}>${c5.header}</ion-select-option>`)}
                           </ion-select>
                         ` : A}
-                    ${this.effPageSizes.length ? b2`
+                    ${this.effPageSizes.length && !this.isMobile ? b2`
                           <ion-select
                             class="tk-psize"
                             interface="popover"
@@ -2725,9 +3006,17 @@ var OkDataTable = class extends i3 {
                           <input class="tk-file" type="file" accept=".csv,text/csv" hidden @change=${(e5) => this.onImportFile(e5)} />
                         ` : A}
                     ${this.effExport ? this.toolButton("download-outline", false, () => this.exportCsv(), this.t.exportCsv) : A}
-                    ${this.addable ? this.toolButton("add", this.panel === "create", () => this.toggle("create"), this.t.add) : A}
+                    ${this.addable ? this.isMobile ? b2`
+                            <ion-button class="primary-btn add-btn" size="small" @click=${() => this.toggle("create")}>
+                              <ion-icon slot="start" .icon=${okIcon("add")}></ion-icon>${this.t.add}
+                            </ion-button>
+                          ` : this.toolButton("add", this.panel === "create", () => this.toggle("create"), this.t.add) : A}
                     ${this.renderOverflowMenu()}
-                    ${this.primaryAction ? b2`
+                    ${this.primaryAction ? this.isMobile ? b2`
+                            <ion-button class="primary-btn add-btn" size="small" @click=${() => this.emit("primaryAction", {})}>
+                              <ion-icon slot="start" .icon=${okIcon(this.primaryAction.icon ?? "add")}></ion-icon>${this.primaryAction.label}
+                            </ion-button>
+                          ` : b2`
                           <ion-button
                             class="primary-btn"
                             size="small"
@@ -2756,7 +3045,7 @@ var OkDataTable = class extends i3 {
               <div class="pager">
                 <div class="left">
                   <span>
-                    ${pages > 1 ? b2`${this.t.showing.replace("{from}", String(current * ps + 1)).replace("{to}", String(Math.min((current + 1) * ps, count)))} ` : A}
+                    ${pages > 1 ? b2`${this.t.showing.replace("{from}", String(this.isMobile && !this.serverSide ? 1 : current * ps + 1)).replace("{to}", String(Math.min(served, count)))} ` : A}
                     <span class="strong">${count}</span> ${count === 1 ? this.t.recordSingular : this.t.recordPlural}
                   </span>
                   ${!showTopbar && this.effPageSizes.length ? b2`
@@ -2765,7 +3054,7 @@ var OkDataTable = class extends i3 {
                         </select>
                       ` : A}
                 </div>
-                ${pages > 1 ? b2`
+                ${this.isMobile ? canLoadMore ? b2`<ion-button class="load-more" size="small" @click=${loadMore}>${this.t.loadMore}</ion-button>` : A : pages > 1 ? b2`
                       <div class="nav">
                         <ion-button size="small" fill="clear" ?disabled=${current === 0} @click=${() => goTo(current - 1)}><ion-icon slot="icon-only" .icon=${iconChevronBack}></ion-icon></ion-button>
                         ${this.pageList(current + 1, pages).map(
@@ -2813,8 +3102,8 @@ var OkDataTable = class extends i3 {
         <div class="fblock">
           <span class="flabel">${label}</span>
           <div class="daterange">
-            <ion-input type="date" label=${this.t.from} label-placement="stacked" fill="outline" .value=${f3.from ?? ""} @ionChange=${(e5) => this.setFilterRange(col.key, "from", e5.detail.value ?? "")}></ion-input>
-            <ion-input type="date" label=${this.t.to} label-placement="stacked" fill="outline" .value=${f3.to ?? ""} @ionChange=${(e5) => this.setFilterRange(col.key, "to", e5.detail.value ?? "")}></ion-input>
+            <ion-input type="date" label=${this.t.from} label-placement="stacked" fill="outline" mode="md" .value=${f3.from ?? ""} @ionChange=${(e5) => this.setFilterRange(col.key, "from", e5.detail.value ?? "")}></ion-input>
+            <ion-input type="date" label=${this.t.to} label-placement="stacked" fill="outline" mode="md" .value=${f3.to ?? ""} @ionChange=${(e5) => this.setFilterRange(col.key, "to", e5.detail.value ?? "")}></ion-input>
           </div>
         </div>
       `;
@@ -2826,7 +3115,7 @@ var OkDataTable = class extends i3 {
         <ion-select
           label=${label}
           label-placement="stacked"
-          fill="outline"
+          fill="outline" mode="md"
           multiple
           interface="modal"
           .interfaceOptions=${{ cssClass: "ok-overlay" }}
@@ -2838,6 +3127,13 @@ var OkDataTable = class extends i3 {
         </ion-select>
       </div>
     `;
+  }
+  /** #67 — Enter/Espacio activan la fila clicable (y, desde #74, la tarjeta): si se llega con el
+   *  tabulador, el ratón no puede ser el único camino. Espacio además NO debe desplazar la página. */
+  onRowKeydown(e5, row) {
+    if (e5.key !== "Enter" && e5.key !== " " && e5.key !== "Spacebar") return;
+    e5.preventDefault();
+    this.emit("rowClick", { row });
   }
   emptyState() {
     return b2`
@@ -2855,7 +3151,7 @@ var OkDataTable = class extends i3 {
     const allOn = this.selectable && visible.length > 0 && visible.every((r6) => this.selection.has(this.keyOf(r6)));
     const alignCls = (a3) => a3 === "right" ? "right" : a3 === "center" ? "center" : "left";
     return b2`
-      <div class="scroll">
+      <div class=${`scroll${this.xOverflow ? " x-overflow" : ""}`}>
         <div class="grid" role="table">
           <!-- Cabecera -->
           <div class="grow ghead" role="row" style=${o6(tpl)}>
@@ -2867,7 +3163,7 @@ var OkDataTable = class extends i3 {
       const caretIcon = !active ? iconSwapVerticalOutline : dir === "asc" ? iconChevronUpOutline : iconChevronDownOutline;
       return b2`
                 <div
-                  class=${`gcell gh ${alignCls(c5.align)}${sortable ? " sortable" : ""}`}
+                  class=${`gcell gh ${alignCls(c5.align)}${sortable ? " sortable" : ""}${c5.pinned === "end" ? " actions-col" : ""}`}
                   role="columnheader"
                   @click=${() => this.onHeaderClick(c5)}
                 >
@@ -2876,7 +3172,7 @@ var OkDataTable = class extends i3 {
                 </div>
               `;
     })}
-            ${this.actions.length ? b2`<div class="gcell gh right" role="columnheader">${this.t.actions}</div>` : A}
+            ${this.actions.length ? b2`<div class="gcell gh right actions-col" role="columnheader">${this.t.actions}</div>` : A}
           </div>
 
           <!-- Filas -->
@@ -2887,12 +3183,19 @@ var OkDataTable = class extends i3 {
         const key = this.keyOf(row);
         const selected = this.selectable && this.selection.has(key);
         return b2`
-                <div class=${`grow grow-data${selected ? " selected" : ""}`} role="row" style=${o6(tpl)}>
-                  ${this.selectable ? b2`<span class="selcb"><ion-checkbox .checked=${selected} aria-label=${this.t.selectRow} @ionChange=${() => this.toggleRow(key)}></ion-checkbox></span>` : A}
+                <div
+                  class=${`grow grow-data${selected ? " selected" : ""}${this.rowClickable ? " clickable" : ""}`}
+                  role="row"
+                  style=${o6(tpl)}
+                  tabindex=${this.rowClickable ? "0" : A}
+                  @click=${this.rowClickable ? () => this.emit("rowClick", { row }) : A}
+                  @keydown=${this.rowClickable ? (e5) => this.onRowKeydown(e5, row) : A}
+                >
+                  ${this.selectable ? b2`<span class="selcb" @click=${(e5) => e5.stopPropagation()}><ion-checkbox .checked=${selected} aria-label=${this.t.selectRow} @ionChange=${() => this.toggleRow(key)}></ion-checkbox></span>` : A}
                   ${cols.map(
-          (c5) => b2`<div class=${`gcell ${alignCls(c5.align)}`} role="cell">${c5.render ? c5.render(row) : b2`<span>${this.cell(c5, row)}</span>`}</div>`
+          (c5) => b2`<div class=${`gcell ${alignCls(c5.align)}${c5.pinned === "end" ? " actions-col" : ""}`} role="cell">${c5.render ? c5.render(row) : b2`<span>${this.cell(c5, row)}</span>`}</div>`
         )}
-                  ${this.actions.length ? b2`<div class="gcell right" role="cell">${this.actionButtons(row)}</div>` : A}
+                  ${this.actions.length ? b2`<div class="gcell right actions-col" role="cell" @click=${(e5) => e5.stopPropagation()}>${this.actionButtons(row)}</div>` : A}
                 </div>
               `;
       }
@@ -2914,12 +3217,18 @@ var OkDataTable = class extends i3 {
         const selected = this.selectable && this.selection.has(key);
         const icon = this.cardIcon?.(row);
         return b2`
-              <ion-card class=${`rcard${selected ? " selected" : ""}`}>
+              <ion-card
+                class=${`rcard${selected ? " selected" : ""}${this.rowClickable ? " clickable" : ""}`}
+                role=${this.rowClickable ? "button" : A}
+                tabindex=${this.rowClickable ? "0" : A}
+                @click=${this.rowClickable ? () => this.emit("rowClick", { row }) : A}
+                @keydown=${this.rowClickable ? (e5) => this.onRowKeydown(e5, row) : A}
+              >
                 ${hasHead ? b2`
                       <ion-card-header class="rcard-head">
                         ${icon != null && icon !== "" ? b2`<span class="rc-icon">${typeof icon === "string" ? b2`<ion-icon .icon=${okIcon(icon)}></ion-icon>` : icon}</span>` : A}
                         <span class="rc-title">${this.cardTitle ? this.cardTitle(row) : A}</span>
-                        ${this.selectable ? b2`<ion-checkbox .checked=${selected} aria-label=${this.t.select} @ionChange=${() => this.toggleRow(key)}></ion-checkbox>` : A}
+                        ${this.selectable ? b2`<ion-checkbox .checked=${selected} aria-label=${this.t.select} @click=${(e5) => e5.stopPropagation()} @ionChange=${() => this.toggleRow(key)}></ion-checkbox>` : A}
                       </ion-card-header>
                     ` : A}
                 <ion-card-content class="rcard-body">
@@ -2927,7 +3236,7 @@ var OkDataTable = class extends i3 {
           (c5) => b2`<div class="rrow"><span class="rk">${c5.header}</span><span class="rv">${c5.render ? c5.render(row) : this.cell(c5, row)}</span></div>`
         )}
                 </ion-card-content>
-                ${this.actions.length ? b2`<div class="ractions">${this.actionButtons(row)}</div>` : A}
+                ${this.actions.length ? b2`<div class="ractions" @click=${(e5) => e5.stopPropagation()}>${this.actionButtons(row)}</div>` : A}
               </ion-card>
             `;
       }
@@ -2938,154 +3247,167 @@ var OkDataTable = class extends i3 {
 };
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "columns");
+], _OkDataTable.prototype, "columns");
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "rows");
+], _OkDataTable.prototype, "rows");
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "searchKeys");
+], _OkDataTable.prototype, "searchKeys");
 __decorateClass3([
   n4({ attribute: "row-key-field" })
-], OkDataTable.prototype, "rowKeyField");
+], _OkDataTable.prototype, "rowKeyField");
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "rowKey");
+], _OkDataTable.prototype, "rowKey");
 __decorateClass3([
   n4({ type: Number, attribute: "page-size" })
-], OkDataTable.prototype, "pageSize");
+], _OkDataTable.prototype, "pageSize");
 __decorateClass3([
   n4({ attribute: "empty-message" })
-], OkDataTable.prototype, "emptyMessage");
+], _OkDataTable.prototype, "emptyMessage");
 __decorateClass3([
   n4({ attribute: "search-placeholder" })
-], OkDataTable.prototype, "searchPlaceholder");
+], _OkDataTable.prototype, "searchPlaceholder");
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "labels");
+], _OkDataTable.prototype, "labels");
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "actions");
+], _OkDataTable.prototype, "actions");
 __decorateClass3([
   n4({ type: Boolean })
-], OkDataTable.prototype, "addable");
+], _OkDataTable.prototype, "addable");
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "pageSizeOptions");
+], _OkDataTable.prototype, "pageSizeOptions");
 __decorateClass3([
   n4({ type: Boolean, reflect: true })
-], OkDataTable.prototype, "fill");
+], _OkDataTable.prototype, "fill");
 __decorateClass3([
   n4({ type: Boolean, attribute: "column-picker" })
-], OkDataTable.prototype, "columnPicker");
+], _OkDataTable.prototype, "columnPicker");
 __decorateClass3([
   n4({ type: Boolean })
-], OkDataTable.prototype, "csv");
+], _OkDataTable.prototype, "csv");
 __decorateClass3([
   n4({ attribute: "csv-name" })
-], OkDataTable.prototype, "csvName");
+], _OkDataTable.prototype, "csvName");
 __decorateClass3([
   n4({ type: Boolean, attribute: "server-side" })
-], OkDataTable.prototype, "serverSide");
+], _OkDataTable.prototype, "serverSide");
 __decorateClass3([
   n4({ type: Number })
-], OkDataTable.prototype, "total");
+], _OkDataTable.prototype, "total");
 __decorateClass3([
   n4({ type: Number })
-], OkDataTable.prototype, "page");
+], _OkDataTable.prototype, "page");
 __decorateClass3([
   n4({ type: Boolean })
-], OkDataTable.prototype, "searchable");
+], _OkDataTable.prototype, "searchable");
 __decorateClass3([
   n4({ type: String })
-], OkDataTable.prototype, "sort");
+], _OkDataTable.prototype, "sort");
 __decorateClass3([
   n4({ attribute: "sort-dir" })
-], OkDataTable.prototype, "sortDir");
+], _OkDataTable.prototype, "sortDir");
 __decorateClass3([
   n4()
-], OkDataTable.prototype, "title");
+], _OkDataTable.prototype, "title");
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "views");
+], _OkDataTable.prototype, "views");
 __decorateClass3([
   n4({ attribute: "default-view" })
-], OkDataTable.prototype, "defaultView");
+], _OkDataTable.prototype, "defaultView");
 __decorateClass3([
   n4({ type: Boolean })
-], OkDataTable.prototype, "exportable");
+], _OkDataTable.prototype, "exportable");
 __decorateClass3([
   n4({ type: Boolean })
-], OkDataTable.prototype, "importable");
+], _OkDataTable.prototype, "importable");
 __decorateClass3([
   n4({ type: Boolean, attribute: "column-selector" })
-], OkDataTable.prototype, "columnSelector");
+], _OkDataTable.prototype, "columnSelector");
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "pageSizes");
+], _OkDataTable.prototype, "pageSizes");
+__decorateClass3([
+  n4({ type: Boolean, attribute: "row-clickable" })
+], _OkDataTable.prototype, "rowClickable");
 __decorateClass3([
   n4({ type: Boolean })
-], OkDataTable.prototype, "selectable");
+], _OkDataTable.prototype, "selectable");
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "selectedKeys");
+], _OkDataTable.prototype, "selectedKeys");
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "primaryAction");
+], _OkDataTable.prototype, "primaryAction");
 __decorateClass3([
   n4({ type: Boolean })
-], OkDataTable.prototype, "inlineFilters");
+], _OkDataTable.prototype, "inlineFilters");
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "menuActions");
+], _OkDataTable.prototype, "menuActions");
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "cardTitle");
+], _OkDataTable.prototype, "cardTitle");
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "cardIcon");
+], _OkDataTable.prototype, "cardIcon");
 __decorateClass3([
   n4({ attribute: false })
-], OkDataTable.prototype, "renderCard");
+], _OkDataTable.prototype, "renderCard");
 __decorateClass3([
   r5()
-], OkDataTable.prototype, "q");
+], _OkDataTable.prototype, "q");
 __decorateClass3([
   r5()
-], OkDataTable.prototype, "clientPage");
+], _OkDataTable.prototype, "clientPage");
 __decorateClass3([
   r5()
-], OkDataTable.prototype, "clientPageSize");
+], _OkDataTable.prototype, "clientPageSize");
 __decorateClass3([
   r5()
-], OkDataTable.prototype, "clientSort");
+], _OkDataTable.prototype, "mobileShown");
 __decorateClass3([
   r5()
-], OkDataTable.prototype, "clientSortDir");
+], _OkDataTable.prototype, "clientSort");
 __decorateClass3([
   r5()
-], OkDataTable.prototype, "clientFilters");
+], _OkDataTable.prototype, "clientSortDir");
 __decorateClass3([
   r5()
-], OkDataTable.prototype, "filterDraft");
+], _OkDataTable.prototype, "clientFilters");
 __decorateClass3([
   r5()
-], OkDataTable.prototype, "panel");
+], _OkDataTable.prototype, "filterDraft");
 __decorateClass3([
   r5()
-], OkDataTable.prototype, "viewMode");
+], _OkDataTable.prototype, "panel");
 __decorateClass3([
   r5()
-], OkDataTable.prototype, "hiddenKeys");
+], _OkDataTable.prototype, "viewMode");
 __decorateClass3([
   r5()
-], OkDataTable.prototype, "internalSelection");
+], _OkDataTable.prototype, "isMobile");
 __decorateClass3([
   r5()
-], OkDataTable.prototype, "menuOpen");
+], _OkDataTable.prototype, "xOverflow");
+__decorateClass3([
+  r5()
+], _OkDataTable.prototype, "hiddenKeys");
+__decorateClass3([
+  r5()
+], _OkDataTable.prototype, "internalSelection");
+__decorateClass3([
+  r5()
+], _OkDataTable.prototype, "menuOpen");
+var OkDataTable = _OkDataTable;
 define("ok-data-table", OkDataTable);
 
-// node_modules/.pnpm/@erplora+module-sdk@file+..+hub+packages+module-sdk/node_modules/@erplora/module-sdk/src/index.ts
+// ../../../hub/packages/module-sdk/src/index.ts
 function isEmpty(v3) {
   return v3 === null || v3 === void 0 || v3 === "";
 }
@@ -3203,9 +3525,10 @@ function createListController(client, queryName, onChange = () => {
   return new ListController(client, queryName, onChange, opts);
 }
 
-// modules/taxes/locales/es.json
+// locales/es.json
 var es_default = {
   name: "Impuestos",
+  description: "Categor\xEDas fiscales y reglas de impuestos por territorio, con el motor que resuelve el tipo en el momento de la venta.",
   navigation: {
     categories: {
       label: "Categor\xEDas"
@@ -3216,6 +3539,10 @@ var es_default = {
     aliases: {
       label: "Alias"
     }
+  },
+  setup: {
+    title: "Tus impuestos",
+    description: "Configura los tipos de IVA del pa\xEDs en el que vendes para que el TPV pueda calcular el precio de una venta."
   },
   ui: {
     colKey: "Clave",
@@ -3230,7 +3557,6 @@ var es_default = {
     colType: "Tipo",
     colValidFrom: "Vigente desde",
     colValidTo: "Vigente hasta",
-    colParentId: "ID regla ra\xEDz",
     colComponentLabel: "Etiqueta componente",
     colAlias: "Alias",
     colSource: "Origen",
@@ -3256,7 +3582,6 @@ var es_default = {
     phRegion: "opcional",
     phCategoryKey: "restaurant.food",
     phPercent: "21",
-    phParentId: "opcional",
     phComponentLabel: "Recargo de equivalencia",
     phAlias: "comida",
     btnSaving: "Guardando\u2026",
@@ -3269,15 +3594,36 @@ var es_default = {
     emptyRules: "Sin reglas fiscales.",
     emptyAliases: "Sin alias de categor\xEDas.",
     actionDeactivate: "Desactivar",
-    rulesHint: "Cada regla fija el % para una categor\xEDa en un pa\xEDs (y opcionalmente una regi\xF3n). Para multi-tributo (p.ej. recargo de equivalencia), indica el ID de una regla ra\xEDz en \xABID regla ra\xEDz\xBB y una \xABEtiqueta componente\xBB.",
+    cancel: "Cancelar",
+    deactivateConfirmTitle: "Desactivar regla fiscal",
+    deactivateConfirmMessage: "La regla dejar\xE1 de aplicarse a operaciones nuevas. Los documentos fiscales ya emitidos no se modifican.",
+    deactivateConfirmAction: "Desactivar regla",
+    rulesHint: "Cada regla fija el % de una categor\xEDa en un pa\xEDs (y opcionalmente una regi\xF3n). Para multi-tributo (p. ej. recargo de equivalencia), elige en \xABRegla ra\xEDz\xBB la regla de la que cuelga y dale una \xABEtiqueta del componente\xBB.",
     errCreateCategory: "No se pudo crear la categor\xEDa",
     errCreateRule: "No se pudo crear la regla",
     errDeactivateRule: "No se pudo desactivar la regla",
-    errCreateAlias: "No se pudo crear el alias"
+    errCreateAlias: "No se pudo crear el alias",
+    colParentRule: "Regla ra\xEDz (componente de)",
+    phParentRule: "Elige una regla ra\xEDz",
+    phParentRuleNone: "No hay regla ra\xEDz compatible para ese pa\xEDs/regi\xF3n/categor\xEDa",
+    optNoParent: "Ninguna (es una regla ra\xEDz)",
+    readOnlyHint: "Puedes consultar las reglas fiscales pero no modificarlas.",
+    taxType_igic: "IGIC (Canarias)",
+    taxType_ipsi: "IPSI (Ceuta/Melilla)",
+    colOperationClass: "Calificaci\xF3n",
+    opClass_subject: "Sujeta",
+    opClass_subject_reverse: "Inversi\xF3n del sujeto pasivo",
+    opClass_exempt: "Exenta",
+    opClass_not_subject: "No sujeta",
+    opClass_not_subject_location: "No sujeta (reglas de localizaci\xF3n)",
+    colExemptReason: "Causa de exenci\xF3n",
+    phExemptReason: "p. ej. E1 (c\xF3digo de la jurisdicci\xF3n)",
+    colRegimeKey: "R\xE9gimen",
+    phRegimeKey: "opcional (c\xF3digo de la jurisdicci\xF3n, p. ej. 01)"
   }
 };
 
-// modules/taxes/locales/en.json
+// locales/en.json
 var en_default = {
   name: "Taxes",
   navigation: {
@@ -3290,6 +3636,10 @@ var en_default = {
     aliases: {
       label: "Aliases"
     }
+  },
+  setup: {
+    title: "Your taxes",
+    description: "Set the VAT rates for the country you sell in, so the till can price a sale."
   },
   ui: {
     colKey: "Key",
@@ -3304,7 +3654,6 @@ var en_default = {
     colType: "Type",
     colValidFrom: "Valid from",
     colValidTo: "Valid to",
-    colParentId: "Root rule ID",
     colComponentLabel: "Component label",
     colAlias: "Alias",
     colSource: "Source",
@@ -3330,7 +3679,6 @@ var en_default = {
     phRegion: "optional",
     phCategoryKey: "restaurant.food",
     phPercent: "21",
-    phParentId: "optional",
     phComponentLabel: "Equivalence surcharge",
     phAlias: "food",
     btnSaving: "Saving\u2026",
@@ -3343,16 +3691,48 @@ var en_default = {
     emptyRules: "No tax rules.",
     emptyAliases: "No category aliases.",
     actionDeactivate: "Deactivate",
-    rulesHint: "Each rule sets the % for a category in a country (and optionally a region). For multi-tax (e.g. equivalence surcharge), enter a root rule ID in \u201CRoot rule ID\u201D and a \u201CComponent label\u201D.",
+    cancel: "Cancel",
+    deactivateConfirmTitle: "Deactivate tax rule",
+    deactivateConfirmMessage: "The rule will no longer apply to new transactions. Previously issued fiscal documents will not change.",
+    deactivateConfirmAction: "Deactivate rule",
+    rulesHint: "Each rule sets the % for a category in a country (and optionally a region). For multi-tax (e.g. equivalence surcharge), choose the root rule it hangs from in \u201CRoot rule\u201D and give it a \u201CComponent label\u201D.",
     errCreateCategory: "Could not create the category",
     errCreateRule: "Could not create the rule",
     errDeactivateRule: "Could not deactivate the rule",
-    errCreateAlias: "Could not create the alias"
+    errCreateAlias: "Could not create the alias",
+    colParentRule: "Root rule (component of)",
+    phParentRule: "Choose a root rule",
+    phParentRuleNone: "No compatible root rule for this country/region/category",
+    optNoParent: "None (this is a root rule)",
+    readOnlyHint: "You can view the tax rules but not change them.",
+    taxType_igic: "IGIC (Canary Islands)",
+    taxType_ipsi: "IPSI (Ceuta/Melilla)",
+    colOperationClass: "Qualification",
+    opClass_subject: "Subject",
+    opClass_subject_reverse: "Reverse charge",
+    opClass_exempt: "Exempt",
+    opClass_not_subject: "Not subject",
+    opClass_not_subject_location: "Not subject (place of supply)",
+    colExemptReason: "Exemption reason",
+    phExemptReason: "e.g. E1 (jurisdiction code)",
+    colRegimeKey: "Regime",
+    phRegimeKey: "optional (jurisdiction code, e.g. 01)"
   }
 };
 
-// modules/taxes/ui/components/erp-taxes-aliases/erp-taxes-aliases.ts
+// ui/lib/tax-category-name.ts
+function taxCategoryDisplayName(category) {
+  return (category.display_name || "").trim() || (category.name || "").trim() || (category.key || "").trim();
+}
+function taxCategoryDisplayDescription(category) {
+  return (category.display_description || "").trim() || (category.description || "").trim();
+}
+
+// ui/components/erp-taxes-aliases/erp-taxes-aliases.ts
 var CATALOG = { es: es_default, en: en_default };
+function can(permission) {
+  return erplora().hasPermission?.(permission) ?? true;
+}
 function erplora() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
@@ -3394,7 +3774,7 @@ var ErpTaxesAliases = class extends i3 {
         // `eq`, así que el `value` es la `key` canónica), no se teclea: una key mal escrita en un
         // alias mete el IVA equivocado en el import.
         filterType: "select",
-        options: this.categories.map((c5) => ({ value: c5.key, label: `${c5.key} \xB7 ${c5.name}` }))
+        options: this.categories.map((c5) => ({ value: c5.key, label: `${c5.key} \xB7 ${taxCategoryDisplayName(c5)}` }))
       },
       {
         key: "source",
@@ -3478,13 +3858,14 @@ var ErpTaxesAliases = class extends i3 {
   render() {
     const t5 = (k2) => erplora().t(CATALOG, k2);
     return b2`<div class="page">
+        ${can("taxes.manage_tax") ? A : b2`<ok-inline-feedback tone="info" icon="lock-closed-outline">${t5("ui.readOnlyHint")}</ok-inline-feedback>`}
         ${this.formError ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
         ${this.ctrl?.error ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
-        <ok-data-table .serverSide=${true} .fill=${true} .addable=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchAlias")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyAliases")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${can("taxes.manage_tax")} .views=${true} .cardTitle=${(row) => String(row.alias ?? "")} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchAlias")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyAliases")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}>
           <!-- Alta de alias: el botón «+» de la tabla despliega este panel. -->
           <form slot="create" class="form" @submit=${(e5) => this.createAlias(e5)}>
             <ion-input fill="outline" label-placement="floating" label=${t5("ui.colAlias")} placeholder=${t5("ui.phAlias")} .value=${this.newAlias} @ionInput=${(e5) => this.newAlias = e5.target.value}></ion-input>
-            <ion-select fill="outline" label-placement="floating" label=${t5("ui.colCategory")} placeholder=${t5("ui.phCategoryKey")} .value=${this.newCategoryKey} @ionChange=${(e5) => this.newCategoryKey = e5.target.value}>${this.categories.map((c5) => b2`<ion-select-option .value=${c5.key}>${c5.key} · ${c5.name}</ion-select-option>`)}</ion-select>
+            <ion-select fill="outline" label-placement="floating" label=${t5("ui.colCategory")} placeholder=${t5("ui.phCategoryKey")} .value=${this.newCategoryKey} @ionChange=${(e5) => this.newCategoryKey = e5.target.value}>${this.categories.map((c5) => b2`<ion-select-option .value=${c5.key}>${c5.key} · ${taxCategoryDisplayName(c5)}</ion-select-option>`)}</ion-select>
             <ion-select fill="outline" label-placement="floating" label=${t5("ui.colSource")} .value=${this.newSource} @ionChange=${(e5) => this.newSource = e5.target.value}>
               <ion-select-option value="learned">${t5("ui.srcLearned")}</ion-select-option>
               <ion-select-option value="shipped">${t5("ui.srcShipped")}</ion-select-option>
@@ -3515,8 +3896,11 @@ __decorateClass([
 ], ErpTaxesAliases.prototype, "saving", 2);
 define("erp-taxes-aliases", ErpTaxesAliases);
 
-// modules/taxes/ui/components/erp-taxes-categories/erp-taxes-categories.ts
+// ui/components/erp-taxes-categories/erp-taxes-categories.ts
 var CATALOG2 = { es: es_default, en: en_default };
+function can2(permission) {
+  return erplora2().hasPermission?.(permission) ?? true;
+}
 function erplora2() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
@@ -3548,14 +3932,16 @@ var ErpTaxesCategories = class extends i3 {
     const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return [
       { key: "key", header: t5("ui.colKey"), sortable: true, filterable: true, filterType: "text" },
-      { key: "name", header: t5("ui.colName"), sortable: true, filterable: true, filterType: "text" },
+      // El nombre y la descripción PRESENTABLES los resuelve la query (taxes#38): la columna ordena
+      // y filtra por el mismo texto que enseña, no por el `name` inglés del seed.
+      { key: "display_name", header: t5("ui.colName"), sortable: true, filterable: true, filterType: "text", format: (r6) => taxCategoryDisplayName(r6) },
       {
-        key: "description",
+        key: "display_description",
         header: t5("ui.colDescription"),
         sortable: true,
         filterable: true,
         filterType: "text",
-        format: (r6) => r6.description || "\u2014"
+        format: (r6) => taxCategoryDisplayDescription(r6) || "\u2014"
       },
       {
         key: "is_system",
@@ -3632,9 +4018,10 @@ var ErpTaxesCategories = class extends i3 {
   render() {
     const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return b2`<div class="page">
+        ${can2("taxes.manage_tax") ? A : b2`<ok-inline-feedback tone="info" icon="lock-closed-outline">${t5("ui.readOnlyHint")}</ok-inline-feedback>`}
         ${this.formError ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
         ${this.ctrl?.error ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
-        <ok-data-table .serverSide=${true} .fill=${true} .addable=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchKeyName")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyCategories")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${can2("taxes.manage_tax")} .views=${true} .cardTitle=${(row) => taxCategoryDisplayName(row) || String(row.key ?? "")} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchKeyName")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyCategories")} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
           <form slot="create" class="form" @submit=${(e5) => this.createCategory(e5)}>
@@ -3664,9 +4051,22 @@ __decorateClass([
 ], ErpTaxesCategories.prototype, "saving", 2);
 define("erp-taxes-categories", ErpTaxesCategories);
 
-// modules/taxes/ui/components/erp-taxes-rules/erp-taxes-rules.ts
+// ui/components/erp-taxes-rules/erp-taxes-rules.ts
 var CATALOG3 = { es: es_default, en: en_default };
-var TAX_TYPES = ["vat", "surcharge", "sales_tax", "withholding", "excise", "import_duty"];
+var TAX_TYPES = ["vat", "igic", "ipsi", "surcharge", "sales_tax", "withholding", "excise", "import_duty"];
+var OPERATION_CLASSES = ["subject", "subject_reverse", "exempt", "not_subject", "not_subject_location"];
+function can3(permission) {
+  return erplora3().hasPermission?.(permission) ?? true;
+}
+function parentCandidates(rules, country, region, category, today) {
+  const c5 = country.trim().toUpperCase();
+  const r6 = region.trim().toUpperCase();
+  const k2 = category.trim();
+  if (!c5 || !k2) return [];
+  return rules.filter(
+    (x2) => !x2.parent_id && Number(x2.is_active) === 1 && x2.country_code === c5 && (x2.region_code ?? "") === r6 && x2.tax_category_key === k2 && (!x2.valid_from || x2.valid_from <= today) && (!x2.valid_to || x2.valid_to >= today)
+  );
+}
 function erplora3() {
   const c5 = globalThis.erplora;
   if (!c5) throw new Error("erplora SDK no inicializado por el shell");
@@ -3681,11 +4081,16 @@ var ErpTaxesRules = class extends i3 {
     this.newCategoryKey = "";
     this.newRatePct = "";
     this.newTaxType = "vat";
+    this.newOperationClass = "subject";
+    this.newExemptReason = "";
+    this.newRegimeKey = "";
     this.newValidFrom = "";
     this.newValidTo = "";
     this.newParentId = "";
+    this.allRules = [];
     this.newComponentLabel = "";
     this.saving = false;
+    this.pendingDeactivate = null;
     this.categories = [];
     this.onLocaleChange = () => this.requestUpdate();
   }
@@ -3712,7 +4117,7 @@ var ErpTaxesRules = class extends i3 {
         filterable: true,
         // Dominio cerrado (las categorías del hub) y el servidor lo declara `op: eq` → select.
         filterType: "select",
-        options: this.categories.map((c5) => ({ value: c5.key, label: `${c5.name} (${c5.key})` })),
+        options: this.categories.map((c5) => ({ value: c5.key, label: `${taxCategoryDisplayName(c5)} (${c5.key})` })),
         format: (r6) => {
           const key = String(r6.tax_category_key ?? "") || "\u2014";
           const label = String(r6.component_label ?? "");
@@ -3737,6 +4142,19 @@ var ErpTaxesRules = class extends i3 {
         options: TAX_TYPES.map((v3) => ({ value: v3, label: t5(`ui.taxType_${v3}`) })),
         format: (r6) => t5(`ui.taxType_${String(r6.tax_type)}`)
       },
+      {
+        key: "operation_class",
+        header: t5("ui.colOperationClass"),
+        sortable: true,
+        filterable: true,
+        filterType: "select",
+        options: OPERATION_CLASSES.map((v3) => ({ value: v3, label: t5(`ui.opClass_${v3}`) })),
+        format: (r6) => {
+          const cls = String(r6.operation_class ?? "") || "subject";
+          const reason = String(r6.exempt_reason ?? "");
+          return cls === "exempt" && reason ? `${t5(`ui.opClass_${cls}`)} \xB7 ${reason}` : t5(`ui.opClass_${cls}`);
+        }
+      },
       { key: "valid_from", header: t5("ui.colValidFrom"), sortable: true, format: (r6) => String(r6.valid_from ?? "") || "\u2014" },
       { key: "valid_to", header: t5("ui.colValidTo"), sortable: true, format: (r6) => String(r6.valid_to ?? "") || "\u2014" },
       {
@@ -3755,12 +4173,23 @@ var ErpTaxesRules = class extends i3 {
   }
   get rowActions() {
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
-    return [{ id: "deactivate", label: t5("ui.actionDeactivate"), color: "danger" }];
+    if (!can3("taxes.manage_tax")) return [];
+    return [{ id: "deactivate", label: t5("ui.actionDeactivate"), icon: "ban-outline", color: "danger" }];
   }
-  async onRowAction(ev) {
+  get parentCandidates() {
+    const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+    return parentCandidates(this.allRules, this.newCountry, this.newRegion, this.newCategoryKey, today);
+  }
+  onRowAction(ev) {
     const { actionId, row } = ev.detail;
-    if (actionId !== "deactivate") return;
+    if (actionId !== "deactivate" || !can3("taxes.manage_tax")) return;
     if (!Number(row.is_active)) return;
+    this.pendingDeactivate = row;
+  }
+  async onDeactivateDismiss(ev) {
+    const row = this.pendingDeactivate;
+    this.pendingDeactivate = null;
+    if (ev.detail?.role !== "confirm" || !row) return;
     this.formError = "";
     try {
       await erplora3().command("taxes.rules.deactivate", { rule_id: row.id });
@@ -3779,10 +4208,12 @@ var ErpTaxesRules = class extends i3 {
     });
     await this.ctrl.load();
     await this.loadCategories();
+    await this.loadAllRules();
     try {
+      const refresh = () => Promise.all([this.ctrl.load(), this.loadAllRules()]);
       const offs = [
-        erplora3().on("taxes.rule.created", () => this.ctrl.load()),
-        erplora3().on("taxes.rule.deactivated", () => this.ctrl.load())
+        erplora3().on("taxes.rule.created", () => refresh()),
+        erplora3().on("taxes.rule.deactivated", () => refresh())
       ];
       this.unsub = () => offs.forEach((o7) => o7());
     } catch {
@@ -3803,6 +4234,16 @@ var ErpTaxesRules = class extends i3 {
       this.categories = [];
     }
   }
+  // ALL active rules, for the parent picker. Best-effort: without them the picker is empty and the
+  // server still validates the link (taxes#9).
+  async loadAllRules() {
+    try {
+      const rows = await erplora3().queryAll("taxes.rules.list", { sort: "tax_category_key", dir: "asc" });
+      this.allRules = Array.isArray(rows) ? rows : [];
+    } catch {
+      this.allRules = [];
+    }
+  }
   // Referencia al ok-data-table para abrir/cerrar su panel lateral (el alta se proyecta dentro).
   dataTable() {
     return this.renderRoot.querySelector("ok-data-table");
@@ -3820,6 +4261,9 @@ var ErpTaxesRules = class extends i3 {
         tax_type: this.newTaxType || "vat"
       };
       if (this.newRegion.trim()) payload.region_code = this.newRegion.trim().toUpperCase();
+      if (this.newOperationClass && this.newOperationClass !== "subject") payload.operation_class = this.newOperationClass;
+      if (this.newOperationClass === "exempt" && this.newExemptReason.trim()) payload.exempt_reason = this.newExemptReason.trim().toUpperCase();
+      if (this.newRegimeKey.trim()) payload.regime_key = this.newRegimeKey.trim();
       if (this.newValidFrom.trim()) payload.valid_from = this.newValidFrom.trim();
       if (this.newValidTo.trim()) payload.valid_to = this.newValidTo.trim();
       if (this.newParentId.trim()) payload.parent_id = this.newParentId.trim();
@@ -3830,12 +4274,15 @@ var ErpTaxesRules = class extends i3 {
       this.newCategoryKey = "";
       this.newRatePct = "";
       this.newTaxType = "vat";
+      this.newOperationClass = "subject";
+      this.newExemptReason = "";
+      this.newRegimeKey = "";
       this.newValidFrom = "";
       this.newValidTo = "";
       this.newParentId = "";
       this.newComponentLabel = "";
       this.dataTable()?.close();
-      await this.ctrl.load();
+      await Promise.all([this.ctrl.load(), this.loadAllRules()]);
     } catch (e5) {
       this.formError = e5 instanceof Error ? e5.message : erplora3().t(CATALOG3, "ui.errCreateRule");
     } finally {
@@ -3846,9 +4293,10 @@ var ErpTaxesRules = class extends i3 {
   render() {
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return b2`<div class="page">
+        ${can3("taxes.manage_tax") ? A : b2`<ok-inline-feedback tone="info" icon="lock-closed-outline">${t5("ui.readOnlyHint")}</ok-inline-feedback>`}
         ${this.formError ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
         ${this.ctrl?.error ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
-        <ok-data-table .serverSide=${true} .fill=${true} .addable=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCategoryCountry")} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${can3("taxes.manage_tax")} .views=${true} .defaultView=${window.innerWidth <= 834 ? "cards" : "table"} .cardTitle=${(row) => String(row.tax_category_key ?? row.country_code ?? "")} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCategoryCountry")} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
           <form slot="create" class="form" @submit=${(e5) => this.createRule(e5)}>
@@ -3857,18 +4305,37 @@ var ErpTaxesRules = class extends i3 {
             <!-- La categoría se ELIGE: la FK (hub_id, tax_category_key) la valida, y una clave mal
                  tecleada era una regla que nunca se aplicaba (o un command rechazado). -->
             <ion-select fill="outline" label-placement="floating" label=${t5("ui.colCategory")} placeholder=${t5("ui.phCategoryKey")} .value=${this.newCategoryKey} @ionChange=${(e5) => this.newCategoryKey = e5.target.value}>
-              ${this.categories.map((c5) => b2`<ion-select-option .value=${c5.key}>${c5.name} (${c5.key})</ion-select-option>`)}
+              ${this.categories.map((c5) => b2`<ion-select-option .value=${c5.key}>${taxCategoryDisplayName(c5)} (${c5.key})</ion-select-option>`)}
             </ion-select>
             <ion-input fill="outline" label-placement="floating" label=${t5("ui.colRate")} type="number" step="0.01" placeholder=${t5("ui.phPercent")} .value=${this.newRatePct} @ionInput=${(e5) => this.newRatePct = e5.target.value}></ion-input>
             <ion-select fill="outline" label-placement="floating" label=${t5("ui.colType")} .value=${this.newTaxType} @ionChange=${(e5) => this.newTaxType = e5.target.value}>${TAX_TYPES.map((v3) => b2`<ion-select-option .value=${v3}>${t5(`ui.taxType_${v3}`)}</ion-select-option>`)}</ion-select>
+            <!-- Fiscal qualification (ADR-0186, taxes#22): the reason only when exempt; regime optional. -->
+            <ion-select fill="outline" label-placement="floating" label=${t5("ui.colOperationClass")} .value=${this.newOperationClass} @ionChange=${(e5) => this.newOperationClass = e5.target.value ?? "subject"}>${OPERATION_CLASSES.map((v3) => b2`<ion-select-option .value=${v3}>${t5(`ui.opClass_${v3}`)}</ion-select-option>`)}</ion-select>
+            ${this.newOperationClass === "exempt" ? b2`<ion-input fill="outline" label-placement="floating" label=${t5("ui.colExemptReason")} placeholder=${t5("ui.phExemptReason")} maxlength="10" .value=${this.newExemptReason} @ionInput=${(e5) => this.newExemptReason = e5.target.value}></ion-input>` : A}
+            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colRegimeKey")} placeholder=${t5("ui.phRegimeKey")} maxlength="10" .value=${this.newRegimeKey} @ionInput=${(e5) => this.newRegimeKey = e5.target.value}></ion-input>
             <ion-input fill="outline" label-placement="floating" label=${t5("ui.colValidFrom")} type="date" .value=${this.newValidFrom} @ionInput=${(e5) => this.newValidFrom = e5.target.value}></ion-input>
             <ion-input fill="outline" label-placement="floating" label=${t5("ui.colValidTo")} type="date" .value=${this.newValidTo} @ionInput=${(e5) => this.newValidTo = e5.target.value}></ion-input>
-            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colParentId")} placeholder=${t5("ui.phParentId")} .value=${this.newParentId} @ionInput=${(e5) => this.newParentId = e5.target.value}></ion-input>
+            <!-- Parent rule (multi-tax component): CHOSEN among the root rules compatible with the
+                 country/region/category above (taxes#11) — never a free id. -->
+            <ion-select fill="outline" label-placement="floating" label=${t5("ui.colParentRule")} placeholder=${this.parentCandidates.length ? t5("ui.phParentRule") : t5("ui.phParentRuleNone")} ?disabled=${!this.parentCandidates.length} .value=${this.newParentId} @ionChange=${(e5) => this.newParentId = e5.target.value ?? ""}>
+              <ion-select-option .value=${""}>${t5("ui.optNoParent")}</ion-select-option>
+              ${this.parentCandidates.map((r6) => b2`<ion-select-option .value=${r6.id}>${Number(r6.rate_pct).toFixed(2)}% · ${t5(`ui.taxType_${r6.tax_type}`)}${r6.valid_from ? ` \xB7 ${r6.valid_from}` : ""}</ion-select-option>`)}
+            </ion-select>
             <ion-input fill="outline" label-placement="floating" label=${t5("ui.colComponentLabel")} placeholder=${t5("ui.phComponentLabel")} .value=${this.newComponentLabel} @ionInput=${(e5) => this.newComponentLabel = e5.target.value}></ion-input>
             <p class="hint">${t5("ui.rulesHint")}</p>
             <ion-button type="submit" ?disabled=${this.saving || !this.newCountry || !this.newCategoryKey || this.newRatePct === ""}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
           </form>
         </ok-data-table>
+        <ion-alert
+          .isOpen=${this.pendingDeactivate !== null}
+          header=${t5("ui.deactivateConfirmTitle")}
+          message=${t5("ui.deactivateConfirmMessage")}
+          .buttons=${[
+      { text: t5("ui.cancel"), role: "cancel" },
+      { text: t5("ui.deactivateConfirmAction"), role: "confirm", cssClass: "alert-button-danger" }
+    ]}
+          @ionAlertDidDismiss=${(e5) => this.onDeactivateDismiss(e5)}
+        ></ion-alert>
       </div>`;
   }
 };
@@ -3892,6 +4359,15 @@ __decorateClass([
 ], ErpTaxesRules.prototype, "newTaxType", 2);
 __decorateClass([
   r5()
+], ErpTaxesRules.prototype, "newOperationClass", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "newExemptReason", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "newRegimeKey", 2);
+__decorateClass([
+  r5()
 ], ErpTaxesRules.prototype, "newValidFrom", 2);
 __decorateClass([
   r5()
@@ -3901,10 +4377,16 @@ __decorateClass([
 ], ErpTaxesRules.prototype, "newParentId", 2);
 __decorateClass([
   r5()
+], ErpTaxesRules.prototype, "allRules", 2);
+__decorateClass([
+  r5()
 ], ErpTaxesRules.prototype, "newComponentLabel", 2);
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "saving", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "pendingDeactivate", 2);
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "categories", 2);

@@ -1,7 +1,8 @@
 {
   "id": "taxes",
   "name": "Taxes",
-  "version": "2.1.5",
+  "version": "2.3.10",
+  "description": "Fiscal categories and per-jurisdiction tax rules, plus the engine that resolves the rate at sale time.",
   "agent": {
     "description": "Manages fiscal categories (the linkable tax_category_key), per-jurisdiction tax rules (the % by country+region+category, with multi-tax components like surcharge), and category aliases for CSV import. Resolves the applicable tax for a sale line by category.",
     "keywords": [
@@ -24,6 +25,10 @@
   "role_permissions": {
     "admin": [
       "*"
+    ],
+    "cashier": [
+      "taxes.view_tax",
+      "taxes.calculate_tax"
     ],
     "manager": [
       "taxes.view_tax",
@@ -56,17 +61,15 @@
     }
   ],
   "migrations": {
-    "sqlite": [
-      "migrations/sqlite/001_init.sql"
-    ],
     "postgres": [
-      "migrations/postgres/001_init.sql"
+      "migrations/postgres/001_init.sql",
+      "migrations/postgres/002_fiscal_qualification.sql",
+      "migrations/postgres/003_backfill_es_vat_baseline.sql",
+      "migrations/postgres/004_taxes_rule_natural_key.sql",
+      "migrations/postgres/005_category_labels.sql"
     ]
   },
   "seed": {
-    "sqlite": [
-      "seed/install.sqlite.sql"
-    ],
     "postgres": [
       "seed/install.postgres.sql"
     ]
@@ -79,14 +82,16 @@
         "search": [
           "key",
           "name",
-          "description"
+          "description",
+          "display_name"
         ],
         "sort": [
           "id",
           "key",
           "name",
           "is_system",
-          "is_active"
+          "is_active",
+          "display_name"
         ],
         "default_sort": "key",
         "default_dir": "asc",
@@ -102,6 +107,9 @@
           },
           "is_active": {
             "op": "eq"
+          },
+          "display_name": {
+            "op": "like"
           }
         },
         "page_size": 50
@@ -126,7 +134,8 @@
         "search": [
           "country_code",
           "region_code",
-          "tax_category_key"
+          "tax_category_key",
+          "operation_class"
         ],
         "sort": [
           "id",
@@ -137,7 +146,9 @@
           "tax_type",
           "valid_from",
           "valid_to",
-          "is_active"
+          "is_active",
+          "operation_class",
+          "regime_key"
         ],
         "default_sort": "tax_category_key",
         "default_dir": "asc",
@@ -162,12 +173,18 @@
           },
           "is_active": {
             "op": "eq"
+          },
+          "operation_class": {
+            "op": "eq"
+          },
+          "regime_key": {
+            "op": "eq"
           }
         },
         "page_size": 50
       },
       "ai": {
-        "description": "Lists all tax rules (rates by country+region+category, including multi-tax components)"
+        "description": "Lists all tax rules (rate + fiscal qualification by country+region+category, including multi-tax components). The qualification says whether the operation is subject, exempt or not subject, under which regime, and — when exempt — the exemption cause."
       },
       "expose_api": true
     },
@@ -224,6 +241,13 @@
         "description": "Resolves an external alias text to a canonical tax_category_key"
       },
       "expose_api": true
+    },
+    "taxes.rules.status": {
+      "permission": "taxes.view_tax",
+      "sql": "queries/setup_status.sql",
+      "ai": {
+        "description": "Configuration state of the tax module: how many active, currently valid root tax rules match the hub's fiscal country. Zero means the sale engine cannot resolve a rate for what this hub sells, so the till would fall back to a guessed one."
+      }
     }
   },
   "commands": {
@@ -247,12 +271,18 @@
       "sql": [
         "commands/rule_create.sql"
       ],
+      "expect_rows": {
+        "op": "min",
+        "n": 1,
+        "error": "taxes.rule_incoherent",
+        "message": "That rule could not be created: a component must hang from a root rule of this business with the same country, region and tax category, and its validity range cannot run backwards."
+      },
       "schema": "schemas/rule_create.json",
       "emit": [
         "taxes.rule.created"
       ],
       "ai": {
-        "description": "Creates a tax rule (the % for a country+region+category). Pass parent_id to add a multi-tax component (e.g. surcharge) to a root rule."
+        "description": "Creates a tax rule (the % for a country+region+category) with its fiscal qualification (operation_class / regime_key / exempt_reason). Pass parent_id to add a multi-tax component (e.g. surcharge) to a root rule."
       }
     },
     "taxes.rules.bulk_create": {
@@ -318,11 +348,38 @@
         "taxes.rules.list"
       ],
       "ai": {
-        "description": "Resolves and calculates the applicable tax for an amount by fiscal category (country/region from the hub's fiscal identity)"
+        "description": "Resolves and calculates the applicable tax for an amount by fiscal category (country/region from the hub's fiscal identity), returning the rate AND the fiscal qualification of the operation"
       }
     }
   },
+  "events": {
+    "listen": {},
+    "emits": [
+      "taxes.alias.created",
+      "taxes.category.created",
+      "taxes.rule.created",
+      "taxes.rule.deactivated",
+      "taxes.rules.bulk_create.report"
+    ]
+  },
   "ui": {
     "entry": "dist/taxes.esm.js"
+  },
+  "setup": {
+    "query": "taxes.rules.status",
+    "configured_when": [
+      {
+        "field": "matching_rules",
+        "truthy": true
+      }
+    ],
+    "title": "Your taxes",
+    "description": "Set the VAT rates for the country you sell in, so the till can price a sale.",
+    "icon": "receipt-outline",
+    "route": "/m/taxes/rules",
+    "permission": "taxes.manage_tax",
+    "countries": [],
+    "order": 20,
+    "required": true
   }
 }

@@ -10,6 +10,9 @@ import type { ListController, ListClient, ListParams, ListPage } from '@erplora/
 // internos se resuelven con `erplora.t(CATALOG, 'ui.clave')` (idioma activo, fallback locale→en→clave).
 import esLocale from '../../../locales/es.json';
 import enLocale from '../../../locales/en.json';
+// Capa de PRESENTACIÓN del nombre de la categoría (taxes#30): el seed lo guarda en inglés canónico
+// (ADR-0055) y aquí se traduce por su `key`, sin tocar el dato. Lo que crea el usuario pasa tal cual.
+import { taxCategoryDisplayDescription, taxCategoryDisplayName } from '../../lib/tax-category-name';
 const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
 interface ErploraClientLike extends ListClient {
@@ -17,6 +20,8 @@ interface ErploraClientLike extends ListClient {
   queryPage<R = unknown>(name: string, params: ListParams): Promise<ListPage<R>>;
   command<T = unknown>(name: string, payload?: Record<string, unknown>): Promise<T>;
   on(event: string, cb: (payload: unknown) => void): () => void;
+  /** Effective permission of the signed-in user (taxes#11). Optional: a preview without it stays permissive. */
+  hasPermission?(permission: string): boolean;
   /** i18n del módulo (ADR-0055): idioma activo + traducción del catálogo `ui`. */
   locale: string;
   t(catalog: Record<string, unknown>, key: string, params?: Record<string, unknown>): string;
@@ -32,6 +37,14 @@ interface TaxCategory {
   description: string;
   is_system: number;
   is_active: number;
+  /** Nombre y descripción presentables, resueltos por la query al idioma del hub (taxes#38). */
+  display_name?: string;
+  display_description?: string;
+}
+
+// The runtime enforces the permission on every command; this only shapes the surface (taxes#11).
+function can(permission: string): boolean {
+  return erplora().hasPermission?.(permission) ?? true;
 }
 
 function erplora(): ErploraClientLike {
@@ -70,14 +83,16 @@ export class ErpTaxesCategories extends LitElement {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return [
       { key: 'key', header: t('ui.colKey'), sortable: true, filterable: true, filterType: 'text' },
-      { key: 'name', header: t('ui.colName'), sortable: true, filterable: true, filterType: 'text' },
+      // El nombre y la descripción PRESENTABLES los resuelve la query (taxes#38): la columna ordena
+      // y filtra por el mismo texto que enseña, no por el `name` inglés del seed.
+      { key: 'display_name', header: t('ui.colName'), sortable: true, filterable: true, filterType: 'text', format: (r) => taxCategoryDisplayName(r as TaxCategory) },
       {
-        key: 'description',
+        key: 'display_description',
         header: t('ui.colDescription'),
         sortable: true,
         filterable: true,
         filterType: 'text',
-        format: (r) => (r.description as string) || '—',
+        format: (r) => taxCategoryDisplayDescription(r as TaxCategory) || '—',
       },
       {
         key: 'is_system',
@@ -164,9 +179,10 @@ export class ErpTaxesCategories extends LitElement {
   render() {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return html`<div class="page">
+        ${can('taxes.manage_tax') ? nothing : html`<ok-inline-feedback tone="info" icon="lock-closed-outline">${t('ui.readOnlyHint')}</ok-inline-feedback>`}
         ${this.formError ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
         ${this.ctrl?.error ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
-        <ok-data-table .serverSide=${true} .fill=${true} .addable=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchKeyName')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyCategories')} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${can('taxes.manage_tax')} .views=${true} .cardTitle=${(row: Record<string, unknown>) => taxCategoryDisplayName(row as TaxCategory) || String(row.key ?? '')} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchKeyName')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyCategories')} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
           <form slot="create" class="form" @submit=${(e: Event) => this.createCategory(e)}>

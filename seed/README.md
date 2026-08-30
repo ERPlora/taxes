@@ -1,17 +1,36 @@
 # Seed canónico del módulo `taxes` (ADR-0085)
 
-`install.sqlite.sql` / `install.postgres.sql` — **DML idempotente por hub** que el **instalador
-del runtime** aplica automáticamente **tras las migraciones** (campo `seed` del `module.json`),
-con `:hub_id`/`:now`/`:current_user_id` inyectados. Garantiza que **todo hub nuevo** tenga:
+`install.postgres.sql` — **DML idempotente por hub** que el **instalador del runtime** aplica
+automáticamente **tras las migraciones** (campo `seed` del `module.json`), con
+`:hub_id`/`:now`/`:current_user_id` inyectados. Garantiza que **todo hub nuevo** tenga:
 
-- las **6 categorías canónicas** (`is_system=1`): `restaurant.food/drink/alcohol/delivery`,
-  `service.generic`, `product.generic`;
+- las **categorías canónicas** (`is_system=1`): `restaurant.food/drink/alcohol/delivery`,
+  `service.generic`, `product.generic`, `service.health`, `service.education`,
+  `product.reduced`, `product.super_reduced`;
 - los **alias de fábrica** (`source='shipped'`): `food`/`pizza`/`meal`→`restaurant.food`, etc.;
-- las **reglas IVA de España** (fase 1, ADR-0072): general 21, reducido 10.
+- la **baseline IVA de España COMPLETA** (taxes#7): general **21**, reducido **10**,
+  superreducido **4** y reglas **exentas** con su calificación (`exempt` + causa `E1`,
+  ADR-0185). Ya no hace falta el seed suplementario del hub (`es_iva.sql`, hub#107) para tener
+  una base fiscal útil: comparte **las mismas claves naturales e ids**, así que ambos componen
+  sin duplicar.
 
 Idempotente por la clave natural (`WHERE NOT EXISTS` sobre `(hub_id, key)` / `(hub_id, alias)` /
 `(hub_id, country, category, parent NULL, region NULL)`): se re-ejecuta en cada install/rehydrate
-sin duplicar. **IVA por país más allá de ES:** añadir reglas de otro país requiere verificar los
-tipos reales de ese país (fiscal, alto riesgo de error si están mal) — no es un ejercicio
-mecánico de seed, verifícalo con fuentes oficiales antes de commitear (añadir reglas aquí o vía
-el seed por país de ADR-0072).
+sin duplicar y **sin pisar filas existentes** (una edición manual del hub sobrevive — contrato
+del que depende el backfill de taxes#18). IVA de otros países = seed por país de ADR-0072.
+
+**Hubs YA instalados** (taxes#18): la misma baseline les llega por la **migración append-only**
+`migrations/postgres/003_backfill_es_vat_baseline.sql`, que se aplica al actualizar el módulo.
+Las migraciones no reciben `:hub_id`, así que deriva los hubs de las propias tablas del módulo;
+mismas guardas (`WHERE NOT EXISTS`) y mismos ids estables que este seed, nunca hace UPDATE
+(ediciones manuales, soft-deletes y alias reapuntados sobreviven), y en un hub nuevo es no-op
+(las tablas están vacías al migrar; siembra el seed justo después, sin duplicar).
+
+**Tests**: `seed/install.postgres.test.sh` — contra un Postgres real en Docker
+(`erplora-test-pg-5433` por defecto; BD scratch que se borra al final). Verifica la baseline
+21/10/4/exentas, el contrato de ids y la idempotencia sin clobber. Y
+`seed/backfill.postgres.test.sh` — el contrato del backfill (taxes#18): hub existente con
+personalizaciones recibe las exentas sin clobber, BD multi-hub legacy, hub nuevo sin duplicados.
+
+> ⚠️ **Antes de sembrar los tipos de otro país**: verifícalos contra la fuente oficial de ese
+> país. Un tipo mal puesto aquí no da error — sale en la factura, y de ahí al registro fiscal.

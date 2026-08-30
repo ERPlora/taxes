@@ -28,6 +28,7 @@
 //! `tax_rule_id` (id de la regla raíz, nullable).
 
 use erplora_guest_sdk::money;
+use erplora_guest_sdk::tax;
 use erplora_guest_sdk::{Event, Operation, Output};
 use rust_decimal::prelude::FromPrimitive;
 use rust_decimal::Decimal;
@@ -116,137 +117,15 @@ fn rate_dec(pct: f64) -> Decimal {
     Decimal::from_f64(pct).unwrap_or(Decimal::ZERO)
 }
 
-/// ¿Está la fila vigente en `date` (YYYY-MM-DD)? Fechas ISO comparan como string.
-fn is_valid_on(rule: &Value, date: &str) -> bool {
-    if date.is_empty() {
-        return true;
-    }
-    let from = field(rule, "valid_from");
-    let until = field(rule, "valid_to");
-    (from.is_empty() || from.as_str() <= date) && (until.is_empty() || until.as_str() >= date)
-}
-
-/// ¿Está activa la fila? Si la columna no viene (query ya filtra), se asume activa.
-fn is_active(row: &Value) -> bool {
-    match row.get("is_active") {
-        None | Some(Value::Null) => true,
-        Some(v) => as_bool(v),
-    }
-}
-
-/// ¿Es una regla RAÍZ (no un componente)? `parent_id` vacío/NULL.
-fn is_root(rule: &Value) -> bool {
-    field(rule, "parent_id").is_empty()
-}
-
-/// Filas candidatas: `context.reads["taxes.rules.list"]` (lo pre-carga el keystone, ADR-0069)
-/// con fallback a `payload.rules` (caller sin pre-carga). Se acepta también `taxes.rules.by_country`.
-fn candidate_rules<'a>(payload: &'a Value, context: &'a Value) -> Vec<&'a Value> {
-    let reads = context.get("reads");
-    let from_reads = reads.and_then(|r| {
-        r.get("taxes.rules.list")
-            .or_else(|| r.get("taxes.rules.by_country"))
-            .or_else(|| r.get("rules"))
-            .and_then(|v| v.as_array())
-    });
-    let rows = from_reads.or_else(|| payload.get("rules").and_then(|v| v.as_array()));
-    rows.map(|a| a.iter().collect()).unwrap_or_default()
-}
-
-// ── Resolución de la regla por categoría (ADR-0085) ──────────────────────────
-
-/// Resuelve la regla RAÍZ aplicable a `(cc, rc, cat, date)`. Precedencia: región exacta →
-/// regla de país (región vacía/NULL). Dentro de un nivel, prefiere la `valid_from` más reciente
-/// (la regla vigente más nueva gana), luego orden determinista por `id`.
-fn resolve_root<'a>(
-    rules: &[&'a Value],
-    cc: &str,
-    rc: &str,
-    cat: &str,
-    date: &str,
-) -> Option<&'a Value> {
-    // Candidatas: raíces activas, vigentes, de la categoría y país pedidos.
-    let eligible: Vec<&Value> = rules
-        .iter()
-        .copied()
-        .filter(|r| {
-            is_root(r)
-                && is_active(r)
-                && is_valid_on(r, date)
-                && field(r, "country_code").eq_ignore_ascii_case(cc)
-                && field(r, "tax_category_key") == cat
-        })
-        .collect();
-
-    // 1) región exacta
-    if !rc.is_empty() {
-        if let Some(r) = pick_best(
-            eligible
-                .iter()
-                .copied()
-                .filter(|r| field(r, "region_code").eq_ignore_ascii_case(rc))
-                .collect(),
-        ) {
-            return Some(r);
-        }
-    }
-    // 2) regla de país (región vacía/NULL)
-    pick_best(
-        eligible
-            .iter()
-            .copied()
-            .filter(|r| field(r, "region_code").is_empty())
-            .collect(),
-    )
-    .or_else(|| pick_best(eligible))
-}
-
-/// Mejor de un conjunto: `valid_from` más reciente primero, luego por `id` ascendente.
-fn pick_best<'a>(mut rows: Vec<&'a Value>) -> Option<&'a Value> {
-    rows.sort_by(|a, b| {
-        let fa = field(a, "valid_from");
-        let fb = field(b, "valid_from");
-        fb.cmp(&fa).then_with(|| field(a, "id").cmp(&field(b, "id")))
-    });
-    rows.first().copied()
-}
-
-/// Un componente a aplicar: la regla raíz o uno de sus hijos.
-struct Component {
-    rate_pct: f64,
-    rule_id: Value,
-    label: Value,
-    tax_type: Value,
-}
-
-fn component_from_rule(rule: &Value) -> Component {
-    // El componente puede traer `component_label`; si no, el nombre por defecto es el tax_type.
-    let label = {
-        let l = field(rule, "component_label");
-        if l.is_empty() { field(rule, "tax_type") } else { l }
-    };
-    Component {
-        rate_pct: as_f64(rule.get("rate_pct").unwrap_or(&Value::Null), 0.0),
-        rule_id: json!(field(rule, "id")),
-        label: json!(label),
-        tax_type: json!(field(rule, "tax_type")),
-    }
-}
-
-/// Expande la regla raíz a sus componentes (ADR-0085): la propia raíz + sus hijos (filas con
-/// `parent_id == raiz.id`, activos y vigentes), ordenados de forma determinista por `id`.
-fn rule_components<'a>(root: &'a Value, rules: &[&'a Value], date: &str) -> Vec<Component> {
-    let rid = field(root, "id");
-    let mut children: Vec<&Value> = rules
-        .iter()
-        .copied()
-        .filter(|r| !field(r, "id").is_empty() && field(r, "parent_id") == rid && is_active(r) && is_valid_on(r, date))
-        .collect();
-    children.sort_by_key(|r| field(r, "id"));
-    let mut comps = vec![component_from_rule(root)];
-    comps.extend(children.iter().map(|r| component_from_rule(r)));
-    comps
-}
+// ── La regla de impuesto: UNA sola implementación (hub#295) ──────────────────
+//
+// The resolution —which root rule applies to `(country, region, category, date)`, how it expands
+// into components, and how the operation is qualified (ADR-0186)— lives in
+// `erplora_guest_sdk::tax`. It used to be copied here, in `sales` (what the customer is CHARGED)
+// and in `invoice` (what is DECLARED); WASM guests cannot call each other, so the three copies
+// had to be kept in step by hand and had already drifted at the edges: this module refused the
+// paginated `{"rows": […]}` catalog the other two accepted, and it emitted `tax_type` verbatim
+// where `invoice` lowercased it.
 
 // ── Lógica pura: calculate_tax ───────────────────────────────────────────────
 
@@ -285,21 +164,39 @@ pub fn calculate_tax_pure(input: Value) -> Result<CalcOutput, String> {
         }
     };
 
-    let rules = candidate_rules(&payload, &context);
-    let root = resolve_root(&rules, &cc, &rc, &cat, &date);
+    let rules = tax::rule_catalog(&context, &payload);
+    let root = tax::resolve_root(&rules, &cc, &rc, &cat, &date);
 
-    let (tax_rule_id, source, components) = match root {
-        Some(r) => (json!(field(r, "id")), "rule", rule_components(r, &rules, &date)),
+    // La calificación (y el impuesto) los pone la regla RAÍZ, nunca un componente: el recargo de
+    // equivalencia aporta cuota sobre la misma base, pero no convierte media línea en otra
+    // operación. Sin regla, el fallback a 0 % es una venta sujeta al 0 % — es lo que ya significaba.
+    let (tax_rule_id, source, components, qualification) = match root {
+        Some(r) => (
+            json!(field(r, "id")),
+            "rule",
+            tax::rule_components(r, &rules, &date),
+            tax::rule_qualification(r),
+        ),
         None => {
             if !payload.get("allow_missing_rate").map(as_bool).unwrap_or(false) {
                 return Err(format!("no_rate: ninguna regla fiscal aplicable a categoría '{cat}' en '{cc}'"));
             }
-            (Value::Null, "fallback_zero", vec![])
+            (
+                Value::Null,
+                "fallback_zero",
+                vec![],
+                tax::Qualification {
+                    operation_class: "subject".to_string(),
+                    regime_key: tax::DEFAULT_REGIME.to_string(),
+                    exempt_reason: String::new(),
+                    tax_kind: tax::DEFAULT_TAX_KIND.to_string(),
+                },
+            )
         }
     };
 
     // Tasa combinada = suma de los componentes (un componente para regla simple; 0 si no hay).
-    let combined_pct: f64 = components.iter().map(|c| c.rate_pct).sum();
+    let combined_pct = tax::combined_rate_pct(&components);
     let combined: Decimal = components.iter().map(|c| rate_dec(c.rate_pct)).sum();
     let hundred = Decimal::from(100);
 
@@ -354,6 +251,14 @@ pub fn calculate_tax_pure(input: Value) -> Result<CalcOutput, String> {
             "tax_country_code": cc,
             "tax_region_code": rc,
             "tax_rule_id": tax_rule_id,
+            // ── Calificación fiscal, también congelada en la línea (hub#292) ──
+            // `tax_kind` es la familia del impuesto de la RAÍZ (`vat`/`igic`/`ipsi`/…), que es lo
+            // que decide qué impuesto se declara; `tax_regime_key` y `tax_exempt_reason` son
+            // códigos de la jurisdicción y viajan opacos.
+            "tax_kind": qualification.tax_kind,
+            "tax_operation_class": qualification.operation_class,
+            "tax_regime_key": qualification.regime_key,
+            "tax_exempt_reason": qualification.exempt_reason,
             // ── Metadatos del cálculo ──
             "tax_included": tax_included,
             "source": source,
@@ -394,6 +299,31 @@ fn rule_op_params(item: &Value, id: Value) -> Result<Map<String, Value>, String>
         let t = as_str(item.get("tax_type").unwrap_or(&Value::Null));
         if t.is_empty() { "vat".to_string() } else { t }
     };
+    // Calificación (hub#292). Lista cerrada: se RECHAZA la línea en vez de caer al default en
+    // silencio — una calificación mal escrita («casi_exento») que se guardara como `subject`
+    // declararía a Hacienda lo contrario de lo que el usuario quiso decir.
+    let operation_class = {
+        let c = as_str(item.get("operation_class").unwrap_or(&Value::Null))
+            .trim()
+            .to_ascii_lowercase();
+        if c.is_empty() {
+            "subject".to_string()
+        } else if tax::OPERATION_CLASSES.contains(&c.as_str()) {
+            c
+        } else {
+            return Err(format!(
+                "`operation_class` inválida: `{c}` (admitidas: {})",
+                tax::OPERATION_CLASSES.join(", ")
+            ));
+        }
+    };
+    let exempt_reason = {
+        let r = as_str(item.get("exempt_reason").unwrap_or(&Value::Null))
+            .trim()
+            .to_ascii_uppercase();
+        // La causa solo tiene sentido en una exenta; fuera de ahí no se guarda.
+        if operation_class == "exempt" && !r.is_empty() { json!(r) } else { Value::Null }
+    };
 
     let mut p = Map::new();
     p.insert("id".into(), id);
@@ -402,6 +332,9 @@ fn rule_op_params(item: &Value, id: Value) -> Result<Map<String, Value>, String>
     p.insert("tax_category_key".into(), json!(cat.trim()));
     p.insert("rate_pct".into(), json!(rate_pct));
     p.insert("tax_type".into(), json!(tax_type));
+    p.insert("operation_class".into(), json!(operation_class));
+    p.insert("exempt_reason".into(), exempt_reason);
+    p.insert("regime_key".into(), opt_field(item, "regime_key"));
     p.insert("parent_id".into(), opt_field(item, "parent_id"));
     p.insert("component_label".into(), opt_field(item, "component_label"));
     p.insert("valid_from".into(), opt_field(item, "valid_from"));
@@ -465,7 +398,7 @@ pub fn bulk_create_rules_pure(input: Value) -> Output {
         json!({ "created": created, "errors": errors }),
     ));
 
-    Output { operations: ops, events }
+    Output { operations: ops, events, ..Default::default() }
 }
 
 #[cfg(test)]
@@ -715,5 +648,233 @@ mod tests {
         let report = &out.events.last().unwrap().payload;
         assert_eq!(report["created"], json!(2));
         assert_eq!(report["errors"].as_array().unwrap().len(), 3);
+    }
+
+    // ── La CALIFICACIÓN fiscal (hub#292) ─────────────────────────────────────
+    //
+    // Hasta aquí una regla solo sabía decir CUÁNTO se repercute (`rate_pct`) y de qué familia es
+    // (`tax_type`). Lo que no sabía expresar es la otra mitad, la que el registro VeriFactu tiene
+    // que declarar: si la operación está **sujeta**, **exenta** o **no sujeta**, bajo qué
+    // **régimen**, y —cuando es exenta— por qué causa. Sin eso, todo acababa declarándose como
+    // venta nacional sujeta y no exenta, que es lo único que el desglose sabía decir.
+    //
+    // Vive en la REGLA, no en la categoría: la misma categoría cambia de calificación según la
+    // jurisdicción (un tratamiento sanitario está exento en España por el art. 20.Uno.3º y no
+    // tiene por qué estarlo en otro país), y la regla ya es exactamente la tupla
+    // `(país, región, categoría, vigencia)` en la que ese dato cambia. La categoría sigue siendo
+    // la clave abstracta enlazable de ADR-0085.
+
+    #[test]
+    fn una_regla_normal_es_sujeta_y_no_exenta_por_defecto() {
+        // Compatibilidad: las reglas que ya existen no traen las columnas nuevas y tienen que
+        // seguir significando lo que significaban — venta sujeta, régimen general.
+        let rules = json!([
+            { "id": "r-gen", "country_code": "ES", "region_code": null, "tax_category_key": "product.generic",
+              "rate_pct": 21.0, "tax_type": "vat", "parent_id": null, "is_active": 1 }
+        ]);
+        let payload = json!({ "amount": 10000, "tax_category_key": "product.generic", "country_code": "ES" });
+        let r = calculate_tax_pure(calc_input(payload, rules)).unwrap().result;
+        assert_eq!(r["tax_operation_class"], json!("subject"));
+        assert_eq!(r["tax_regime_key"], json!("01"));
+        assert_eq!(r["tax_exempt_reason"], json!(""));
+        assert_eq!(r["tax_kind"], json!("vat"));
+    }
+
+    #[test]
+    fn un_servicio_sanitario_se_resuelve_como_exento_con_su_causa() {
+        // El caso del vertical de estética: un tratamiento sanitario NO es «sujeto al 0 %», es
+        // EXENTO por el artículo 20 (causa E1 en el vocabulario de la AEAT). La causa viaja opaca:
+        // `taxes` la guarda y la devuelve, no la interpreta.
+        let rules = json!([
+            { "id": "r-health", "country_code": "ES", "region_code": null, "tax_category_key": "service.health",
+              "rate_pct": 0.0, "tax_type": "vat", "parent_id": null, "is_active": 1,
+              "operation_class": "exempt", "exempt_reason": "E1", "regime_key": "01" }
+        ]);
+        let payload = json!({ "amount": 5000, "tax_category_key": "service.health", "country_code": "ES" });
+        let r = calculate_tax_pure(calc_input(payload, rules)).unwrap().result;
+        assert_eq!(r["tax_operation_class"], json!("exempt"));
+        assert_eq!(r["tax_exempt_reason"], json!("E1"));
+        assert_eq!(r["tax"], json!(0), "una exenta no repercute cuota");
+        assert_eq!(r["base"], json!(5000));
+    }
+
+    #[test]
+    fn un_hub_canario_resuelve_igic_no_iva() {
+        // La región manda: la regla de Canarias (IGIC al 7 %) gana a la regla de país (IVA 21 %).
+        // Lo que cambia no es solo el %, es el IMPUESTO — y eso tiene que llegar al consumidor.
+        let rules = json!([
+            { "id": "r-es", "country_code": "ES", "region_code": null, "tax_category_key": "product.generic",
+              "rate_pct": 21.0, "tax_type": "vat", "parent_id": null, "is_active": 1 },
+            { "id": "r-ic", "country_code": "ES", "region_code": "IC", "tax_category_key": "product.generic",
+              "rate_pct": 7.0, "tax_type": "igic", "parent_id": null, "is_active": 1, "regime_key": "01" }
+        ]);
+        let payload = json!({ "amount": 10000, "tax_category_key": "product.generic",
+                              "country_code": "ES", "region_code": "IC" });
+        let r = calculate_tax_pure(calc_input(payload, rules)).unwrap().result;
+        assert_eq!(r["tax_rule_id"], json!("r-ic"));
+        assert_eq!(r["tax_kind"], json!("igic"));
+        assert_eq!(r["tax_rate_pct"], json!(7.0));
+        assert_eq!(r["tax"], json!(700));
+        assert_eq!(r["tax_operation_class"], json!("subject"));
+    }
+
+    #[test]
+    fn la_inversion_del_sujeto_pasivo_intracomunitaria_es_no_sujeta_por_localizacion() {
+        let rules = json!([
+            { "id": "r-eu", "country_code": "ES", "region_code": null, "tax_category_key": "service.generic",
+              "rate_pct": 0.0, "tax_type": "vat", "parent_id": null, "is_active": 1,
+              "operation_class": "not_subject_location", "regime_key": "01" }
+        ]);
+        let payload = json!({ "amount": 100000, "tax_category_key": "service.generic", "country_code": "ES" });
+        let r = calculate_tax_pure(calc_input(payload, rules)).unwrap().result;
+        assert_eq!(r["tax_operation_class"], json!("not_subject_location"));
+        assert_eq!(r["tax"], json!(0));
+    }
+
+    #[test]
+    fn la_calificacion_la_pone_la_regla_raiz_no_el_componente() {
+        // El recargo de equivalencia es un COMPONENTE de la regla del IVA: aporta su cuota sobre la
+        // misma base, pero no es una operación distinta. La calificación de la línea es la de la
+        // raíz — si el componente pudiera cambiarla, media línea se declararía de otra manera.
+        let rules = json!([
+            { "id": "r-21", "country_code": "ES", "region_code": null, "tax_category_key": "product.generic",
+              "rate_pct": 21.0, "tax_type": "vat", "parent_id": null, "is_active": 1, "regime_key": "01" },
+            { "id": "r-21-re", "country_code": "ES", "region_code": null, "tax_category_key": "product.generic",
+              "rate_pct": 5.2, "tax_type": "surcharge", "parent_id": "r-21", "is_active": 1,
+              "component_label": "Recargo de equivalencia" }
+        ]);
+        let payload = json!({ "amount": 10000, "tax_category_key": "product.generic", "country_code": "ES" });
+        let r = calculate_tax_pure(calc_input(payload, rules)).unwrap().result;
+        assert_eq!(r["tax_operation_class"], json!("subject"));
+        assert_eq!(r["tax_kind"], json!("vat"), "el impuesto es el de la raíz, no `surcharge`");
+        let comps = r["components"].as_array().unwrap();
+        assert_eq!(comps.len(), 2);
+        assert_eq!(comps[0]["tax_type"], json!("vat"));
+        assert_eq!(comps[0]["tax"], json!(2100));
+        assert_eq!(comps[1]["tax_type"], json!("surcharge"), "el componente sigue identificable");
+        assert_eq!(comps[1]["tax"], json!(520));
+    }
+
+    #[test]
+    fn bulk_create_acepta_la_calificacion_y_le_pone_defaults() {
+        let input = with_payload(
+            ctx_rules(4),
+            json!({ "rules": [
+                { "country_code": "ES", "tax_category_key": "service.health", "rate_pct": 0,
+                  "operation_class": "exempt", "exempt_reason": "e1", "regime_key": "01" },
+                { "country_code": "ES", "tax_category_key": "product.generic", "rate_pct": 21 },
+            ] }),
+        );
+        let out = bulk_create_rules_pure(input);
+        assert_eq!(out.operations.len(), 2);
+        let exenta = &out.operations[0].params;
+        assert_eq!(exenta["operation_class"], json!("exempt"));
+        assert_eq!(exenta["exempt_reason"], json!("E1"), "la causa se normaliza a mayúsculas");
+        assert_eq!(exenta["regime_key"], json!("01"));
+        let normal = &out.operations[1].params;
+        assert_eq!(normal["operation_class"], json!("subject"), "default explícito");
+        assert_eq!(normal["exempt_reason"], Value::Null);
+    }
+
+    #[test]
+    fn bulk_create_rechaza_una_calificacion_inventada() {
+        // La lista es cerrada: un valor libre acabaría en el XML de la AEAT como una calificación
+        // que no existe, y el rechazo llegaría con el número de factura ya gastado.
+        let input = with_payload(
+            ctx_rules(2),
+            json!({ "rules": [
+                { "country_code": "ES", "tax_category_key": "product.generic", "rate_pct": 21,
+                  "operation_class": "casi_exento" },
+            ] }),
+        );
+        let out = bulk_create_rules_pure(input);
+        assert_eq!(out.operations.len(), 0);
+        let report = &out.events.last().unwrap().payload;
+        assert_eq!(report["created"], json!(0));
+        assert!(
+            report["errors"][0]["error"].as_str().unwrap().contains("operation_class"),
+            "{report}"
+        );
+    }
+
+    // ── El contrato COMPARTIDO de la regla (hub#295) ─────────────────────────
+    //
+    // The same fixture is replayed by `sales` (what the customer is CHARGED) and by `invoice`
+    // (what is DECLARED). The three entry points resolve it through
+    // `erplora_guest_sdk::tax`, so an answer that changes here changes there.
+
+    /// The catalog the three entry points share in their tests (hub#295).
+    fn shared_fixture_rules() -> Value {
+        json!([
+            {"id": "es-vat-21", "country_code": "ES", "region_code": null, "tax_category_key": "standard",
+             "rate_pct": 21.0, "tax_type": "vat", "parent_id": null, "valid_from": "2012-09-01"},
+            {"id": "es-vat-21-surcharge", "parent_id": "es-vat-21", "country_code": "ES", "region_code": null,
+             "tax_category_key": "standard", "rate_pct": 5.2, "tax_type": "surcharge"},
+            {"id": "es-cn-igic-7", "country_code": "ES", "region_code": "CN", "tax_category_key": "standard",
+             "rate_pct": 7.0, "tax_type": "IGIC", "parent_id": null},
+            {"id": "es-vat-10", "country_code": "ES", "region_code": null, "tax_category_key": "restaurant.food",
+             "rate_pct": 10.0, "tax_type": "vat", "parent_id": null},
+            {"id": "es-exempt-health", "country_code": "ES", "region_code": null,
+             "tax_category_key": "health.treatment", "rate_pct": 0.0, "tax_type": "vat", "parent_id": null,
+             "operation_class": "exempt", "exempt_reason": "e1"},
+            {"id": "es-broken-class", "country_code": "ES", "region_code": null,
+             "tax_category_key": "broken.class", "rate_pct": 21.0, "tax_type": "vat", "parent_id": null,
+             "operation_class": "exent"}
+        ])
+    }
+
+    fn shared_calc(category: &str, region: &str) -> Value {
+        let payload = json!({ "amount": 10000, "tax_category_key": category,
+                              "country_code": "ES", "region_code": region, "date": "2026-08-07" });
+        calculate_tax_pure(calc_input(payload, shared_fixture_rules())).unwrap().result
+    }
+
+    #[test]
+    fn the_shared_fixture_resolves_to_one_answer_per_scenario() {
+        let peninsula = shared_calc("standard", "MD");
+        assert_eq!(peninsula["tax_rule_id"], json!("es-vat-21"));
+        assert_eq!(peninsula["tax_rate_pct"], json!(26.2), "the surcharge is a component of the root");
+        assert_eq!(peninsula["tax_kind"], json!("vat"));
+
+        let canaries = shared_calc("standard", "CN");
+        assert_eq!(canaries["tax_rule_id"], json!("es-cn-igic-7"));
+        assert_eq!(canaries["tax_rate_pct"], json!(7.0));
+
+        let reduced = shared_calc("restaurant.food", "MD");
+        assert_eq!(reduced["tax_rate_pct"], json!(10.0));
+
+        let exempt = shared_calc("health.treatment", "MD");
+        assert_eq!(exempt["tax_operation_class"], json!("exempt"));
+        assert_eq!(exempt["tax_exempt_reason"], json!("E1"));
+        assert_eq!(exempt["tax"], json!(0));
+
+        let broken = shared_calc("broken.class", "MD");
+        assert_eq!(
+            broken["tax_operation_class"],
+            json!("subject"),
+            "a qualification that does not exist is never declared"
+        );
+    }
+
+    #[test]
+    fn an_uppercase_tax_type_declares_the_same_family_key_everywhere() {
+        // `taxes` used to copy `tax_type` verbatim while `invoice` lowercased it: `IGIC` here and
+        // `igic` there are two spellings of the key that decides WHICH tax is declared.
+        assert_eq!(shared_calc("standard", "CN")["tax_kind"], json!("igic"));
+    }
+
+    #[test]
+    fn a_paginated_rule_catalog_is_a_catalog_not_an_empty_one() {
+        // The list engine composes `{"rows": […]}`. `sales` and `invoice` already unwrapped it;
+        // `taxes` only unwrapped a plain array, so the very same read left this entry point with
+        // no rules — 0 % calculated here, 21 % charged there.
+        let input = json!({
+            "payload": { "amount": 10000, "tax_category_key": "standard",
+                         "country_code": "ES", "region_code": "MD", "date": "2026-08-07" },
+            "context": { "reads": { "taxes.rules.list": { "rows": shared_fixture_rules(), "total": 6 } } }
+        });
+        let r = calculate_tax_pure(input).unwrap().result;
+        assert_eq!(r["tax_rule_id"], json!("es-vat-21"));
+        assert_eq!(r["source"], json!("rule"));
     }
 }

@@ -10,6 +10,9 @@ import type { ListController, ListClient, ListParams, ListPage } from '@erplora/
 // internos se resuelven con `erplora.t(CATALOG, 'ui.clave')` (idioma activo, fallback locale→en→clave).
 import esLocale from '../../../locales/es.json';
 import enLocale from '../../../locales/en.json';
+// Capa de PRESENTACIÓN del nombre de la categoría (taxes#30): el seed lo guarda en inglés canónico
+// (ADR-0055) y aquí se traduce por su `key`, sin tocar el dato. Lo que crea el usuario pasa tal cual.
+import { taxCategoryDisplayName } from '../../lib/tax-category-name';
 const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
 interface ErploraClientLike extends ListClient {
@@ -17,6 +20,8 @@ interface ErploraClientLike extends ListClient {
   queryPage<R = unknown>(name: string, params: ListParams): Promise<ListPage<R>>;
   command<T = unknown>(name: string, payload?: Record<string, unknown>): Promise<T>;
   on(event: string, cb: (payload: unknown) => void): () => void;
+  /** Effective permission of the signed-in user (taxes#11). Optional: a preview without it stays permissive. */
+  hasPermission?(permission: string): boolean;
   /** i18n del módulo (ADR-0055): idioma activo + traducción del catálogo `ui`. */
   locale: string;
   t(catalog: Record<string, unknown>, key: string, params?: Record<string, unknown>): string;
@@ -37,6 +42,13 @@ interface TaxCategoryRef {
   id: string;
   key: string;
   name: string;
+  /** Nombre presentable resuelto por `taxes.categories.list` al idioma del hub (taxes#38). */
+  display_name?: string;
+}
+
+// The runtime enforces the permission on every command; this only shapes the surface (taxes#11).
+function can(permission: string): boolean {
+  return erplora().hasPermission?.(permission) ?? true;
 }
 
 function erplora(): ErploraClientLike {
@@ -86,7 +98,7 @@ export class ErpTaxesAliases extends LitElement {
         // `eq`, así que el `value` es la `key` canónica), no se teclea: una key mal escrita en un
         // alias mete el IVA equivocado en el import.
         filterType: 'select',
-        options: this.categories.map((c) => ({ value: c.key, label: `${c.key} · ${c.name}` })),
+        options: this.categories.map((c) => ({ value: c.key, label: `${c.key} · ${taxCategoryDisplayName(c)}` })),
       },
       {
         key: 'source',
@@ -180,13 +192,14 @@ export class ErpTaxesAliases extends LitElement {
   render() {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return html`<div class="page">
+        ${can('taxes.manage_tax') ? nothing : html`<ok-inline-feedback tone="info" icon="lock-closed-outline">${t('ui.readOnlyHint')}</ok-inline-feedback>`}
         ${this.formError ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
         ${this.ctrl?.error ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
-        <ok-data-table .serverSide=${true} .fill=${true} .addable=${true} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchAlias')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyAliases')} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${can('taxes.manage_tax')} .views=${true} .cardTitle=${(row: Record<string, unknown>) => String(row.alias ?? '')} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchAlias')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyAliases')} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}>
           <!-- Alta de alias: el botón «+» de la tabla despliega este panel. -->
           <form slot="create" class="form" @submit=${(e: Event) => this.createAlias(e)}>
             <ion-input fill="outline" label-placement="floating" label=${t('ui.colAlias')} placeholder=${t('ui.phAlias')} .value=${this.newAlias} @ionInput=${(e: any) => (this.newAlias = e.target.value)}></ion-input>
-            <ion-select fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategoryKey')} .value=${this.newCategoryKey} @ionChange=${(e: any) => (this.newCategoryKey = e.target.value)}>${this.categories.map((c) => html`<ion-select-option .value=${c.key}>${c.key} · ${c.name}</ion-select-option>`)}</ion-select>
+            <ion-select fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategoryKey')} .value=${this.newCategoryKey} @ionChange=${(e: any) => (this.newCategoryKey = e.target.value)}>${this.categories.map((c) => html`<ion-select-option .value=${c.key}>${c.key} · ${taxCategoryDisplayName(c)}</ion-select-option>`)}</ion-select>
             <ion-select fill="outline" label-placement="floating" label=${t('ui.colSource')} .value=${this.newSource} @ionChange=${(e: any) => (this.newSource = e.target.value)}>
               <ion-select-option value="learned">${t('ui.srcLearned')}</ion-select-option>
               <ion-select-option value="shipped">${t('ui.srcShipped')}</ion-select-option>
