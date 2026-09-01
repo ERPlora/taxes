@@ -31,3 +31,6 @@ mismas guardas (`WHERE NOT EXISTS`) y mismos ids estables que este seed, nunca h
 21/10/4/exentas, el contrato de ids y la idempotencia sin clobber. Y
 `seed/backfill.postgres.test.sh` — el contrato del backfill (taxes#18): hub existente con
 personalizaciones recibe las exentas sin clobber, BD multi-hub legacy, hub nuevo sin duplicados.
+
+> ⚠️ **Antes de sembrar los tipos de otro país**: verifícalos contra la fuente oficial de ese
+> país. Un tipo mal puesto aquí no da error — sale en la factura, y de ahí al registro fiscal.
