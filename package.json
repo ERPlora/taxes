@@ -1,7 +1,7 @@
 {
   "name": "@erplora/module-taxes",
   "private": true,
-  "version": "2.3.10",
+  "version": "2.3.11",
   "type": "module",
   "description": "Módulo taxes (manifest declarativo + Web Component Lit): categorías, tipos por país/región y reglas fiscales, más un motor de cálculo de impuestos. Se compila con @erplora/module-cli.",
   "dependencies": {
