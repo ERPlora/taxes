@@ -4883,7 +4883,22 @@ var ErpTaxesRules = class extends i3 {
           return r6.parent_id && label ? `\u21B3 ${key} \xB7 ${label}` : key;
         }
       },
-      { key: "country_code", header: t5("ui.colCountry"), sortable: true, filterable: true, filterType: "text" },
+      // The jurisdiction is CHOSEN here too (taxes#48): since taxes#41 the domain of
+      // `country_code` is the closed ISO list, and the server declares it `op: eq` in module.json.
+      {
+        key: "country_code",
+        header: t5("ui.colCountry"),
+        sortable: true,
+        filterable: true,
+        filterType: "select",
+        options: this.countryFilterOptions
+      },
+      // The region is NOT the same case and stays a text box ON PURPOSE (taxes#48):
+      // `schemas/rule_create.json` gives it a `pattern`, not an `enum` — ISO 3166-2 is a SHAPE here,
+      // not a list, and there is no source of subdivisions the way `Intl.DisplayNames` names the
+      // countries — and a dropdown could not say «no region»: `ok-data-table` reads the empty value
+      // as «clear the filter», and no region — the whole country — is the NORMAL case. That is why
+      // the manifest keeps `like`: a text box invites a fragment, and `like` is what a fragment does.
       { key: "region_code", header: t5("ui.colRegion"), sortable: true, filterable: true, filterType: "text", format: (r6) => String(r6.region_code ?? "") || "\u2014" },
       {
         key: "rate_pct",
@@ -4929,6 +4944,37 @@ var ErpTaxesRules = class extends i3 {
         format: (r6) => Number(r6.is_active) ? t5("ui.optYes") : t5("ui.optNo")
       }
     ];
+  }
+  /**
+   * The options of the country filter: the jurisdictions this hub HAS rules for.
+   *
+   * Not the 249 of the `enum` (taxes#48). `ok-data-table` paints a `filterType: 'select'` as an
+   * `ion-select` with NO search box, so handing it the whole list would rebuild the control the
+   * create form, one element below, already rejected in writing: «combo y no ion-select porque son
+   * 249». And a filter is not a create form — it narrows what is on the table, so 247 of those 249
+   * could only ever answer with an empty list. It is what the column next door already does (the
+   * category comes from `this.categories`) and what `ok-data-table` does on its own when a select
+   * brings no options: look at the rows.
+   *
+   * `this.allRules` is already loaded (the parent-rule picker needs it) and refreshes on the create
+   * and delete events, so this adds no reads. The visible page joins the union because
+   * `loadAllRules` is best-effort: if that read fails, the dropdown still offers what is being
+   * looked at instead of sitting empty on top of a full table.
+   *
+   * A code the `enum` no longer admits — the `ZZ` taxes#41 found — stays on the list with its code
+   * as its label: its rules are still on the table, and dropping it from the filter would leave
+   * visible rows that cannot be narrowed to.
+   */
+  get countryFilterOptions() {
+    const present = /* @__PURE__ */ new Set();
+    for (const rule of [...this.allRules, ...this.ctrl?.rows ?? []]) {
+      const code = String(rule.country_code ?? "");
+      if (code) present.add(code);
+    }
+    if (!present.size) return [];
+    const named = countryOptions(erplora3().locale).filter((o7) => present.has(o7.value));
+    const unnamed = [...present].filter((c5) => !named.some((o7) => o7.value === c5)).sort();
+    return [...named, ...unnamed.map((value) => ({ value, label: value }))];
   }
   get rowActions() {
     const t5 = (k2) => erplora3().t(CATALOG3, k2);

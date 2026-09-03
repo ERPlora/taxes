@@ -159,7 +159,7 @@
         "default_dir": "asc",
         "filters": {
           "country_code": {
-            "op": "like"
+            "op": "eq"
           },
           "region_code": {
             "op": "like"
