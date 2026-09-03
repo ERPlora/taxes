@@ -1924,6 +1924,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     this.page = 0;
     this.searchable = false;
     this.sortDir = "asc";
+    this.filterValues = {};
     this.title = "";
     this.views = false;
     this.exportable = false;
@@ -1941,6 +1942,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     this.clientSortDir = "asc";
     this.clientFilters = {};
     this.filterDraft = {};
+    this.serverFilters = {};
     this.panel = "none";
     this.viewMode = "table";
     this.viewChosenByUser = false;
@@ -2553,11 +2555,54 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   get hasFilterRow() {
     return this.filterColumns.length > 0;
   }
-  /** Nº de filtros activos (modo cliente) → badge del botón Filtros. */
+  /** Nº de filtros activos → badge del botón Filtros. En servidor cuenta `filterValues` (#106): sin
+   *  esto el embudo no daba NINGUNA señal de que la lista venía acotada. */
   get activeFilterCount() {
+    if (this.serverSide) {
+      return Object.keys(this.serverFilters).filter((k2) => this.serverFilterState(k2) !== void 0).length;
+    }
     return Object.values(this.clientFilters).filter(
       (f3) => f3.values && f3.values.size > 0 || f3.from || f3.to
     ).length;
+  }
+  // ── Estado de filtro VISIBLE (#106) ──────────────────────────────────────────────────────────
+  /** Traduce un valor de `filterValues` (la forma que emite `filterChange`) a la forma interna que
+   *  usan los `render*Filter`. `undefined` = ese filtro no está puesto. */
+  serverFilterState(key) {
+    const raw = this.serverFilters[key];
+    if (raw === void 0 || raw === null || raw === "") return void 0;
+    if (Array.isArray(raw)) {
+      const values = raw.filter((v3) => v3 !== null && v3 !== void 0 && v3 !== "").map((v3) => String(v3));
+      return values.length ? { values: new Set(values) } : void 0;
+    }
+    if (typeof raw === "object") {
+      const range = raw;
+      const from = range.from === null || range.from === void 0 || range.from === "" ? void 0 : String(range.from);
+      const to = range.to === null || range.to === void 0 || range.to === "" ? void 0 : String(range.to);
+      return from !== void 0 || to !== void 0 ? { from, to } : void 0;
+    }
+    return { values: /* @__PURE__ */ new Set([String(raw)]) };
+  }
+  /** Estado de filtro efectivo de una columna: servidor → `filterValues`/espejo; cliente → memoria. */
+  filterStateOf(key) {
+    return this.serverSide ? this.serverFilterState(key) : this.clientFilters[key];
+  }
+  /** Fija (o borra) el valor visible de un filtro en el espejo de servidor. */
+  setServerFilter(key, value) {
+    const next = { ...this.serverFilters };
+    const empty = value === void 0 || value === null || value === "" || Array.isArray(value) && value.length === 0;
+    if (empty) delete next[key];
+    else next[key] = value;
+    this.serverFilters = next;
+  }
+  /** Fija UN extremo de un rango en el espejo. Los dos extremos viajan en eventos SEPARADOS
+   *  (`{from}` y luego `{to}`), así que aquí se MEZCLA: reemplazar borraría el otro extremo. */
+  setServerRangeEdge(key, edge, value) {
+    const prev = this.serverFilters[key];
+    const base = prev && typeof prev === "object" && !Array.isArray(prev) ? { ...prev } : {};
+    base[edge] = value;
+    const alive = (v3) => v3 !== void 0 && v3 !== null && v3 !== "";
+    this.setServerFilter(key, alive(base.from) || alive(base.to) ? base : void 0);
   }
   /** Valor crudo de una columna para ordenar/filtrar (usa format si lo hay, si no row[key]). */
   rawValue(col, row) {
@@ -2647,15 +2692,18 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   }
   onFilterInput(col, ev) {
     const value = ev.target.value ?? "";
+    this.setServerFilter(col.key, value);
     this.emit("filterChange", { col: col.key, value });
   }
   onRangeInput(col, edge, ev) {
     const raw = ev.target.value ?? "";
     const v3 = raw === "" ? "" : Number(raw);
+    this.setServerRangeEdge(col.key, edge, v3);
     this.emit("filterChange", { col: col.key, value: { [edge]: v3 } });
   }
   onDateRangeInput(col, edge, ev) {
     const v3 = ev.target.value ?? "";
+    this.setServerRangeEdge(col.key, edge, v3);
     this.emit("filterChange", { col: col.key, value: { [edge]: v3 } });
   }
   // ── Filtros EN LÍNEA (toolbar) ────────────────────────────────────────────────────────────
@@ -2675,7 +2723,9 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   // `filterChange`; en cliente escribe `clientFilters` (multiselect ⇒ filtra por inclusión).
   onFilterSelect(col, value, multi) {
     if (this.serverSide) {
-      this.emit("filterChange", { col: col.key, value: value ?? (multi ? [] : "") });
+      const next = value ?? (multi ? [] : "");
+      this.setServerFilter(col.key, next);
+      this.emit("filterChange", { col: col.key, value: next });
       return;
     }
     if (multi) {
@@ -2689,6 +2739,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   onInlineRange(col, edge, ev) {
     const v3 = ev.target.value ?? "";
     if (this.serverSide) {
+      this.setServerRangeEdge(col.key, edge, v3);
       this.emit("filterChange", { col: col.key, value: { [edge]: v3 } });
       return;
     }
@@ -2719,6 +2770,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
    */
   willUpdate(changed) {
     this.applyInitialView();
+    if (changed.has("filterValues")) this.serverFilters = { ...this.filterValues ?? {} };
     if (!this.serverSide && changed.has("rows") && this.mobileShown !== 0) this.mobileShown = 0;
   }
   applyInitialView() {
@@ -2741,9 +2793,11 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   renderFilterControl(col) {
     if (!col.filterable) return A;
     const type = col.filterType ?? "text";
+    const f3 = this.filterStateOf(col.key);
     if (type === "select" || type === "multiselect") {
       const multi = type === "multiselect";
       const opts = col.options ?? this.distinctValues(col).map((v3) => ({ value: v3, label: v3 }));
+      const current = this.selectValue(f3, multi);
       return b2`
         <ion-select
           label=${col.header}
@@ -2753,6 +2807,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
           interface="modal"
           .interfaceOptions=${{ cssClass: "ok-overlay" }}
           placeholder=${this.t.select}
+          .value=${current}
           @ionChange=${(e5) => this.onFilterSelect(col, e5.detail.value, multi)}
         >
           ${multi ? A : b2`<ion-select-option value="">${this.t.select}</ion-select-option>`}
@@ -2768,8 +2823,10 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
           <span class="flabel">${col.header}</span>
           <div class="frange">
             <ion-input type=${t5} fill="outline" mode="md" placeholder=${type === "daterange" ? this.t.from : this.t.gte}
+              .value=${f3?.from ?? ""}
               @ionInput=${(e5) => onEdge(col, "from", e5)}></ion-input>
             <ion-input type=${t5} fill="outline" mode="md" placeholder=${type === "daterange" ? this.t.to : this.t.lte}
+              .value=${f3?.to ?? ""}
               @ionInput=${(e5) => onEdge(col, "to", e5)}></ion-input>
           </div>
         </div>
@@ -2783,9 +2840,17 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
         label=${col.header}
         label-placement="stacked"
         placeholder=${this.t.filterPlaceholder}
+        .value=${this.selectValue(f3, false)}
         @ionInput=${(e5) => this.onFilterInput(col, e5)}
       ></ion-input>
     `;
+  }
+  /** Valor para un control de un solo valor (`ion-select`/`ion-input`) o multi (`ion-select
+   *  multiple`) a partir del estado de filtro interno. '' / [] = sin filtro. */
+  selectValue(f3, multi) {
+    const values = [...f3?.values ?? /* @__PURE__ */ new Set()];
+    if (multi) return values;
+    return values.length ? values[0] : "";
   }
   // Controles de filtro COMPACTOS para la toolbar (modo `inlineFilters`). Solo select y rango de
   // fechas (los del screenshot); el resto de tipos siguen disponibles vía el drawer si no se activa
@@ -2800,11 +2865,11 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   }
   renderInlineFilter(col) {
     const type = col.filterType ?? "text";
-    const f3 = this.clientFilters[col.key];
+    const f3 = this.filterStateOf(col.key);
     if (type === "select" || type === "multiselect") {
       const multi = type === "multiselect";
       const opts = col.options ?? this.distinctValues(col).map((v3) => ({ value: v3, label: v3 }));
-      const current = multi ? [...f3?.values ?? /* @__PURE__ */ new Set()] : f3?.values && f3.values.size ? [...f3.values][0] : "";
+      const current = this.selectValue(f3, multi);
       return b2`
         <ion-select
           class="tk-filter"
@@ -3002,7 +3067,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
                             ${this.toolButton("grid-outline", this.viewMode === "cards", () => this.setViewMode("cards"), this.t.viewCards)}
                           </span>
                         ` : A}
-                    ${this.hasFilterRow && !this.inlineFilters ? this.toolButton("funnel-outline", this.panel === "filters" || this.activeFilterCount > 0, () => this.toggle("filters"), this.t.filters, this.serverSide ? void 0 : this.activeFilterCount) : A}
+                    ${this.hasFilterRow && !this.inlineFilters ? this.toolButton("funnel-outline", this.panel === "filters" || this.activeFilterCount > 0, () => this.toggle("filters"), this.t.filters, this.activeFilterCount) : A}
                     ${this.effImport ? b2`
                           ${this.toolButton("cloud-upload-outline", false, () => this.renderRoot.querySelector(".tk-file")?.click(), this.t.importCsv)}
                           <input class="tk-file" type="file" accept=".csv,text/csv" hidden @change=${(e5) => this.onImportFile(e5)} />
@@ -3314,6 +3379,9 @@ __decorateClass3([
   n4({ attribute: "sort-dir" })
 ], _OkDataTable.prototype, "sortDir");
 __decorateClass3([
+  n4({ attribute: false })
+], _OkDataTable.prototype, "filterValues");
+__decorateClass3([
   n4()
 ], _OkDataTable.prototype, "title");
 __decorateClass3([
@@ -3385,6 +3453,9 @@ __decorateClass3([
 __decorateClass3([
   r5()
 ], _OkDataTable.prototype, "filterDraft");
+__decorateClass3([
+  r5()
+], _OkDataTable.prototype, "serverFilters");
 __decorateClass3([
   r5()
 ], _OkDataTable.prototype, "panel");
@@ -3580,8 +3651,9 @@ var es_default = {
     phKey: "restaurant.food",
     phName: "IVA general",
     phDescription: "opcional",
-    phCountry: "ES",
-    phRegion: "opcional",
+    phCountry: "Busca un pa\xEDs\u2026",
+    noCountryMatch: "Ning\xFAn pa\xEDs coincide",
+    phRegion: "Opcional \u2014 ISO 3166-2, p. ej. ES-CN",
     phCategoryKey: "restaurant.food",
     phPercent: "21",
     phComponentLabel: "Recargo de equivalencia",
@@ -3677,8 +3749,9 @@ var en_default = {
     phKey: "restaurant.food",
     phName: "general VAT",
     phDescription: "optional",
-    phCountry: "ES",
-    phRegion: "optional",
+    phCountry: "Search a country\u2026",
+    noCountryMatch: "No country matches",
+    phRegion: "Optional \u2014 ISO 3166-2, e.g. ES-CN",
     phCategoryKey: "restaurant.food",
     phPercent: "21",
     phComponentLabel: "Equivalence surcharge",
@@ -4053,6 +4126,685 @@ __decorateClass([
 ], ErpTaxesCategories.prototype, "saving", 2);
 define("erp-taxes-categories", ErpTaxesCategories);
 
+// @erplora/outfitkit/dist/ok-combo.js
+var __defProp4 = Object.defineProperty;
+var __decorateClass4 = (decorators, target, key, kind) => {
+  var result = void 0;
+  for (var i7 = decorators.length - 1, decorator; i7 >= 0; i7--)
+    if (decorator = decorators[i7])
+      result = decorator(target, key, result) || result;
+  if (result) __defProp4(target, key, result);
+  return result;
+};
+var DEFAULT_LABELS3 = {
+  placeholder: "Search\u2026",
+  empty: "No results"
+};
+var OkCombo = class extends i3 {
+  constructor() {
+    super(...arguments);
+    this.options = [];
+    this.value = "";
+    this.placeholder = "";
+    this.labels = {};
+    this.query = "";
+    this.open = false;
+    this.activeIndex = -1;
+    this.onDocClick = (e5) => {
+      if (!this.open) return;
+      if (!e5.composedPath().includes(this)) this.close();
+    };
+  }
+  static {
+    this.styles = i`
+    :host {
+      /* Vars overridable (estilo Ionic), default = cadena --ok-* → --ion-* → hex */
+      --color: var(--ok-text, var(--ion-text-color, #1c1b17));
+      --color-muted: var(--ok-text-muted, rgba(var(--ion-text-color-rgb, 28, 27, 23), 0.55));
+      --primary-color: var(--ok-primary, var(--ion-color-primary, #3880ff));
+      --primary-contrast: var(--ok-primary-contrast, var(--ion-color-primary-contrast, #ffffff));
+      --background: var(--ok-surface, var(--ion-background-color, #ffffff));
+      --hover-bg: var(--ok-hover, rgba(var(--ion-text-color-rgb, 28, 27, 23), 0.06));
+      --border-color: var(--ok-border, rgba(var(--ion-text-color-rgb, 28, 27, 23), 0.18));
+      --border-radius: var(--ok-radius, 8px);
+      --font: var(--ok-font, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif);
+      --shadow: var(--ok-shadow, 0 6px 24px rgba(0, 0, 0, 0.14));
+
+      /* Por defecto ocupa el ancho del contenedor y es responsive. */
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      position: relative;
+      color: var(--color);
+      font-family: var(--font);
+      font-size: 0.95rem;
+    }
+    .field {
+      position: relative;
+      width: 100%;
+    }
+    /* El ion-input se estiliza vía sus propias vars (estilo Ionic). */
+    ion-input {
+      --background: var(--background);
+      --color: var(--color);
+      --placeholder-color: var(--color-muted);
+      --border-radius: var(--border-radius);
+      width: 100%;
+    }
+    /* Chevron decorativo a la derecha del campo. */
+    .chevron {
+      position: absolute;
+      right: 0.6rem;
+      top: 50%;
+      transform: translateY(-50%);
+      display: inline-flex;
+      align-items: center;
+      color: var(--color-muted);
+      pointer-events: none;
+      transition: transform 0.18s ease;
+    }
+    :host([data-open]) .chevron {
+      transform: translateY(-50%) rotate(180deg);
+    }
+    /* Dropdown de resultados: posicionado bajo el campo, ancho del contenedor. */
+    .dropdown {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 4px);
+      z-index: 50;
+      max-height: 16rem;
+      overflow-y: auto;
+      margin: 0;
+      padding: 0.25rem;
+      list-style: none;
+      background: var(--background);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      box-sizing: border-box;
+    }
+    .option {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.5rem 0.6rem;
+      border-radius: calc(var(--border-radius) - 2px);
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: background-color var(--ok-transition, 150ms ease),
+        color var(--ok-transition, 150ms ease),
+        border-color var(--ok-transition, 150ms ease),
+        box-shadow var(--ok-transition, 150ms ease), transform 120ms ease;
+    }
+    @media (hover: hover) {
+      .option:hover {
+        background: var(--hover-bg);
+      }
+    }
+    .option:active {
+      transform: scale(var(--ok-press-scale, 0.97));
+    }
+    .option.active {
+      background: var(--primary-color);
+      color: var(--primary-contrast);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .option:hover,
+      .option:active {
+        transform: none;
+      }
+    }
+    .empty {
+      padding: 0.6rem;
+      color: var(--color-muted);
+      text-align: center;
+    }
+  `;
+  }
+  // Textos efectivos: defaults inglés sobreescritos por los pasados desde fuera.
+  get t() {
+    return { ...DEFAULT_LABELS3, ...this.labels };
+  }
+  // Placeholder efectivo: prop explícita si se pasó, si no el de los labels.
+  get effectivePlaceholder() {
+    return this.placeholder || this.t.placeholder;
+  }
+  connectedCallback() {
+    super.connectedCallback();
+    document.addEventListener("click", this.onDocClick, true);
+  }
+  disconnectedCallback() {
+    document.removeEventListener("click", this.onDocClick, true);
+    super.disconnectedCallback();
+  }
+  // Texto a mostrar en el input: si está escribiendo usa la query, si no, el label del value.
+  get displayText() {
+    if (this.open) return this.query;
+    const current = this.options.find((o7) => o7.value === this.value);
+    return current ? current.label : this.query;
+  }
+  // Opciones que casan con la query (case-insensitive, substring).
+  get filtered() {
+    const q = this.query.trim().toLowerCase();
+    if (!q) return this.options;
+    return this.options.filter((o7) => o7.label.toLowerCase().includes(q));
+  }
+  close() {
+    this.open = false;
+    this.activeIndex = -1;
+  }
+  // Maneja la escritura en el ion-input: actualiza query, abre dropdown y emite `ok-input`.
+  handleInput(e5) {
+    const detail = e5.detail;
+    const value = detail?.value ?? "";
+    this.query = value;
+    this.open = true;
+    this.activeIndex = -1;
+    this.dispatchEvent(
+      new CustomEvent("ok-input", {
+        detail: { query: value },
+        bubbles: true,
+        composed: true
+      })
+    );
+  }
+  // Elige una opción: fija value, rellena input, cierra y emite `ok-change`.
+  choose(option) {
+    this.value = option.value;
+    this.query = option.label;
+    this.close();
+    this.dispatchEvent(
+      new CustomEvent("ok-change", {
+        detail: { value: option.value, label: option.label },
+        bubbles: true,
+        composed: true
+      })
+    );
+  }
+  // Navegación por teclado sobre la lista filtrada.
+  handleKeydown(e5) {
+    const items = this.filtered;
+    switch (e5.key) {
+      case "ArrowDown":
+        e5.preventDefault();
+        if (!this.open) this.open = true;
+        if (items.length) this.activeIndex = (this.activeIndex + 1) % items.length;
+        break;
+      case "ArrowUp":
+        e5.preventDefault();
+        if (!this.open) this.open = true;
+        if (items.length)
+          this.activeIndex = (this.activeIndex - 1 + items.length) % items.length;
+        break;
+      case "Enter":
+        if (this.open && this.activeIndex >= 0 && items[this.activeIndex]) {
+          e5.preventDefault();
+          this.choose(items[this.activeIndex]);
+        }
+        break;
+      case "Escape":
+        if (this.open) {
+          e5.preventDefault();
+          this.close();
+        }
+        break;
+    }
+  }
+  render() {
+    const items = this.filtered;
+    this.toggleAttribute("data-open", this.open);
+    return b2`<div class="field">
+      <ion-input
+        .label=${this.label ?? ""}
+        label-placement=${this.label ? "stacked" : "start"}
+        fill="outline" mode="md"
+        .value=${this.displayText}
+        placeholder=${this.effectivePlaceholder}
+        @ionInput=${(e5) => this.handleInput(e5)}
+        @ionFocus=${() => {
+      this.open = true;
+    }}
+        @keydown=${(e5) => this.handleKeydown(e5)}
+      ></ion-input>
+      <span class="chevron">
+        <ion-icon .icon=${iconChevronDownOutline}></ion-icon>
+      </span>
+      ${this.open ? b2`<ul class="dropdown" role="listbox">
+            ${items.length ? items.map(
+      (option, i7) => b2`<li
+                    role="option"
+                    class=${`option ${i7 === this.activeIndex ? "active" : ""}`.trim()}
+                    aria-selected=${option.value === this.value ? "true" : "false"}
+                    @mouseenter=${() => {
+        this.activeIndex = i7;
+      }}
+                    @click=${() => this.choose(option)}
+                  >
+                    ${option.label}
+                  </li>`
+    ) : b2`<li class="empty">${this.t.empty}</li>`}
+          </ul>` : ""}
+    </div>`;
+  }
+};
+__decorateClass4([
+  n4({ attribute: false })
+], OkCombo.prototype, "options");
+__decorateClass4([
+  n4()
+], OkCombo.prototype, "value");
+__decorateClass4([
+  n4()
+], OkCombo.prototype, "placeholder");
+__decorateClass4([
+  n4()
+], OkCombo.prototype, "label");
+__decorateClass4([
+  n4({ attribute: false })
+], OkCombo.prototype, "labels");
+__decorateClass4([
+  r5()
+], OkCombo.prototype, "query");
+__decorateClass4([
+  r5()
+], OkCombo.prototype, "open");
+__decorateClass4([
+  r5()
+], OkCombo.prototype, "activeIndex");
+define("ok-combo", OkCombo);
+
+// schemas/rule_create.json
+var rule_create_default = {
+  $schema: "https://json-schema.org/draft/2020-12/schema",
+  title: "taxes.rules.create",
+  type: "object",
+  additionalProperties: false,
+  required: [
+    "country_code",
+    "tax_category_key",
+    "rate_pct"
+  ],
+  properties: {
+    country_code: {
+      type: "string",
+      enum: [
+        "AD",
+        "AE",
+        "AF",
+        "AG",
+        "AI",
+        "AL",
+        "AM",
+        "AO",
+        "AQ",
+        "AR",
+        "AS",
+        "AT",
+        "AU",
+        "AW",
+        "AX",
+        "AZ",
+        "BA",
+        "BB",
+        "BD",
+        "BE",
+        "BF",
+        "BG",
+        "BH",
+        "BI",
+        "BJ",
+        "BL",
+        "BM",
+        "BN",
+        "BO",
+        "BQ",
+        "BR",
+        "BS",
+        "BT",
+        "BV",
+        "BW",
+        "BY",
+        "BZ",
+        "CA",
+        "CC",
+        "CD",
+        "CF",
+        "CG",
+        "CH",
+        "CI",
+        "CK",
+        "CL",
+        "CM",
+        "CN",
+        "CO",
+        "CR",
+        "CU",
+        "CV",
+        "CW",
+        "CX",
+        "CY",
+        "CZ",
+        "DE",
+        "DJ",
+        "DK",
+        "DM",
+        "DO",
+        "DZ",
+        "EC",
+        "EE",
+        "EG",
+        "EH",
+        "ER",
+        "ES",
+        "ET",
+        "FI",
+        "FJ",
+        "FK",
+        "FM",
+        "FO",
+        "FR",
+        "GA",
+        "GB",
+        "GD",
+        "GE",
+        "GF",
+        "GG",
+        "GH",
+        "GI",
+        "GL",
+        "GM",
+        "GN",
+        "GP",
+        "GQ",
+        "GR",
+        "GS",
+        "GT",
+        "GU",
+        "GW",
+        "GY",
+        "HK",
+        "HM",
+        "HN",
+        "HR",
+        "HT",
+        "HU",
+        "ID",
+        "IE",
+        "IL",
+        "IM",
+        "IN",
+        "IO",
+        "IQ",
+        "IR",
+        "IS",
+        "IT",
+        "JE",
+        "JM",
+        "JO",
+        "JP",
+        "KE",
+        "KG",
+        "KH",
+        "KI",
+        "KM",
+        "KN",
+        "KP",
+        "KR",
+        "KW",
+        "KY",
+        "KZ",
+        "LA",
+        "LB",
+        "LC",
+        "LI",
+        "LK",
+        "LR",
+        "LS",
+        "LT",
+        "LU",
+        "LV",
+        "LY",
+        "MA",
+        "MC",
+        "MD",
+        "ME",
+        "MF",
+        "MG",
+        "MH",
+        "MK",
+        "ML",
+        "MM",
+        "MN",
+        "MO",
+        "MP",
+        "MQ",
+        "MR",
+        "MS",
+        "MT",
+        "MU",
+        "MV",
+        "MW",
+        "MX",
+        "MY",
+        "MZ",
+        "NA",
+        "NC",
+        "NE",
+        "NF",
+        "NG",
+        "NI",
+        "NL",
+        "NO",
+        "NP",
+        "NR",
+        "NU",
+        "NZ",
+        "OM",
+        "PA",
+        "PE",
+        "PF",
+        "PG",
+        "PH",
+        "PK",
+        "PL",
+        "PM",
+        "PN",
+        "PR",
+        "PS",
+        "PT",
+        "PW",
+        "PY",
+        "QA",
+        "RE",
+        "RO",
+        "RS",
+        "RU",
+        "RW",
+        "SA",
+        "SB",
+        "SC",
+        "SD",
+        "SE",
+        "SG",
+        "SH",
+        "SI",
+        "SJ",
+        "SK",
+        "SL",
+        "SM",
+        "SN",
+        "SO",
+        "SR",
+        "SS",
+        "ST",
+        "SV",
+        "SX",
+        "SY",
+        "SZ",
+        "TC",
+        "TD",
+        "TF",
+        "TG",
+        "TH",
+        "TJ",
+        "TK",
+        "TL",
+        "TM",
+        "TN",
+        "TO",
+        "TR",
+        "TT",
+        "TV",
+        "TW",
+        "TZ",
+        "UA",
+        "UG",
+        "UM",
+        "US",
+        "UY",
+        "UZ",
+        "VA",
+        "VC",
+        "VE",
+        "VG",
+        "VI",
+        "VN",
+        "VU",
+        "WF",
+        "WS",
+        "YE",
+        "YT",
+        "ZA",
+        "ZM",
+        "ZW"
+      ],
+      description: "Jurisdicci\xF3n de la regla: ISO 3166-1 alpha-2, lista CERRADA (taxes#41). Antes bastaba con dos caracteres, as\xED que `ZZ` \u2014que ISO deja SIN ASIGNAR\u2014 era un pa\xEDs v\xE1lido: la regla se creaba, se listaba y no casaba con la identidad fiscal de ning\xFAn hub, y el due\xF1o la ve\xEDa en pantalla creyendo que ten\xEDa el IVA puesto mientras el TPV segu\xEDa sin resolver un tipo. Es la otra mitad de la clave con la que el resolutor busca (`pa\xEDs + regi\xF3n + categor\xEDa`, ADR-0085): un pa\xEDs que no existe es silencio, no un error."
+    },
+    region_code: {
+      type: [
+        "string",
+        "null"
+      ],
+      default: null,
+      pattern: "^[A-Z]{2}-[A-Z0-9]{1,3}$",
+      description: "Subdivisi\xF3n ISO 3166-2 (`ES-CN`, `ES-ML`\u2026) o `null` = todo el pa\xEDs, que es el caso normal (migraci\xF3n 004). La forma es la MISMA que el core exige a la regi\xF3n del hub en `crates/runtime/src/settings.rs::validate_region`: si aqu\xED entrara una que all\xED no cabe, la regla no podr\xEDa casar con ning\xFAn hub \u2014 el mismo silencio que taxes#41."
+    },
+    tax_category_key: {
+      type: "string",
+      minLength: 1,
+      maxLength: 80,
+      pattern: "^[a-z][a-z0-9_.]*$"
+    },
+    rate_pct: {
+      type: "number",
+      minimum: 0,
+      maximum: 100,
+      description: "Tasa en % (0..100). El tope es real: un tipo por encima de 100 no es un tipo, y sin \xE9l un 500 pasaba el schema (taxes#9). La tasa COMBINADA (IVA + recargo) la calcula el resolutor sumando componentes; no se guarda aqu\xED."
+    },
+    tax_type: {
+      type: "string",
+      enum: [
+        "vat",
+        "igic",
+        "ipsi",
+        "surcharge",
+        "sales_tax",
+        "withholding",
+        "excise",
+        "import_duty"
+      ],
+      default: "vat"
+    },
+    parent_id: {
+      type: [
+        "string",
+        "null"
+      ],
+      default: null
+    },
+    component_label: {
+      type: [
+        "string",
+        "null"
+      ],
+      default: null,
+      maxLength: 120
+    },
+    valid_from: {
+      type: [
+        "string",
+        "null"
+      ],
+      format: "date",
+      default: null
+    },
+    valid_to: {
+      type: [
+        "string",
+        "null"
+      ],
+      format: "date",
+      default: null
+    },
+    operation_class: {
+      type: "string",
+      enum: [
+        "subject",
+        "subject_reverse",
+        "exempt",
+        "not_subject",
+        "not_subject_location"
+      ],
+      default: "subject"
+    },
+    exempt_reason: {
+      type: [
+        "string",
+        "null"
+      ],
+      default: null,
+      maxLength: 10
+    },
+    regime_key: {
+      type: [
+        "string",
+        "null"
+      ],
+      default: null,
+      maxLength: 10
+    }
+  }
+};
+
+// ui/lib/countries.ts
+var COUNTRY_CODES = rule_create_default.properties.country_code.enum;
+function regionNames(locale) {
+  const DisplayNames = Intl.DisplayNames;
+  if (typeof DisplayNames !== "function") return null;
+  try {
+    return new DisplayNames([locale, "en"], { type: "region", fallback: "none" });
+  } catch {
+    return null;
+  }
+}
+function countryOptions(locale) {
+  const names = regionNames(locale);
+  const options = COUNTRY_CODES.map((value) => {
+    const name = names?.of(value);
+    return { value, label: name ? `${name} (${value})` : value };
+  });
+  let compare;
+  try {
+    compare = new Intl.Collator(locale).compare;
+  } catch {
+    compare = (a3, b3) => a3 < b3 ? -1 : a3 > b3 ? 1 : 0;
+  }
+  return options.sort((a3, b3) => compare(a3.label, b3.label));
+}
+
 // ui/components/erp-taxes-rules/erp-taxes-rules.ts
 var CATALOG3 = { es: es_default, en: en_default };
 var TAX_TYPES = ["vat", "igic", "ipsi", "surcharge", "sales_tax", "withholding", "excise", "import_duty"];
@@ -4302,7 +5054,16 @@ var ErpTaxesRules = class extends i3 {
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
           <form slot="create" class="form" @submit=${(e5) => this.createRule(e5)}>
-            <ion-input fill="outline" label-placement="floating" label=${t5("ui.colCountry")} placeholder=${t5("ui.phCountry")} maxlength="2" .value=${this.newCountry} @ionInput=${(e5) => this.newCountry = e5.target.value}></ion-input>
+            <!-- El país se ELIGE de la lista CERRADA que acepta el command (taxes#41): tecleado a
+                 mano, ZZ —que ISO 3166-1 deja sin asignar— creaba una regla que no casaba con
+                 ningún hub y que nadie volvía a mirar. Combo y no ion-select porque son 249. -->
+            <ok-combo
+              label=${t5("ui.colCountry")}
+              .options=${countryOptions(erplora3().locale)}
+              .value=${this.newCountry}
+              .labels=${{ placeholder: t5("ui.phCountry"), empty: t5("ui.noCountryMatch") }}
+              @ok-change=${(e5) => this.newCountry = e5.detail.value}
+            ></ok-combo>
             <ion-input fill="outline" label-placement="floating" label=${t5("ui.colRegion")} placeholder=${t5("ui.phRegion")} .value=${this.newRegion} @ionInput=${(e5) => this.newRegion = e5.target.value}></ion-input>
             <!-- La categoría se ELIGE: la FK (hub_id, tax_category_key) la valida, y una clave mal
                  tecleada era una regla que nunca se aplicaba (o un command rechazado). -->
