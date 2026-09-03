@@ -3,6 +3,7 @@ import { state } from 'lit/decorators.js';
 import { define } from '@erplora/outfitkit/define';
 import '@erplora/outfitkit/ok-inline-feedback';
 import '@erplora/outfitkit/ok-data-table';
+import '@erplora/outfitkit/ok-combo';
 import type { DataTableColumn, DataTableAction } from '@erplora/outfitkit';
 import { createListController } from '@erplora/module-sdk';
 import type { ListController, ListClient, ListParams, ListPage } from '@erplora/module-sdk';
@@ -13,6 +14,9 @@ import enLocale from '../../../locales/en.json';
 // Capa de PRESENTACIÓN del nombre de la categoría (taxes#30): el seed lo guarda en inglés canónico
 // (ADR-0055) y aquí se traduce por su `key`, sin tocar el dato. Lo que crea el usuario pasa tal cual.
 import { taxCategoryDisplayName } from '../../lib/tax-category-name';
+// La jurisdicción se ELIGE (taxes#41): las opciones salen del `enum` del propio schema del
+// command, así que la pantalla no puede ofrecer un país que el servidor vaya a rechazar.
+import { countryOptions } from '../../lib/countries';
 const CATALOG: Record<string, unknown> = { es: esLocale, en: enLocale };
 
 interface ErploraClientLike extends ListClient {
@@ -369,7 +373,16 @@ export class ErpTaxesRules extends LitElement {
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
           <form slot="create" class="form" @submit=${(e: Event) => this.createRule(e)}>
-            <ion-input fill="outline" label-placement="floating" label=${t('ui.colCountry')} placeholder=${t('ui.phCountry')} maxlength="2" .value=${this.newCountry} @ionInput=${(e: any) => (this.newCountry = e.target.value)}></ion-input>
+            <!-- El país se ELIGE de la lista CERRADA que acepta el command (taxes#41): tecleado a
+                 mano, ZZ —que ISO 3166-1 deja sin asignar— creaba una regla que no casaba con
+                 ningún hub y que nadie volvía a mirar. Combo y no ion-select porque son 249. -->
+            <ok-combo
+              label=${t('ui.colCountry')}
+              .options=${countryOptions(erplora().locale)}
+              .value=${this.newCountry}
+              .labels=${{ placeholder: t('ui.phCountry'), empty: t('ui.noCountryMatch') }}
+              @ok-change=${(e: CustomEvent<{ value: string }>) => (this.newCountry = e.detail.value)}
+            ></ok-combo>
             <ion-input fill="outline" label-placement="floating" label=${t('ui.colRegion')} placeholder=${t('ui.phRegion')} .value=${this.newRegion} @ionInput=${(e: any) => (this.newRegion = e.target.value)}></ion-input>
             <!-- La categoría se ELIGE: la FK (hub_id, tax_category_key) la valida, y una clave mal
                  tecleada era una regla que nunca se aplicaba (o un command rechazado). -->
