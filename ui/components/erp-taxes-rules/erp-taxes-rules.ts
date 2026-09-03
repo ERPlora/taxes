@@ -227,16 +227,12 @@ export class ErpTaxesRules extends LitElement {
       },
       { key: 'valid_from', header: t('ui.colValidFrom'), sortable: true, format: (r) => String(r.valid_from ?? '') || '—' },
       { key: 'valid_to', header: t('ui.colValidTo'), sortable: true, format: (r) => String(r.valid_to ?? '') || '—' },
+      // NO filtrable (taxes#50): `queries/rules_list.sql` termina en `AND r.is_active = 1`, así que
+      // un filtro «No» nunca podría devolver una fila — mismo trato que valid_from/valid_to arriba.
       {
         key: 'is_active',
         header: t('ui.colActive'),
         sortable: true,
-        filterable: true,
-        filterType: 'select',
-        options: [
-          { value: '1', label: t('ui.optYes') },
-          { value: '0', label: t('ui.optNo') },
-        ],
         format: (r) => (Number(r.is_active) ? t('ui.optYes') : t('ui.optNo')),
       },
     ];
@@ -245,7 +241,7 @@ export class ErpTaxesRules extends LitElement {
   /**
    * The options of the country filter: the jurisdictions this hub HAS rules for.
    *
-   * Not the 249 of the `enum` (taxes#48). `ok-data-table` paints a `filterType: 'select'` as an
+   * Not the 249 of the `enum` (taxes#48). `ok-data-table` paints a `select`-type filter as an
    * `ion-select` with NO search box, so handing it the whole list would rebuild the control the
    * create form, one element below, already rejected in writing: «combo y no ion-select porque son
    * 249». And a filter is not a create form — it narrows what is on the table, so 247 of those 249

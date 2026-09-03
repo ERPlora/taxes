@@ -102,11 +102,17 @@ describe('el alta vive DENTRO de la tabla (paridad con /employees e inventory)',
 });
 
 describe('filtros: los de dominio cerrado son `select`; los que el servidor no soporta, no se declaran', () => {
-  it('«activa» se filtra con un select sí/no', async () => {
+  // taxes#50: la aserción anterior («activa» filtra con un select sí/no) comprobaba el bug, no el
+  // contrato — `rules_list.sql` termina en `AND r.is_active = 1`, así que la opción «No» del select
+  // no podía devolver una fila jamás, tuviera el hub las reglas inactivas que tuviera. Se corrige
+  // igual que `valid_from`/`valid_to` justo abajo: la columna se sigue viendo (sortable), pero deja
+  // de prometer un filtro que el servidor no puede cumplir.
+  it('«activa» NO se declara filtrable: la query siempre excluye las inactivas, así que un filtro «No» no podría devolver nada jamás', async () => {
     const el = await montar();
     const activa = columnas(el).find((c) => c.key === 'is_active');
-    expect(activa?.filterType).toBe('select');
-    expect(activa?.options?.map((o) => o.value)).toEqual(['1', '0']);
+    expect(activa, 'la columna is_active ha desaparecido').toBeTruthy();
+    expect(activa?.filterable, 'filtro muerto: rules_list.sql fuerza is_active = 1, «No» nunca podría devolver filas').toBeFalsy();
+    expect(activa?.filterType).toBeUndefined();
   });
 
   it('la categoría se filtra con un select poblado con las categorías reales, no tecleando la clave', async () => {

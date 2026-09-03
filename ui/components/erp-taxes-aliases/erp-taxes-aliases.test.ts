@@ -84,6 +84,19 @@ describe('la categoría fiscal se ELIGE, no se teclea', () => {
   });
 });
 
+// taxes#50: `aliases_list.sql` termina en `AND is_active = 1`, el mismo bug que rules/categories —
+// «activa» se ve (sortable) pero no se filtra: un «No» no podría devolver una fila jamás.
+describe('«activa» no promete un filtro que el servidor no puede cumplir (taxes#50)', () => {
+  it('is_active NO se declara filtrable', async () => {
+    const el = await montar();
+    const cols = (el as unknown as { columns: { key: string; filterable?: boolean; filterType?: string }[] }).columns;
+    const activa = cols.find((c) => c.key === 'is_active');
+    expect(activa, 'la columna is_active ha desaparecido').toBeTruthy();
+    expect(activa?.filterable, 'filtro muerto: aliases_list.sql fuerza is_active = 1').toBeFalsy();
+    expect(activa?.filterType).toBeUndefined();
+  });
+});
+
 describe('el alta sigue mandando el comando correcto', () => {
   it('crear un alias manda taxes.aliases.create con alias, key y origen', async () => {
     const el = await montar();

@@ -4,8 +4,9 @@
 // `slot="create"`), igual que /employees del core y el CRUD de productos de `inventory`: ningún
 // formulario suelto encima de la tabla, ningún título propio (lo pinta el topbar del shell).
 //
-// El único campo de dominio cerrado de esta tabla es «Activa» (sí/no) y ya se filtra con un
-// `select`; aquí se blinda para que no vuelva a ser texto libre.
+// «Activa» (sí/no) se ve (sortable) pero NO se filtra (taxes#50): `categories_list.sql` termina
+// en `AND c.is_active = 1`, así que un filtro «No» no podría devolver una fila jamás — el mismo
+// bug que taxes.rules.list, mismo arreglo.
 //
 // El payload de `taxes.categories.create` es contrato fiscal: se comprueba para que un retoque de
 // colocación no lo mueva. La identidad enlazable de una categoría es su `key` canónica (ADR-0085),
@@ -82,11 +83,12 @@ describe('el alta vive DENTRO de la tabla (paridad con /employees e inventory)',
 });
 
 describe('los filtros de dominio cerrado son `select`', () => {
-  it('«activa» se filtra con un select sí/no, no tecleando 1 o 0', async () => {
+  it('«activa» NO se declara filtrable: la query siempre excluye las inactivas, así que un filtro «No» no podría devolver nada jamás (taxes#50)', async () => {
     const el = await montar();
     const activa = columnas(el).find((c) => c.key === 'is_active');
-    expect(activa?.filterType).toBe('select');
-    expect(activa?.options?.map((o) => o.value)).toEqual(['1', '0']);
+    expect(activa, 'la columna is_active ha desaparecido').toBeTruthy();
+    expect(activa?.filterable, 'filtro muerto: categories_list.sql fuerza is_active = 1').toBeFalsy();
+    expect(activa?.filterType).toBeUndefined();
   });
 });
 
