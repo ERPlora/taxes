@@ -46,12 +46,25 @@ function regionNames(locale: string): { of(code: string): string | undefined } |
 }
 
 /**
+ * Built lists, by language.
+ *
+ * The rules form re-renders on every character typed into any of its ten fields, and the picker is
+ * part of that template: without this, each keystroke names 249 regions and collates them again.
+ * At most a handful of entries ever live here — one per language the hub is read in.
+ */
+const byLocale = new Map<string, CountryOption[]>();
+
+/**
  * The picker's options, named and ordered for whoever is reading (`erplora.locale`).
  *
  * The label carries the code as well as the name (`España (ES)`): `ok-combo` filters on the label
  * only, so without it an owner who knows her rule says `ES` could not find it by typing `ES`.
+ *
+ * The array is shared between calls for one language — the caller reads it, never mutates it.
  */
 export function countryOptions(locale: string): CountryOption[] {
+  const cached = byLocale.get(locale);
+  if (cached) return cached;
   const names = regionNames(locale);
   const options = COUNTRY_CODES.map((value) => {
     const name = names?.of(value);
@@ -63,5 +76,7 @@ export function countryOptions(locale: string): CountryOption[] {
   } catch {
     compare = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
   }
-  return options.sort((a, b) => compare(a.label, b.label));
+  options.sort((a, b) => compare(a.label, b.label));
+  byLocale.set(locale, options);
+  return options;
 }

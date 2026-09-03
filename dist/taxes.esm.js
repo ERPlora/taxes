@@ -4790,7 +4790,10 @@ function regionNames(locale) {
     return null;
   }
 }
+var byLocale = /* @__PURE__ */ new Map();
 function countryOptions(locale) {
+  const cached = byLocale.get(locale);
+  if (cached) return cached;
   const names = regionNames(locale);
   const options = COUNTRY_CODES.map((value) => {
     const name = names?.of(value);
@@ -4802,7 +4805,9 @@ function countryOptions(locale) {
   } catch {
     compare = (a3, b3) => a3 < b3 ? -1 : a3 > b3 ? 1 : 0;
   }
-  return options.sort((a3, b3) => compare(a3.label, b3.label));
+  options.sort((a3, b3) => compare(a3.label, b3.label));
+  byLocale.set(locale, options);
+  return options;
 }
 
 // ui/components/erp-taxes-rules/erp-taxes-rules.ts

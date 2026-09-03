@@ -78,16 +78,35 @@ describe('an option is readable in the language of whoever is looking', () => {
 
   // A browser without `Intl.DisplayNames` (or a locale it cannot serve) must still get a usable
   // list — the code alone — instead of an empty picker that makes the screen unusable.
+  // A COLD language on purpose: the list is memoised per locale, so asking for one this file has
+  // already built would hand back the cached names and never take the fallback path at all.
   it('falls back to the bare code when the platform cannot name a region', () => {
     const original = Intl.DisplayNames;
     try {
       // @ts-expect-error — deliberately removing the API to take the fallback path
       delete Intl.DisplayNames;
-      const options = countryOptions('es');
+      const options = countryOptions('qps-ploc');
       expect(options).toHaveLength(COUNTRY_CODES.length);
       expect(options.find((o) => o.value === 'ES')?.label).toBe('ES');
     } finally {
       Intl.DisplayNames = original;
     }
+  });
+});
+
+describe('the list is built once per language, not once per keystroke', () => {
+  // The rules form re-renders on every character typed into any of its ten fields, and the picker
+  // sits in that template. Naming 249 regions and collating them on each of those renders is work
+  // nobody asked for, on the screen of a till.
+  it('hands back the very same array for the same locale', () => {
+    expect(countryOptions('es')).toBe(countryOptions('es'));
+  });
+
+  it('but a different language gets its own', () => {
+    const es = countryOptions('es');
+    const en = countryOptions('en');
+    expect(en).not.toBe(es);
+    expect(en.find((o) => o.value === 'DE')?.label).toContain('Germany');
+    expect(es.find((o) => o.value === 'DE')?.label).toContain('Alemania');
   });
 });
