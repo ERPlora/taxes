@@ -83,7 +83,8 @@
           "key",
           "name",
           "description",
-          "display_name"
+          "display_name",
+          "display_description"
         ],
         "sort": [
           "id",
@@ -91,13 +92,14 @@
           "name",
           "is_system",
           "is_active",
-          "display_name"
+          "display_name",
+          "display_description"
         ],
         "default_sort": "key",
         "default_dir": "asc",
         "filters": {
           "key": {
-            "op": "eq"
+            "op": "like"
           },
           "name": {
             "op": "like"
@@ -109,6 +111,9 @@
             "op": "eq"
           },
           "display_name": {
+            "op": "like"
+          },
+          "display_description": {
             "op": "like"
           }
         },
@@ -154,10 +159,10 @@
         "default_dir": "asc",
         "filters": {
           "country_code": {
-            "op": "eq"
+            "op": "like"
           },
           "region_code": {
-            "op": "eq"
+            "op": "like"
           },
           "tax_category_key": {
             "op": "eq"
