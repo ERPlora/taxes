@@ -4883,8 +4883,8 @@ var ErpTaxesRules = class extends i3 {
           return r6.parent_id && label ? `\u21B3 ${key} \xB7 ${label}` : key;
         }
       },
-      // La jurisdicción se ELIGE también aquí (taxes#48): desde taxes#41 el dominio de
-      // `country_code` es la lista ISO cerrada, y el servidor la declara `op: eq` en module.json.
+      // The jurisdiction is CHOSEN here too (taxes#48): since taxes#41 the domain of
+      // `country_code` is the closed ISO list, and the server declares it `op: eq` in module.json.
       {
         key: "country_code",
         header: t5("ui.colCountry"),
@@ -4893,12 +4893,12 @@ var ErpTaxesRules = class extends i3 {
         filterType: "select",
         options: this.countryFilterOptions
       },
-      // La región NO es el mismo caso y se queda como caja de texto A PROPÓSITO (taxes#48):
-      // `schemas/rule_create.json` le pone un `pattern`, no un `enum` —ISO 3166-2 es aquí una FORMA,
-      // no una lista, y no hay fuente de subdivisiones como `Intl.DisplayNames` da los países—, y un
-      // desplegable no sabría decir «sin región»: `ok-data-table` lee el valor vacío como «quita el
-      // filtro», y sin región —el país entero— es el caso NORMAL. Por eso el manifest le deja
-      // `like`: una caja de texto invita a un fragmento, y con `like` el fragmento es lo que hace.
+      // The region is NOT the same case and stays a text box ON PURPOSE (taxes#48):
+      // `schemas/rule_create.json` gives it a `pattern`, not an `enum` — ISO 3166-2 is a SHAPE here,
+      // not a list, and there is no source of subdivisions the way `Intl.DisplayNames` names the
+      // countries — and a dropdown could not say «no region»: `ok-data-table` reads the empty value
+      // as «clear the filter», and no region — the whole country — is the NORMAL case. That is why
+      // the manifest keeps `like`: a text box invites a fragment, and `like` is what a fragment does.
       { key: "region_code", header: t5("ui.colRegion"), sortable: true, filterable: true, filterType: "text", format: (r6) => String(r6.region_code ?? "") || "\u2014" },
       {
         key: "rate_pct",
@@ -4946,24 +4946,24 @@ var ErpTaxesRules = class extends i3 {
     ];
   }
   /**
-   * Las opciones del filtro de país: las jurisdicciones para las que este hub TIENE reglas.
+   * The options of the country filter: the jurisdictions this hub HAS rules for.
    *
-   * No son las 249 del `enum` (taxes#48). `ok-data-table` pinta un `filterType: 'select'` como un
-   * `ion-select` SIN buscador, así que darle la lista entera reconstruiría el control que el alta,
-   * un elemento más abajo, ya rechazó por escrito: «combo y no ion-select porque son 249». Y un
-   * filtro no es un alta — narra lo que hay en la tabla, así que 247 de esos 249 solo podrían
-   * contestar con una lista vacía. Es lo mismo que hace la columna de al lado (la categoría sale de
-   * `this.categories`) y lo que `ok-data-table` hace por su cuenta cuando un select no trae
-   * opciones: mirar las filas.
+   * Not the 249 of the `enum` (taxes#48). `ok-data-table` paints a `filterType: 'select'` as an
+   * `ion-select` with NO search box, so handing it the whole list would rebuild the control the
+   * create form, one element below, already rejected in writing: «combo y no ion-select porque son
+   * 249». And a filter is not a create form — it narrows what is on the table, so 247 of those 249
+   * could only ever answer with an empty list. It is what the column next door already does (the
+   * category comes from `this.categories`) and what `ok-data-table` does on its own when a select
+   * brings no options: look at the rows.
    *
-   * `this.allRules` ya está cargado (lo pide el selector de regla padre) y se refresca con los
-   * eventos de alta y baja, así que esto no añade ni una lectura. La página visible entra en la
-   * unión porque `loadAllRules` es best-effort: si esa lectura falla, el desplegable sigue
-   * ofreciendo lo que se está viendo en vez de quedarse vacío encima de una tabla llena.
+   * `this.allRules` is already loaded (the parent-rule picker needs it) and refreshes on the create
+   * and delete events, so this adds no reads. The visible page joins the union because
+   * `loadAllRules` is best-effort: if that read fails, the dropdown still offers what is being
+   * looked at instead of sitting empty on top of a full table.
    *
-   * Un código que el `enum` ya no admite —el `ZZ` que encontró taxes#41— se queda en la lista con
-   * su código por etiqueta: sus reglas siguen en la tabla, y sacarlo del filtro dejaría filas
-   * visibles que no se pueden acotar.
+   * A code the `enum` no longer admits — the `ZZ` taxes#41 found — stays on the list with its code
+   * as its label: its rules are still on the table, and dropping it from the filter would leave
+   * visible rows that cannot be narrowed to.
    */
   get countryFilterOptions() {
     const present = /* @__PURE__ */ new Set();
