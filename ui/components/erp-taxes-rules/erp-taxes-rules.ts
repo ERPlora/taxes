@@ -179,7 +179,22 @@ export class ErpTaxesRules extends LitElement {
           return r.parent_id && label ? `↳ ${key} · ${label}` : key;
         },
       },
-      { key: 'country_code', header: t('ui.colCountry'), sortable: true, filterable: true, filterType: 'text' },
+      // La jurisdicción se ELIGE también aquí (taxes#48): desde taxes#41 el dominio de
+      // `country_code` es la lista ISO cerrada, y el servidor la declara `op: eq` en module.json.
+      {
+        key: 'country_code',
+        header: t('ui.colCountry'),
+        sortable: true,
+        filterable: true,
+        filterType: 'select',
+        options: this.countryFilterOptions,
+      },
+      // La región NO es el mismo caso y se queda como caja de texto A PROPÓSITO (taxes#48):
+      // `schemas/rule_create.json` le pone un `pattern`, no un `enum` —ISO 3166-2 es aquí una FORMA,
+      // no una lista, y no hay fuente de subdivisiones como `Intl.DisplayNames` da los países—, y un
+      // desplegable no sabría decir «sin región»: `ok-data-table` lee el valor vacío como «quita el
+      // filtro», y sin región —el país entero— es el caso NORMAL. Por eso el manifest le deja
+      // `like`: una caja de texto invita a un fragmento, y con `like` el fragmento es lo que hace.
       { key: 'region_code', header: t('ui.colRegion'), sortable: true, filterable: true, filterType: 'text', format: (r) => String(r.region_code ?? '') || '—' },
       {
         key: 'rate_pct',
@@ -225,6 +240,38 @@ export class ErpTaxesRules extends LitElement {
         format: (r) => (Number(r.is_active) ? t('ui.optYes') : t('ui.optNo')),
       },
     ];
+  }
+
+  /**
+   * Las opciones del filtro de país: las jurisdicciones para las que este hub TIENE reglas.
+   *
+   * No son las 249 del `enum` (taxes#48). `ok-data-table` pinta un `filterType: 'select'` como un
+   * `ion-select` SIN buscador, así que darle la lista entera reconstruiría el control que el alta,
+   * un elemento más abajo, ya rechazó por escrito: «combo y no ion-select porque son 249». Y un
+   * filtro no es un alta — narra lo que hay en la tabla, así que 247 de esos 249 solo podrían
+   * contestar con una lista vacía. Es lo mismo que hace la columna de al lado (la categoría sale de
+   * `this.categories`) y lo que `ok-data-table` hace por su cuenta cuando un select no trae
+   * opciones: mirar las filas.
+   *
+   * `this.allRules` ya está cargado (lo pide el selector de regla padre) y se refresca con los
+   * eventos de alta y baja, así que esto no añade ni una lectura. La página visible entra en la
+   * unión porque `loadAllRules` es best-effort: si esa lectura falla, el desplegable sigue
+   * ofreciendo lo que se está viendo en vez de quedarse vacío encima de una tabla llena.
+   *
+   * Un código que el `enum` ya no admite —el `ZZ` que encontró taxes#41— se queda en la lista con
+   * su código por etiqueta: sus reglas siguen en la tabla, y sacarlo del filtro dejaría filas
+   * visibles que no se pueden acotar.
+   */
+  private get countryFilterOptions(): { value: string; label: string }[] {
+    const present = new Set<string>();
+    for (const rule of [...this.allRules, ...((this.ctrl?.rows ?? []) as TaxRule[])]) {
+      const code = String(rule.country_code ?? '');
+      if (code) present.add(code);
+    }
+    if (!present.size) return [];
+    const named = countryOptions(erplora().locale).filter((o) => present.has(o.value));
+    const unnamed = [...present].filter((c) => !named.some((o) => o.value === c)).sort();
+    return [...named, ...unnamed.map((value) => ({ value, label: value }))];
   }
 
   private get rowActions(): DataTableAction[] {
