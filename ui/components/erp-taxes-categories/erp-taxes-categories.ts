@@ -106,16 +106,12 @@ export class ErpTaxesCategories extends LitElement {
         ],
         format: (r) => (Number(r.is_system) ? `🔒 ${t('ui.optSystem')}` : t('ui.optCustom')),
       },
+      // NO filtrable (taxes#50): `queries/categories_list.sql` termina en `AND c.is_active = 1`,
+      // así que un filtro «No» nunca podría devolver una fila.
       {
         key: 'is_active',
         header: t('ui.colActive'),
         sortable: true,
-        filterable: true,
-        filterType: 'select',
-        options: [
-          { value: '1', label: t('ui.optYes') },
-          { value: '0', label: t('ui.optNo') },
-        ],
         format: (r) => (Number(r.is_active) ? t('ui.optYes') : t('ui.optNo')),
       },
     ];

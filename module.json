@@ -107,9 +107,6 @@
           "is_system": {
             "op": "eq"
           },
-          "is_active": {
-            "op": "eq"
-          },
           "display_name": {
             "op": "like"
           },
@@ -176,9 +173,6 @@
           "parent_id": {
             "op": "eq"
           },
-          "is_active": {
-            "op": "eq"
-          },
           "operation_class": {
             "op": "eq"
           },
@@ -226,9 +220,6 @@
             "op": "eq"
           },
           "source": {
-            "op": "eq"
-          },
-          "is_active": {
             "op": "eq"
           }
         },

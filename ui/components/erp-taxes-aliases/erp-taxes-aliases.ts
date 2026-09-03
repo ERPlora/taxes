@@ -112,16 +112,12 @@ export class ErpTaxesAliases extends LitElement {
         ],
         format: (r) => (String(r.source) === 'shipped' ? t('ui.srcShipped') : t('ui.srcLearned')),
       },
+      // NO filtrable (taxes#50): `queries/aliases_list.sql` termina en `AND is_active = 1`, así que
+      // un filtro «No» nunca podría devolver una fila.
       {
         key: 'is_active',
         header: t('ui.colActive'),
         sortable: true,
-        filterable: true,
-        filterType: 'select',
-        options: [
-          { value: '1', label: t('ui.optYes') },
-          { value: '0', label: t('ui.optNo') },
-        ],
         format: (r) => (Number(r.is_active) ? t('ui.optYes') : t('ui.optNo')),
       },
     ];
