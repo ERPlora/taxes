@@ -11,12 +11,14 @@
     "commands": [
       "taxes.aliases.create",
       "taxes.categories.create",
+      "taxes.rules.activate",
       "taxes.rules.create",
       "taxes.rules.deactivate"
     ],
     "events": [
       "taxes.alias.created",
       "taxes.category.created",
+      "taxes.rule.activated",
       "taxes.rule.created",
       "taxes.rule.deactivated"
     ],
