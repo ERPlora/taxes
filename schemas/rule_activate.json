@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "taxes.rules.activate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rule_id"],
+  "properties": {
+    "rule_id": { "type": "string", "minLength": 1 }
+  }
+}

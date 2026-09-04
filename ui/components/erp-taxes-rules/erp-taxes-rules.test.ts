@@ -102,17 +102,21 @@ describe('el alta vive DENTRO de la tabla (paridad con /employees e inventory)',
 });
 
 describe('filtros: los de dominio cerrado son `select`; los que el servidor no soporta, no se declaran', () => {
-  // taxes#50: la aserción anterior («activa» filtra con un select sí/no) comprobaba el bug, no el
-  // contrato — `rules_list.sql` termina en `AND r.is_active = 1`, así que la opción «No» del select
-  // no podía devolver una fila jamás, tuviera el hub las reglas inactivas que tuviera. Se corrige
-  // igual que `valid_from`/`valid_to` justo abajo: la columna se sigue viendo (sortable), pero deja
-  // de prometer un filtro que el servidor no puede cumplir.
-  it('«activa» NO se declara filtrable: la query siempre excluye las inactivas, así que un filtro «No» no podría devolver nada jamás', async () => {
+  // taxes#52: «activa» VUELVE a ser filtrable, y ahora sí puede cumplirse. taxes#50 la quitó con
+  // razón —`rules_list.sql` terminaba en `AND r.is_active = 1`, así que la opción «No» no podía
+  // devolver una fila jamás—, pero quitar el filtro dejó de pie el defecto de verdad: una regla
+  // desactivada desaparecía de la pantalla y no había forma de volver a verla ni de reactivarla.
+  // La cola de la query es ahora `AND (r.is_active = 1 OR <alcance ampliado>)` y el manifest
+  // declara el filtro, así que elegir «No» trae filas reales. El contrato completo —que elegir
+  // «No» AMPLÍA el alcance además de filtrar, y que la fila ofrece entonces «reactivar»— vive en
+  // `archived-rules.test.ts`; aquí solo se fija que la caja del filtro existe y es de dominio
+  // cerrado, como las demás de este bloque.
+  it('«activa» se declara filtrable con un select sí/no: la query ya sabe traer las desactivadas (taxes#52)', async () => {
     const el = await montar();
     const activa = columnas(el).find((c) => c.key === 'is_active');
     expect(activa, 'la columna is_active ha desaparecido').toBeTruthy();
-    expect(activa?.filterable, 'filtro muerto: rules_list.sql fuerza is_active = 1, «No» nunca podría devolver filas').toBeFalsy();
-    expect(activa?.filterType).toBeUndefined();
+    expect(activa?.filterable, 'sin filtro no hay forma de ver una regla desactivada: es taxes#52 otra vez').toBe(true);
+    expect(activa?.filterType, 'un dominio de dos valores se elige, no se teclea').toBe('select');
   });
 
   it('la categoría se filtra con un select poblado con las categorías reales, no tecleando la clave', async () => {

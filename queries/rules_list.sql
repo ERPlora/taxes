@@ -31,4 +31,18 @@ FROM taxes_rule r
 LEFT JOIN taxes_category c ON c.hub_id = r.hub_id AND c.key = r.tax_category_key AND c.is_deleted = 0
 LEFT JOIN taxes_category_label l   ON l.key   = r.tax_category_key AND l.lang   = (SELECT lang FROM caller_lang)
 LEFT JOIN taxes_category_label len ON len.key = r.tax_category_key AND len.lang = 'en'
-WHERE r.hub_id = :hub_id AND r.is_deleted = 0 AND r.is_active = 1
+-- Alcance: por DEFECTO solo las activas — es lo que el keystone (ADR-0069) pre-carga y lo que
+-- resuelve una venta, y ahí una regla desactivada no puede aparecer nunca.
+--
+-- `include_archived` amplía ese alcance para que la PANTALLA pueda enseñar las desactivadas y
+-- devolverlas a la vida (taxes#52). Antes no había forma: se desactivaba con un toque, la fila
+-- desaparecía y el único camino de vuelta era la base de datos. taxes#50 quitó el filtro de la
+-- columna precisamente porque esta cola lo hacía imposible de cumplir; ahora se puede.
+--
+-- La forma `COALESCE(CAST(:x AS TEXT), '0') IN ('1','true')` es el ÚNICO idioma de bind OPCIONAL
+-- que el runtime reconoce (hub#1086): quien no lo bindea —el keystone, `taxes.calculate`, el
+-- handler— recibe exactamente las filas de ayer, sin enterarse de que el parámetro existe. Y tiene
+-- que aparecer UNA sola vez y DENTRO del COALESCE: una segunda aparición fuera lo vuelve
+-- obligatorio para TODOS los llamantes y rompe justo a los que no debían enterarse.
+WHERE r.hub_id = :hub_id AND r.is_deleted = 0
+  AND (r.is_active = 1 OR COALESCE(CAST(:include_archived AS TEXT), '0') IN ('1', 'true'))
