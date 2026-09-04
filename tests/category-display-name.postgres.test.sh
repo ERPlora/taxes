@@ -117,10 +117,14 @@ psql_db -qc "INSERT INTO taxes_category (id, hub_id, key, name, description, is_
 # ── Running a declarative query the way the runtime does (queries.rs) ─────────────────────
 # The SQL runs as-is with the system params bound (`:hub_id`, `:current_user_id`, `:now` — here
 # substituted, as psql has no named binds), wrapped in the subquery the list engine builds.
+# `:include_archived` (rules_list.sql, taxes#52) is an OPTIONAL bind — COALESCE-guarded, so the
+# runtime binds it as NULL for every caller that never sends it (`required_binds`, hub#1086;
+# `DynNull` in crates/db). This battery is one of those callers, exactly like inventory and sales,
+# so the absence is spelled out the way the driver would: a bare `:name` is a psql syntax error.
 run_query() { # run_query <file> <user_id> <select-expression> [extra where]
   local file="$1" user="$2" expr="$3" where="${4:-}"
   sed -e "s/:hub_id/'$HUB_ID'/g" -e "s/:current_user_id/'$user'/g" -e "s/:now/'$NOW'/g" \
-      -e "s/:key/'product.generic'/g" "$MODULE_DIR/$file" \
+      -e "s/:key/'product.generic'/g" -e "s/:include_archived/NULL/g" "$MODULE_DIR/$file" \
     | sed -e 's/;[[:space:]]*$//' \
     | { printf 'SELECT %s FROM (' "$expr"; cat; printf ') AS sub %s;' "$where"; } \
     | psql_db -tA
