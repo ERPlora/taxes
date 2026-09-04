@@ -178,6 +178,9 @@
           },
           "regime_key": {
             "op": "eq"
+          },
+          "is_active": {
+            "op": "eq"
           }
         },
         "page_size": 50
@@ -307,6 +310,27 @@
         "description": "Deactivates a tax rule so it no longer applies to new transactions (issued invoices keep their snapshot)"
       }
     },
+    "taxes.rules.activate": {
+      "permission": "taxes.manage_tax",
+      "transaction": true,
+      "sql": [
+        "commands/rule_activate.sql"
+      ],
+      "schema": "schemas/rule_activate.json",
+      "expect_rows": {
+        "op": "min",
+        "n": 1,
+        "error": "taxes.rule_not_deactivated",
+        "message": "That rule could not be brought back: it does not exist in this business, or it is already active."
+      },
+      "emit": [
+        "taxes.rule.activated"
+      ],
+      "ai": {
+        "description": "Brings a deactivated tax rule back so it applies to new transactions again (undoes `taxes.rules.deactivate`). Its rate, jurisdiction, category, validity and components are untouched — deactivating never changed them."
+      },
+      "expose_api": true
+    },
     "taxes.aliases.create": {
       "permission": "taxes.manage_tax",
       "transaction": true,
@@ -353,6 +377,7 @@
     "emits": [
       "taxes.alias.created",
       "taxes.category.created",
+      "taxes.rule.activated",
       "taxes.rule.created",
       "taxes.rule.deactivated",
       "taxes.rules.bulk_create.report"

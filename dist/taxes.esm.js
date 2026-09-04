@@ -3668,6 +3668,7 @@ var es_default = {
     emptyRules: "Sin reglas fiscales.",
     emptyAliases: "Sin alias de categor\xEDas.",
     actionDeactivate: "Desactivar",
+    actionRestore: "Reactivar",
     cancel: "Cancelar",
     deactivateConfirmTitle: "Desactivar regla fiscal",
     deactivateConfirmMessage: "La regla dejar\xE1 de aplicarse a operaciones nuevas. Los documentos fiscales ya emitidos no se modifican.",
@@ -3676,6 +3677,7 @@ var es_default = {
     errCreateCategory: "No se pudo crear la categor\xEDa",
     errCreateRule: "No se pudo crear la regla",
     errDeactivateRule: "No se pudo desactivar la regla",
+    errRestoreRule: "No se pudo reactivar la regla",
     errCreateAlias: "No se pudo crear el alias",
     colParentRule: "Regla ra\xEDz (componente de)",
     phParentRule: "Elige una regla ra\xEDz",
@@ -3766,6 +3768,7 @@ var en_default = {
     emptyRules: "No tax rules.",
     emptyAliases: "No category aliases.",
     actionDeactivate: "Deactivate",
+    actionRestore: "Restore",
     cancel: "Cancel",
     deactivateConfirmTitle: "Deactivate tax rule",
     deactivateConfirmMessage: "The rule will no longer apply to new transactions. Previously issued fiscal documents will not change.",
@@ -3774,6 +3777,7 @@ var en_default = {
     errCreateCategory: "Could not create the category",
     errCreateRule: "Could not create the rule",
     errDeactivateRule: "Could not deactivate the rule",
+    errRestoreRule: "Could not bring the rule back",
     errCreateAlias: "Could not create the alias",
     colParentRule: "Root rule (component of)",
     phParentRule: "Choose a root rule",
@@ -4842,6 +4846,7 @@ var ErpTaxesRules = class extends i3 {
     this.newComponentLabel = "";
     this.saving = false;
     this.pendingDeactivate = null;
+    this.showingArchived = false;
     this.categories = [];
     this.onLocaleChange = () => this.requestUpdate();
   }
@@ -4923,12 +4928,22 @@ var ErpTaxesRules = class extends i3 {
       },
       { key: "valid_from", header: t5("ui.colValidFrom"), sortable: true, format: (r6) => String(r6.valid_from ?? "") || "\u2014" },
       { key: "valid_to", header: t5("ui.colValidTo"), sortable: true, format: (r6) => String(r6.valid_to ?? "") || "\u2014" },
-      // NO filtrable (taxes#50): `queries/rules_list.sql` termina en `AND r.is_active = 1`, así que
-      // un filtro «No» nunca podría devolver una fila — mismo trato que valid_from/valid_to arriba.
+      // Filtrable otra vez (taxes#52). taxes#50 la dejó sin filtro con razón —`rules_list.sql`
+      // terminaba en `AND r.is_active = 1`, así que «No» no podía devolver una fila jamás—, pero
+      // eso dejó de pie el defecto real: se desactivaba una regla, la fila desaparecía y no había
+      // ninguna pantalla que la trajera de vuelta. Ahora la query sabe ampliar el alcance, así que
+      // la caja puede cumplir lo que ofrece. Ojo: elegir «No» NO es un filtro más — ver
+      // `onFilterChange`.
       {
         key: "is_active",
         header: t5("ui.colActive"),
         sortable: true,
+        filterable: true,
+        filterType: "select",
+        options: [
+          { value: "1", label: t5("ui.optYes") },
+          { value: "0", label: t5("ui.optNo") }
+        ],
         format: (r6) => Number(r6.is_active) ? t5("ui.optYes") : t5("ui.optNo")
       }
     ];
@@ -4964,10 +4979,38 @@ var ErpTaxesRules = class extends i3 {
     const unnamed = [...present].filter((c5) => !named.some((o7) => o7.value === c5)).sort();
     return [...named, ...unnamed.map((value) => ({ value, label: value }))];
   }
+  /**
+   * Las acciones de la fila. Mientras se están mirando las DESACTIVADAS la fila ofrece el camino de
+   * vuelta en lugar de «desactivar» (taxes#52): ofrecer desactivar sobre algo ya desactivado es
+   * ofrecer no hacer nada. Es lo que hacen Square (`Unarchive`) y Fresha/Treatwell (el `⋯` de la
+   * fila), y lo que este mismo repo ya hace en `services` (services#44) — la acción vive en la
+   * fila, nunca dentro de la ficha: el «ábrelo, baja del todo, reactiva y vuelve a cambiar el
+   * estado» de Shopify son seis toques y dos pantallas para una decisión.
+   */
   get rowActions() {
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
     if (!can3("taxes.manage_tax")) return [];
+    if (this.showingArchived) {
+      return [{ id: "restore", label: t5("ui.actionRestore"), icon: "arrow-undo-outline", color: "success" }];
+    }
     return [{ id: "deactivate", label: t5("ui.actionDeactivate"), icon: "ban-outline", color: "danger" }];
+  }
+  /**
+   * Cambio de filtro de la tabla. `is_active = 0` no es un filtro más: las reglas desactivadas NO
+   * están en la respuesta por defecto de `taxes.rules.list` —el keystone (ADR-0069) consume esa
+   * misma lectura para resolver una venta, y ahí una regla desactivada no puede aparecer— así que
+   * elegir «No» tiene que AMPLIAR el alcance además de filtrar. Sin eso, la caja solo podría pintar
+   * una tabla vacía, que es exactamente el filtro muerto que taxes#50 retiró.
+   *
+   * El alcance se escribe directo en el contexto del controlador y la recarga se deja en manos de
+   * `setFilter`: `setContext` recargaría por su cuenta y el mismo toque costaría DOS viajes al hub.
+   */
+  onFilterChange(col, value) {
+    if (col === "is_active") {
+      this.showingArchived = String(value ?? "") === "0";
+      this.ctrl.state.context = this.showingArchived ? { include_archived: 1 } : {};
+    }
+    this.ctrl.setFilter(col, value);
   }
   get parentCandidates() {
     const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
@@ -4975,9 +5018,25 @@ var ErpTaxesRules = class extends i3 {
   }
   onRowAction(ev) {
     const { actionId, row } = ev.detail;
-    if (actionId !== "deactivate" || !can3("taxes.manage_tax")) return;
+    if (!can3("taxes.manage_tax")) return;
+    if (actionId === "restore") {
+      void this.restoreRule(row);
+      return;
+    }
+    if (actionId !== "deactivate") return;
     if (!Number(row.is_active)) return;
     this.pendingDeactivate = row;
+  }
+  /** Devuelve a la vida una regla desactivada (`taxes.rules.activate`). Sin confirmación: reactivar
+   *  no es destructivo —deshace algo que sí lo era— y el mercado tampoco la pide (taxes#52). */
+  async restoreRule(row) {
+    this.formError = "";
+    try {
+      await erplora3().command("taxes.rules.activate", { rule_id: String(row.id) });
+      await Promise.all([this.ctrl.load(), this.loadAllRules()]);
+    } catch (e5) {
+      this.formError = e5 instanceof Error ? e5.message : erplora3().t(CATALOG3, "ui.errRestoreRule");
+    }
   }
   async onDeactivateDismiss(ev) {
     const row = this.pendingDeactivate;
@@ -5006,7 +5065,8 @@ var ErpTaxesRules = class extends i3 {
       const refresh = () => Promise.all([this.ctrl.load(), this.loadAllRules()]);
       const offs = [
         erplora3().on("taxes.rule.created", () => refresh()),
-        erplora3().on("taxes.rule.deactivated", () => refresh())
+        erplora3().on("taxes.rule.deactivated", () => refresh()),
+        erplora3().on("taxes.rule.activated", () => refresh())
       ];
       this.unsub = () => offs.forEach((o7) => o7());
     } catch {
@@ -5089,7 +5149,7 @@ var ErpTaxesRules = class extends i3 {
         ${can3("taxes.manage_tax") ? A : b2`<ok-inline-feedback tone="info" icon="lock-closed-outline">${t5("ui.readOnlyHint")}</ok-inline-feedback>`}
         ${this.formError ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
         ${this.ctrl?.error ? b2`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
-        <ok-data-table .serverSide=${true} .fill=${true} .addable=${can3("taxes.manage_tax")} .views=${true} .defaultView=${window.innerWidth <= 834 ? "cards" : "table"} .cardTitle=${(row) => String(row.tax_category_key ?? row.country_code ?? "")} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCategoryCountry")} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.ctrl.setFilter(e5.detail.col, e5.detail.value)}>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${can3("taxes.manage_tax")} .views=${true} .defaultView=${window.innerWidth <= 834 ? "cards" : "table"} .cardTitle=${(row) => String(row.tax_category_key ?? row.country_code ?? "")} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCategoryCountry")} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.onFilterChange(e5.detail.col, e5.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
           <form slot="create" class="form" @submit=${(e5) => this.createRule(e5)}>
@@ -5189,6 +5249,9 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "pendingDeactivate", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "showingArchived", 2);
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "categories", 2);

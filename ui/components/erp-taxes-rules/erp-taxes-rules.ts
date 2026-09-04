@@ -154,6 +154,9 @@ export class ErpTaxesRules extends LitElement {
   @state() saving = false;
 
   @state() private pendingDeactivate: TaxRule | null = null;
+  /** Si la tabla está mirando las reglas DESACTIVADAS (taxes#52): manda sobre el alcance de la
+   *  lectura y sobre la acción que ofrece la fila. */
+  @state() private showingArchived = false;
 
   // Categorías fiscales del hub: pueblan el selector del alta y el filtro de la columna.
   @state() private categories: TaxCategory[] = [];
@@ -227,12 +230,22 @@ export class ErpTaxesRules extends LitElement {
       },
       { key: 'valid_from', header: t('ui.colValidFrom'), sortable: true, format: (r) => String(r.valid_from ?? '') || '—' },
       { key: 'valid_to', header: t('ui.colValidTo'), sortable: true, format: (r) => String(r.valid_to ?? '') || '—' },
-      // NO filtrable (taxes#50): `queries/rules_list.sql` termina en `AND r.is_active = 1`, así que
-      // un filtro «No» nunca podría devolver una fila — mismo trato que valid_from/valid_to arriba.
+      // Filtrable otra vez (taxes#52). taxes#50 la dejó sin filtro con razón —`rules_list.sql`
+      // terminaba en `AND r.is_active = 1`, así que «No» no podía devolver una fila jamás—, pero
+      // eso dejó de pie el defecto real: se desactivaba una regla, la fila desaparecía y no había
+      // ninguna pantalla que la trajera de vuelta. Ahora la query sabe ampliar el alcance, así que
+      // la caja puede cumplir lo que ofrece. Ojo: elegir «No» NO es un filtro más — ver
+      // `onFilterChange`.
       {
         key: 'is_active',
         header: t('ui.colActive'),
         sortable: true,
+        filterable: true,
+        filterType: 'select',
+        options: [
+          { value: '1', label: t('ui.optYes') },
+          { value: '0', label: t('ui.optNo') },
+        ],
         format: (r) => (Number(r.is_active) ? t('ui.optYes') : t('ui.optNo')),
       },
     ];
@@ -270,10 +283,39 @@ export class ErpTaxesRules extends LitElement {
     return [...named, ...unnamed.map((value) => ({ value, label: value }))];
   }
 
+  /**
+   * Las acciones de la fila. Mientras se están mirando las DESACTIVADAS la fila ofrece el camino de
+   * vuelta en lugar de «desactivar» (taxes#52): ofrecer desactivar sobre algo ya desactivado es
+   * ofrecer no hacer nada. Es lo que hacen Square (`Unarchive`) y Fresha/Treatwell (el `⋯` de la
+   * fila), y lo que este mismo repo ya hace en `services` (services#44) — la acción vive en la
+   * fila, nunca dentro de la ficha: el «ábrelo, baja del todo, reactiva y vuelve a cambiar el
+   * estado» de Shopify son seis toques y dos pantallas para una decisión.
+   */
   private get rowActions(): DataTableAction[] {
     const t = (k: string): string => erplora().t(CATALOG, k);
     if (!can('taxes.manage_tax')) return [];
+    if (this.showingArchived) {
+      return [{ id: 'restore', label: t('ui.actionRestore'), icon: 'arrow-undo-outline', color: 'success' }];
+    }
     return [{ id: 'deactivate', label: t('ui.actionDeactivate'), icon: 'ban-outline', color: 'danger' }];
+  }
+
+  /**
+   * Cambio de filtro de la tabla. `is_active = 0` no es un filtro más: las reglas desactivadas NO
+   * están en la respuesta por defecto de `taxes.rules.list` —el keystone (ADR-0069) consume esa
+   * misma lectura para resolver una venta, y ahí una regla desactivada no puede aparecer— así que
+   * elegir «No» tiene que AMPLIAR el alcance además de filtrar. Sin eso, la caja solo podría pintar
+   * una tabla vacía, que es exactamente el filtro muerto que taxes#50 retiró.
+   *
+   * El alcance se escribe directo en el contexto del controlador y la recarga se deja en manos de
+   * `setFilter`: `setContext` recargaría por su cuenta y el mismo toque costaría DOS viajes al hub.
+   */
+  private onFilterChange(col: string, value: unknown): void {
+    if (col === 'is_active') {
+      this.showingArchived = String(value ?? '') === '0';
+      this.ctrl.state.context = this.showingArchived ? { include_archived: 1 } : {};
+    }
+    this.ctrl.setFilter(col, value);
   }
 
   get parentCandidates(): TaxRule[] {
@@ -283,9 +325,27 @@ export class ErpTaxesRules extends LitElement {
 
   private onRowAction(ev: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) {
     const { actionId, row } = ev.detail;
-    if (actionId !== 'deactivate' || !can('taxes.manage_tax')) return;
+    // El permiso lo decide la PANTALLA, no la tabla: un `rowAction` forjado llega igual (taxes#11).
+    if (!can('taxes.manage_tax')) return;
+    if (actionId === 'restore') {
+      void this.restoreRule(row);
+      return;
+    }
+    if (actionId !== 'deactivate') return;
     if (!Number(row.is_active)) return;
     this.pendingDeactivate = row as unknown as TaxRule;
+  }
+
+  /** Devuelve a la vida una regla desactivada (`taxes.rules.activate`). Sin confirmación: reactivar
+   *  no es destructivo —deshace algo que sí lo era— y el mercado tampoco la pide (taxes#52). */
+  private async restoreRule(row: Record<string, unknown>): Promise<void> {
+    this.formError = '';
+    try {
+      await erplora().command('taxes.rules.activate', { rule_id: String(row.id) });
+      await Promise.all([this.ctrl.load(), this.loadAllRules()]);
+    } catch (e) {
+      this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errRestoreRule');
+    }
   }
 
   private async onDeactivateDismiss(ev: CustomEvent<{ role?: string }>) {
@@ -319,6 +379,7 @@ export class ErpTaxesRules extends LitElement {
       const offs = [
         erplora().on('taxes.rule.created', () => refresh()),
         erplora().on('taxes.rule.deactivated', () => refresh()),
+        erplora().on('taxes.rule.activated', () => refresh()),
       ];
       this.unsub = () => offs.forEach((o) => o());
     } catch {
@@ -412,7 +473,7 @@ export class ErpTaxesRules extends LitElement {
         ${can('taxes.manage_tax') ? nothing : html`<ok-inline-feedback tone="info" icon="lock-closed-outline">${t('ui.readOnlyHint')}</ok-inline-feedback>`}
         ${this.formError ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
         ${this.ctrl?.error ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
-        <ok-data-table .serverSide=${true} .fill=${true} .addable=${can('taxes.manage_tax')} .views=${true} .defaultView=${window.innerWidth <= 834 ? 'cards' : 'table'} .cardTitle=${(row: Record<string, unknown>) => String(row.tax_category_key ?? row.country_code ?? '')} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCategoryCountry')} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRules')} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}>
+        <ok-data-table .serverSide=${true} .fill=${true} .addable=${can('taxes.manage_tax')} .views=${true} .defaultView=${window.innerWidth <= 834 ? 'cards' : 'table'} .cardTitle=${(row: Record<string, unknown>) => String(row.tax_category_key ?? row.country_code ?? '')} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCategoryCountry')} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRules')} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.onFilterChange(e.detail.col, e.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
           <form slot="create" class="form" @submit=${(e: Event) => this.createRule(e)}>
