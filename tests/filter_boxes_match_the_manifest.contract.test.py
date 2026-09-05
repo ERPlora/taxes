@@ -109,23 +109,103 @@ def components():
 UNCLOSED = object()
 
 
-def _column_body(src: str, start: int) -> str | None:
-    """The text of ONE column object: from `start` up to the `}` that closes it, and no further.
+def _string_end(src: str, i: int, quote: str) -> int | None:
+    """Index just past the `'…'`/`"…"` literal opening at `i`; `None` if it never closes on its line.
+
+    A brace inside quotes is text, not structure. A quote that does not close before the newline is
+    a read the scanner cannot trust, and that is reported (UNCLOSED), never guessed.
+    """
+    i += 1
+    while i < len(src):
+        char = src[i]
+        if char == "\\":
+            i += 2
+            continue
+        if char == quote:
+            return i + 1
+        if char == "\n":
+            return None
+        i += 1
+    return None
+
+
+def _template_end(src: str, i: int) -> int | None:
+    """Index just past the closing backtick of the template literal opening at `i`; `None` if it never closes.
+
+    Its text may hold any brace it likes; only a `${…}` is code, and that code is scanned like the
+    rest of the column (so an inner template — a Lit `render` — nests cleanly).
+    """
+    i += 1
+    while i < len(src):
+        char = src[i]
+        if char == "\\":
+            i += 2
+            continue
+        if char == "`":
+            return i + 1
+        if char == "$" and src.startswith("{", i + 1):
+            close = _closing_brace(src, i + 2)
+            if close is None:
+                return None
+            i = close + 1
+            continue
+        i += 1
+    return None
+
+
+def _closing_brace(src: str, start: int) -> int | None:
+    """Index of the `}` that closes the object already open before `start`; `None` if it never closes.
 
     Braces are balanced, so the nested objects a column legitimately carries (`options: [{…}]`) do
-    not end it early, and `${…}` inside a template literal balances itself. `None` means the object
-    never closed — a parse failure, never a green.
+    not end it early. Strings, template literals and comments are skipped whole: a brace written as
+    TEXT — `header: '}'`, a `${…}` with a template inside, a `}` in a remark — is not structure, and
+    an apostrophe in a comment does not open a string.
     """
     depth = 0
-    for i in range(start, len(src)):
+    i = start
+    n = len(src)
+    while i < n:
         char = src[i]
+        if char == "/" and src.startswith("/", i + 1):
+            newline = src.find("\n", i)
+            i = n if newline < 0 else newline
+            continue
+        if char == "/" and src.startswith("*", i + 1):
+            close = src.find("*/", i + 2)
+            if close < 0:
+                return None
+            i = close + 2
+            continue
+        if char in "'\"":
+            after = _string_end(src, i, char)
+            if after is None:
+                return None
+            i = after
+            continue
+        if char == "`":
+            after = _template_end(src, i)
+            if after is None:
+                return None
+            i = after
+            continue
         if char == "{":
             depth += 1
         elif char == "}":
             if depth == 0:
-                return src[start:i]
+                return i
             depth -= 1
+        i += 1
     return None
+
+
+def _column_body(src: str, start: int) -> str | None:
+    """The text of ONE column object: from `start` up to the `}` that closes it, and no further.
+
+    `None` means the object never closed — a parse failure, never a green. Braces inside strings,
+    template literals and comments are text, not structure: see `_closing_brace`.
+    """
+    close = _closing_brace(src, start)
+    return None if close is None else src[start:close]
 
 
 def declared_columns(src: str):
@@ -215,6 +295,75 @@ PARSER_CASES: tuple[tuple[str, str, list], ...] = (
         "a column whose object never closes is UNREADABLE, not a slice of whatever came after",
         "    const columns = [\n      { key: 'orphan', filterable: true, filterType: 'text'\n",
         [("orphan", UNCLOSED, False, False)],
+    ),
+    (
+        "a brace inside a STRING is text, not the end of the column (rv taxes#58)",
+        # The permissive direction: a cut that stops at the `}` inside `header` never sees the
+        # `filterable`/`filterType` written after it, and the column drops out of the sweep with
+        # nobody the wiser. The old EOF cut did see them, so this is the one regression the balance
+        # could introduce, and it has to stay red for a scanner that counts braces inside quotes.
+        """
+    const columns = [
+      { key: 'unit', header: '}', filterable: true, filterType: 'text' },
+      { key: 'note', header: "{", sortable: true },
+    ];
+  }
+
+  // Below the array: filterType: 'range' belongs to no column at all.
+""",
+        [("unit", "text", True, False), ("note", None, False, True)],
+    ),
+    (
+        "an apostrophe in a COMMENT inside the column is prose, not an open string",
+        # The other way round: once quotes are honoured, a `'` in a comment must not swallow the
+        # rest of the object, or the fix for the false red hands out a new one.
+        """
+    const columns = [
+      {
+        key: 'owner',
+        // the user's choice, kept as they typed it
+        /* and a block comment with a stray } and a ' too */
+        filterable: true,
+        filterType: 'text',
+      },
+    ];
+  }
+""",
+        [("owner", "text", True, False)],
+    ),
+    (
+        "a template literal is read whole: `${…}` nests code, and its own text may hold a brace",
+        # `ok-data-table` renders are Lit templates: a `${…}` can hold another template, and that
+        # inner template's text can hold a `}`. The column ends at ITS brace, not at that one.
+        """
+    const columns = [
+      {
+        key: 'state',
+        render: (r) => html`<b>${r.ok ? html`<i>}</i>` : ''}</b>`,
+        format: (r) => `{${r.state}}`,
+        filterable: true,
+        filterType: 'select',
+      },
+    ];
+  }
+""",
+        [("state", "select", True, False)],
+    ),
+    (
+        "a quote that never closes on its line makes the column UNREADABLE, not a body pieced together from the lines below",
+        # A stray `'` (a regex literal, say) is a read the scanner cannot trust. Carrying the string
+        # across the newline would resync on the apostrophe in the comment below and hand `left`
+        # the `filterable` of a column that is not its own — with the sweep still green.
+        """
+    const columns = [
+      { key: 'left', header: 'unterminated
+        filterable: true, filterType: 'text' },
+      { key: 'right', sortable: true },
+      // the user's choice
+    ];
+  }
+""",
+        [("left", UNCLOSED, False, False), ("right", None, False, True)],
     ),
 )
 
