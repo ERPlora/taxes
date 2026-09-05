@@ -32,6 +32,14 @@ lives here, reads EVERY table, and stays. Same gate as `inventory` (inventory#74
 The pairs (screen → query) are DISCOVERED from the source, not listed here: a new table has to be
 covered by this gate the day it is written, without anybody remembering to add it.
 
+THE CUT. A column is read from its OWN `{…}` object and no further (taxes#54). The slice used to be
+`split("key: '")`, and the slice of the LAST column ran to the end of the file — methods, comments
+and docstrings included —, so a `filterType: '…'` merely NAMED down there was read as a box that
+column painted and the gate failed on a filter nobody had drawn. False RED, not false green: loud
+rather than silent, but it still cost the next person who wrote such a comment a full triage.
+`parser_reads_one_column_at_a_time` pins it, with every case putting the poison AFTER the last
+column, which is the one place the old cut reached.
+
 REMAPS. A screen may legitimately paint a box on one key and send another. None of the three tables
 of this module does that today, so `REMAPPED` is empty — it is kept because the day one does, the
 declaration is where it gets checked, instead of the gate being weakened to let it through.
@@ -96,21 +104,288 @@ def components():
     return found
 
 
+#: A column whose object never closes. The source could not be read, and a gate that cannot read
+#: its input has to say so instead of sweeping half a file and calling it green (taxes#54).
+UNCLOSED = object()
+
+
+def _string_end(src: str, i: int, quote: str) -> int | None:
+    """Index just past the `'…'`/`"…"` literal opening at `i`; `None` if it never closes on its line.
+
+    A brace inside quotes is text, not structure. A quote that does not close before the newline is
+    a read the scanner cannot trust, and that is reported (UNCLOSED), never guessed.
+    """
+    i += 1
+    while i < len(src):
+        char = src[i]
+        if char == "\\":
+            i += 2
+            continue
+        if char == quote:
+            return i + 1
+        if char == "\n":
+            return None
+        i += 1
+    return None
+
+
+def _template_end(src: str, i: int) -> int | None:
+    """Index just past the closing backtick of the template literal opening at `i`; `None` if it never closes.
+
+    Its text may hold any brace it likes; only a `${…}` is code, and that code is scanned like the
+    rest of the column (so an inner template — a Lit `render` — nests cleanly).
+    """
+    i += 1
+    while i < len(src):
+        char = src[i]
+        if char == "\\":
+            i += 2
+            continue
+        if char == "`":
+            return i + 1
+        if char == "$" and src.startswith("{", i + 1):
+            close = _closing_brace(src, i + 2)
+            if close is None:
+                return None
+            i = close + 1
+            continue
+        i += 1
+    return None
+
+
+def _closing_brace(src: str, start: int) -> int | None:
+    """Index of the `}` that closes the object already open before `start`; `None` if it never closes.
+
+    Braces are balanced, so the nested objects a column legitimately carries (`options: [{…}]`) do
+    not end it early. Strings, template literals and comments are skipped whole: a brace written as
+    TEXT — `header: '}'`, a `${…}` with a template inside, a `}` in a remark — is not structure, and
+    an apostrophe in a comment does not open a string.
+    """
+    depth = 0
+    i = start
+    n = len(src)
+    while i < n:
+        char = src[i]
+        if char == "/" and src.startswith("/", i + 1):
+            newline = src.find("\n", i)
+            i = n if newline < 0 else newline
+            continue
+        if char == "/" and src.startswith("*", i + 1):
+            close = src.find("*/", i + 2)
+            if close < 0:
+                return None
+            i = close + 2
+            continue
+        if char in "'\"":
+            after = _string_end(src, i, char)
+            if after is None:
+                return None
+            i = after
+            continue
+        if char == "`":
+            after = _template_end(src, i)
+            if after is None:
+                return None
+            i = after
+            continue
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            if depth == 0:
+                return i
+            depth -= 1
+        i += 1
+    return None
+
+
+def _column_body(src: str, start: int) -> str | None:
+    """The text of ONE column object: from `start` up to the `}` that closes it, and no further.
+
+    `None` means the object never closed — a parse failure, never a green. Braces inside strings,
+    template literals and comments are text, not structure: see `_closing_brace`.
+    """
+    close = _closing_brace(src, start)
+    return None if close is None else src[start:close]
+
+
 def declared_columns(src: str):
-    """`(column, filterType|None, filterable, sortable)` for every column the component paints."""
+    """`(column, filterType|None, filterable, sortable)` for every column the component paints.
+
+    Each column is read from ITS OWN `{…}` object. The cut used to be `src.split("key: '")`, whose
+    last slice ran to the end of the file: see `parser_reads_one_column_at_a_time` (taxes#54).
+    """
     out = []
-    for chunk in src.split("key: '")[1:]:
-        column = chunk.split("'")[0]
-        kind = re.search(r"filterType: '(\w+)'", chunk)
+    for match in re.finditer(r"key: '([^']*)'", src):
+        body = _column_body(src, match.end())
+        if body is None:
+            out.append((match.group(1), UNCLOSED, False, False))
+            continue
+        kind = re.search(r"filterType: '(\w+)'", body)
         out.append(
             (
-                column,
+                match.group(1),
                 kind.group(1) if kind else None,
-                "filterable: true" in chunk,
-                "sortable: true" in chunk,
+                "filterable: true" in body,
+                "sortable: true" in body,
             )
         )
     return out
+
+
+#: The check on the CUT (taxes#54). Every case puts the poison AFTER the last column, which is the
+#: one place a slice that runs to the end of the file reaches: a comment, a docstring or a method
+#: that merely NAMES `filterType: '…'` or `filterable: true` is not a box anybody painted. A gate
+#: that goes back to cutting until EOF turns these red, and so does one that cuts too early and
+#: stops at the first nested `}`.
+PARSER_CASES: tuple[tuple[str, str, list], ...] = (
+    (
+        "a `filterType` named BELOW the array is nobody's box",
+        """
+    const columns = [
+      { key: 'name', header: h('name'), filterable: true, filterType: 'text' },
+      { key: 'is_active', header: h('active'), sortable: true },
+    ];
+  }
+
+  /** `ok-data-table` paints a `filterType: 'text'` as an `ion-input` with no dropdown. */
+  private get help(): string { return ''; }
+""",
+        [("name", "text", True, False), ("is_active", None, False, True)],
+    ),
+    (
+        "a `filterable: true` named BELOW the array does not turn the last column into a box",
+        """
+    const columns = [
+      { key: 'code', header: h('code'), sortable: true },
+      { key: 'is_active', header: h('active') },
+    ];
+  }
+
+  // The `is_system` column of the other table is `filterable: true` and `sortable: true`.
+""",
+        [("code", None, False, True), ("is_active", None, False, False)],
+    ),
+    (
+        "a column that nests objects is read whole, PAST the nesting, up to ITS OWN closing brace",
+        # What the column declares sits AFTER the `options` array on purpose: an attribute written
+        # before the nesting is still visible to a cut that stops at the first `}`, so it would not
+        # tell the two apart. Only a positive placed past the nested region does.
+        """
+    const columns = [
+      {
+        key: 'is_active',
+        header: h('active'),
+        options: [
+          { value: '1', label: h('yes') },
+          { value: '0', label: h('no') },
+        ],
+        filterable: true,
+        filterType: 'select',
+        sortable: true,
+        format: (r) => String(r.is_active),
+      },
+    ];
+  }
+
+  // Below the array: filterType: 'range' belongs to no column at all.
+""",
+        [("is_active", "select", True, True)],
+    ),
+    (
+        "a column whose object never closes is UNREADABLE, not a slice of whatever came after",
+        "    const columns = [\n      { key: 'orphan', filterable: true, filterType: 'text'\n",
+        [("orphan", UNCLOSED, False, False)],
+    ),
+    (
+        "a brace inside a STRING is text, not the end of the column (rv taxes#58)",
+        # The permissive direction: a cut that stops at the `}` inside `header` never sees the
+        # `filterable`/`filterType` written after it, and the column drops out of the sweep with
+        # nobody the wiser. The old EOF cut did see them, so this is the one regression the balance
+        # could introduce, and it has to stay red for a scanner that counts braces inside quotes.
+        """
+    const columns = [
+      { key: 'unit', header: '}', filterable: true, filterType: 'text' },
+      { key: 'note', header: "{", sortable: true },
+    ];
+  }
+
+  // Below the array: filterType: 'range' belongs to no column at all.
+""",
+        [("unit", "text", True, False), ("note", None, False, True)],
+    ),
+    (
+        "an apostrophe in a COMMENT inside the column is prose, not an open string",
+        # The other way round: once quotes are honoured, a `'` in a comment must not swallow the
+        # rest of the object, or the fix for the false red hands out a new one.
+        """
+    const columns = [
+      {
+        key: 'owner',
+        // the user's choice, kept as they typed it
+        /* and a block comment with a stray } and a ' too */
+        filterable: true,
+        filterType: 'text',
+      },
+    ];
+  }
+""",
+        [("owner", "text", True, False)],
+    ),
+    (
+        "a template literal is read whole: `${…}` nests code, and its own text may hold a brace",
+        # `ok-data-table` renders are Lit templates: a `${…}` can hold another template, and that
+        # inner template's text can hold a `}`. The column ends at ITS brace, not at that one.
+        """
+    const columns = [
+      {
+        key: 'state',
+        render: (r) => html`<b>${r.ok ? html`<i>}</i>` : ''}</b>`,
+        format: (r) => `{${r.state}}`,
+        filterable: true,
+        filterType: 'select',
+      },
+    ];
+  }
+""",
+        [("state", "select", True, False)],
+    ),
+    (
+        "a quote that never closes on its line makes the column UNREADABLE, not a body pieced together from the lines below",
+        # A stray `'` (a regex literal, say) is a read the scanner cannot trust. Carrying the string
+        # across the newline would resync on the apostrophe in the comment below and hand `left`
+        # the `filterable` of a column that is not its own — with the sweep still green.
+        """
+    const columns = [
+      { key: 'left', header: 'unterminated
+        filterable: true, filterType: 'text' },
+      { key: 'right', sortable: true },
+      // the user's choice
+    ];
+  }
+""",
+        [("left", UNCLOSED, False, False), ("right", None, False, True)],
+    ),
+)
+
+
+def parser_reads_one_column_at_a_time() -> list[str]:
+    """The check on the cut: what a column declares has to come from ITS OWN object.
+
+    taxes#54. The slice used to be `src.split("key: '")`, so the slice of the LAST column ran to the
+    end of the file — methods, docstrings and comments included — and a `filterType: '…'` written
+    anywhere below the array was read as a box that column painted. The gate then failed on a filter
+    nobody had drawn: a false RED, loud instead of silent, but it still costs the next person who
+    writes such a comment a full triage (#53 dodged it by rewording a docstring).
+
+    It is ruled out on synthetic sources on purpose: the poison has to sit AFTER the last column,
+    and no real component is obliged to keep a comment like that around for the gate's benefit.
+    """
+    broken = []
+    for name, src, expected in PARSER_CASES:
+        got = declared_columns(src)
+        if got != expected:
+            broken.append(f"{name}\n      expected {expected}\n      got      {got}")
+    return broken
 
 
 def check(path, query, src) -> None:
@@ -127,6 +402,12 @@ def check(path, query, src) -> None:
     sortable_whitelist = set(block.get("sort") or [])
 
     for column, kind, filterable, sortable in declared_columns(src):
+        if kind is UNCLOSED:
+            fail(
+                f"{screen} declares a `{column}` column whose object never closes: this gate cannot "
+                f"tell what box it paints, and a gate that cannot read does not get to pass"
+            )
+            continue
         remap = REMAPPED.get((query, column))
         if remap:
             # The box does not feed its own key: check the columns it really writes instead.
@@ -160,7 +441,43 @@ def check(path, query, src) -> None:
             )
 
 
+def an_unreadable_column_stops_the_gate() -> str | None:
+    """A column the gate could not parse has to fail IN ITS OWN WORDS (taxes#54).
+
+    Without its own branch the sentinel leaks into the filter-type message and the screen reads
+    «paints `orphan` as `filterType: '<object object at 0x…>'` — teach it», which sends the next
+    person hunting for a filter type nobody ever wrote instead of for the brace that never closed.
+    """
+    listed = [q for q, spec in MANIFEST["queries"].items() if (spec or {}).get("list")]
+    if not listed:
+        return "no query of this module declares a `list` block, so this check cannot run"
+
+    global failures
+    kept, failures = failures, []
+    try:
+        check(MODULE_DIR / "ui/components/never-written.ts", listed[0], "{ key: 'orphan', ")
+        got = list(failures)
+    finally:
+        failures = kept
+
+    if len(got) != 1 or "never closes" not in got[0]:
+        return f"expected exactly one «never closes» failure, got {got}"
+    return None
+
+
 def main() -> int:
+    misread = parser_reads_one_column_at_a_time()
+    if misread:
+        print(f"FAIL ({len(misread)}): this gate misreads a column declaration, so its sweep means nothing:")
+        for m in misread:
+            print(f"  - {m}")
+        return 1
+
+    leaked = an_unreadable_column_stops_the_gate()
+    if leaked:
+        print(f"FAIL: an unreadable column does not stop this gate cleanly: {leaked}")
+        return 1
+
     pairs = components()
     if len(pairs) < SCREENS_TODAY:
         print(
