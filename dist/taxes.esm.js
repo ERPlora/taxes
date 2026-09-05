@@ -2935,6 +2935,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
       (a3) => {
         const loading = a3.loading?.(row) === true;
         const disabled = loading || a3.disabled?.(row) === true;
+        const label = typeof a3.label === "function" ? a3.label(row) : a3.label;
         return b2`
             <ion-button
               size="small"
@@ -2942,11 +2943,11 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
               color=${a3.color ?? "medium"}
               ?disabled=${disabled}
               aria-disabled=${disabled ? "true" : A}
-              aria-label=${a3.label}
-              title=${a3.label}
+              aria-label=${label}
+              title=${label}
               @click=${() => this.emit("rowAction", { actionId: a3.id, row })}
             >
-              ${loading ? b2`<ion-spinner slot="icon-only" name="dots"></ion-spinner>` : a3.icon ? b2`<ion-icon slot="icon-only" .icon=${okIcon(a3.icon)}></ion-icon>` : a3.label}
+              ${loading ? b2`<ion-spinner slot="icon-only" name="dots"></ion-spinner>` : a3.icon ? b2`<ion-icon slot="icon-only" .icon=${okIcon(a3.icon)}></ion-icon>` : label}
             </ion-button>
           `;
       }
@@ -3617,6 +3618,10 @@ var es_default = {
     title: "Tus impuestos",
     description: "Configura los tipos de IVA del pa\xEDs en el que vendes para que el TPV pueda calcular el precio de una venta."
   },
+  errors: {
+    "taxes.rule_incoherent": "No se ha podido crear la regla: un componente tiene que colgar de una regla ra\xEDz de este negocio con el mismo pa\xEDs, regi\xF3n y categor\xEDa fiscal, y su rango de validez no puede ir hacia atr\xE1s.",
+    "taxes.rule_not_deactivated": "No se ha podido recuperar la regla: no existe en este negocio, o ya est\xE1 activa."
+  },
   ui: {
     colKey: "Clave",
     colName: "Nombre",
@@ -3716,6 +3721,10 @@ var en_default = {
   setup: {
     title: "Your taxes",
     description: "Set the VAT rates for the country you sell in, so the till can price a sale."
+  },
+  errors: {
+    "taxes.rule_incoherent": "That rule could not be created: a component must hang from a root rule of this business with the same country, region and tax category, and its validity range cannot run backwards.",
+    "taxes.rule_not_deactivated": "That rule could not be brought back: it does not exist in this business, or it is already active."
   },
   ui: {
     colKey: "Key",

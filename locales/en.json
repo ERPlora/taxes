@@ -15,6 +15,10 @@
     "title": "Your taxes",
     "description": "Set the VAT rates for the country you sell in, so the till can price a sale."
   },
+  "errors": {
+    "taxes.rule_incoherent": "That rule could not be created: a component must hang from a root rule of this business with the same country, region and tax category, and its validity range cannot run backwards.",
+    "taxes.rule_not_deactivated": "That rule could not be brought back: it does not exist in this business, or it is already active."
+  },
   "ui": {
     "colKey": "Key",
     "colName": "Name",

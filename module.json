@@ -372,6 +372,10 @@
       }
     }
   },
+  "errors": {
+    "taxes.rule_incoherent": {},
+    "taxes.rule_not_deactivated": {}
+  },
   "events": {
     "listen": {},
     "emits": [
