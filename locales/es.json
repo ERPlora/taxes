@@ -16,6 +16,10 @@
     "title": "Tus impuestos",
     "description": "Configura los tipos de IVA del país en el que vendes para que el TPV pueda calcular el precio de una venta."
   },
+  "errors": {
+    "taxes.rule_incoherent": "No se ha podido crear la regla: un componente tiene que colgar de una regla raíz de este negocio con el mismo país, región y categoría fiscal, y su rango de validez no puede ir hacia atrás.",
+    "taxes.rule_not_deactivated": "No se ha podido recuperar la regla: no existe en este negocio, o ya está activa."
+  },
   "ui": {
     "colKey": "Clave",
     "colName": "Nombre",

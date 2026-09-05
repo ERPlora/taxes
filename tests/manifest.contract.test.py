@@ -55,6 +55,7 @@ RESERVED_SETUP_ORDER = 20
 # does not turn red for no reason (layer 2 is the strict one). Extend when the contract grows.
 KNOWN_TOP_LEVEL = {
     "id",
+    "errors",
     "name",
     "version",
     "description",
