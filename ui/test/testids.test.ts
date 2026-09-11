@@ -226,7 +226,7 @@ type Hook = { literal?: string; head?: string };
  */
 function hooks(source: string): Hook[] {
   const found: Hook[] = [];
-  const re = /(?<![\w-])data-testid\s*=\s*/g;
+  const re = /(?<![:\w-])data-testid\s*=\s*/g;
   for (let m = re.exec(source); m; m = re.exec(source)) {
     const at = m.index + m[0].length;
     const raw = source[at] === '"' || source[at] === "'" ? quoted(source, at) : braced(source, at);
@@ -263,7 +263,7 @@ function staticHead(raw: string): string {
 }
 
 /** Carries a hook, literal or computed. */
-const hasHook = (open: string): boolean => /(?<![\w-])data-testid\s*=/.test(open);
+const hasHook = (open: string): boolean => /(?<![:\w-])data-testid\s*=/.test(open);
 
 type Element = { tag: string; line: number; open: string };
 
@@ -348,7 +348,7 @@ const headsOf = (name: string): string[] =>
 const tablesOf = (source: string): Array<string | null> =>
   elements(source)
     .filter((el) => el.tag === TABLE_TAG)
-    .map((el) => el.open.match(/(?<![\w-])testid="([^"]*)"/)?.[1] ?? null);
+    .map((el) => el.open.match(/(?<![:\w-])testid="([^"]*)"/)?.[1] ?? null);
 
 describe('data-testid — the module UI convention (taxes#60)', () => {
   it('every literal data-testid is kebab-case', () => {
@@ -499,13 +499,33 @@ describe('data-testid — the module UI convention (taxes#60)', () => {
     ).toEqual([]);
   });
 
+  it('nothing in ui/ writes :data-testid: Lit does not bind it, it renders the colon', () => {
+    // The convention this module copies was written for the Vue shell, where `:data-testid="x"` is
+    // the LEGAL way to spell a computed hook. Lit has no such binding: it renders an attribute
+    // called literally `:data-testid`, which `getByTestId` never resolves. So the one spelling a
+    // person is most likely to arrive with — copied from the hub, or from the convention doc — is
+    // precisely the one that produces a hook that looks right in the diff and addresses nothing.
+    // It has to be denied by NAME: with the colon simply ignored by the reader, a dead hook on a
+    // decorative element is a hook no rule above is even looking at.
+    const offenders: string[] = [];
+    const bound = /(?<![\w-])((?::|v-bind:)data-testid)\s*=/g;
+    for (const { name, source } of ALL_UI) {
+      bound.lastIndex = 0;
+      for (let m = bound.exec(source); m; m = bound.exec(source)) offenders.push(`${name}: ${m[1]}=`);
+    }
+    expect(
+      offenders,
+      'Lit renders the colon: write data-testid=${…} for a computed hook',
+    ).toEqual([]);
+  });
+
   it('a hook is spelled data-testid="…" or data-testid=${…}, and nothing else', () => {
     // The rules above read exactly two spellings. Any other way of writing the SAME attribute is a
     // hook Lit renders, the QA can address, and this file never sees — `data-testid='x'` in single
     // quotes being the easy one to type. A guard that reads one spelling has to forbid the rest,
     // or it fails open on the next person.
     const offenders: string[] = [];
-    const spelling = /(?<![\w-])data-testid\s*=\s*(.)/g;
+    const spelling = /(?<![:\w-])data-testid\s*=\s*(.)/g;
     for (const { name, source } of SURFACES) {
       spelling.lastIndex = 0;
       for (let m = spelling.exec(source); m; m = spelling.exec(source)) {
@@ -612,6 +632,26 @@ describe('the guard reads a Lit open tag, not a JavaScript one (taxes#60)', () =
       unhooked(source),
       'the input is hooked and the button is not: bleeding past the tag would hide one of the two',
     ).toEqual(['<ion-button> line 1']);
+  });
+
+  it('does not take :data-testid for a hook: that control is unhooked', () => {
+    // If the reader accepts the colon, the coverage rule sees a hooked control and the contract
+    // rule sees the declared name present — the surface goes green while the spec that calls
+    // `getByTestId('taxes-rules-rate')` finds nothing. Both loud rules have to fire, so the reader
+    // has to not see it in the first place.
+    const source = 'html`<ion-input :data-testid="taxes-rules-rate"></ion-input>`';
+    expect(
+      unhooked(source),
+      'a colon-bound attribute is not a hook: the control has to be reported as missing one',
+    ).toEqual(['<ion-input> line 1']);
+  });
+
+  it('does not put a :data-testid into the contract', () => {
+    const source = 'html`<ion-input :data-testid="taxes-rules-rate"></ion-input>`';
+    expect(
+      hooks(source),
+      'reading it as a literal would let a dead hook satisfy the declared contract',
+    ).toEqual([]);
   });
 
   it('reads the testid of a table declared after its interpolated properties', () => {
