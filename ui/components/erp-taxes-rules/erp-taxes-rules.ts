@@ -470,51 +470,51 @@ export class ErpTaxesRules extends LitElement {
   render() {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return html`<div class="page">
-        ${can('taxes.manage_tax') ? nothing : html`<ok-inline-feedback tone="info" icon="lock-closed-outline">${t('ui.readOnlyHint')}</ok-inline-feedback>`}
-        ${this.formError ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
-        ${this.ctrl?.error ? html`<ok-inline-feedback tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
-        <ok-data-table .serverSide=${true} .fill=${true} .addable=${can('taxes.manage_tax')} .views=${true} .defaultView=${window.innerWidth <= 834 ? 'cards' : 'table'} .cardTitle=${(row: Record<string, unknown>) => String(row.tax_category_key ?? row.country_code ?? '')} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCategoryCountry')} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRules')} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.onFilterChange(e.detail.col, e.detail.value)}>
+        ${can('taxes.manage_tax') ? nothing : html`<ok-inline-feedback data-testid="taxes-rules-readonly" tone="info" icon="lock-closed-outline">${t('ui.readOnlyHint')}</ok-inline-feedback>`}
+        ${this.formError ? html`<ok-inline-feedback data-testid="taxes-rules-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
+        ${this.ctrl?.error ? html`<ok-inline-feedback data-testid="taxes-rules-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
+        <ok-data-table testid="taxes-rules-table" .serverSide=${true} .fill=${true} .addable=${can('taxes.manage_tax')} .views=${true} .defaultView=${window.innerWidth <= 834 ? 'cards' : 'table'} .cardTitle=${(row: Record<string, unknown>) => String(row.tax_category_key ?? row.country_code ?? '')} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCategoryCountry')} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRules')} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.onFilterChange(e.detail.col, e.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
-          <form slot="create" class="form" @submit=${(e: Event) => this.createRule(e)}>
+          <form data-testid="taxes-rules-form" slot="create" class="form" @submit=${(e: Event) => this.createRule(e)}>
             <!-- El país se ELIGE de la lista CERRADA que acepta el command (taxes#41): tecleado a
                  mano, ZZ —que ISO 3166-1 deja sin asignar— creaba una regla que no casaba con
                  ningún hub y que nadie volvía a mirar. Combo y no ion-select porque son 249. -->
-            <ok-combo
+            <ok-combo data-testid="taxes-rules-country"
               label=${t('ui.colCountry')}
               .options=${countryOptions(erplora().locale)}
               .value=${this.newCountry}
               .labels=${{ placeholder: t('ui.phCountry'), empty: t('ui.noCountryMatch') }}
               @ok-change=${(e: CustomEvent<{ value: string }>) => (this.newCountry = e.detail.value)}
             ></ok-combo>
-            <ion-input fill="outline" label-placement="floating" label=${t('ui.colRegion')} placeholder=${t('ui.phRegion')} .value=${this.newRegion} @ionInput=${(e: any) => (this.newRegion = e.target.value)}></ion-input>
+            <ion-input data-testid="taxes-rules-region" fill="outline" label-placement="floating" label=${t('ui.colRegion')} placeholder=${t('ui.phRegion')} .value=${this.newRegion} @ionInput=${(e: any) => (this.newRegion = e.target.value)}></ion-input>
             <!-- La categoría se ELIGE: la FK (hub_id, tax_category_key) la valida, y una clave mal
                  tecleada era una regla que nunca se aplicaba (o un command rechazado). -->
-            <ion-select fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategoryKey')} .value=${this.newCategoryKey} @ionChange=${(e: any) => (this.newCategoryKey = e.target.value)}>
+            <ion-select data-testid="taxes-rules-category" fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategoryKey')} .value=${this.newCategoryKey} @ionChange=${(e: any) => (this.newCategoryKey = e.target.value)}>
               ${this.categories.map((c) => html`<ion-select-option .value=${c.key}>${taxCategoryDisplayName(c)} (${c.key})</ion-select-option>`)}
             </ion-select>
-            <ion-input fill="outline" label-placement="floating" label=${t('ui.colRate')} type="number" step="0.01" placeholder=${t('ui.phPercent')} .value=${this.newRatePct} @ionInput=${(e: any) => (this.newRatePct = e.target.value)}></ion-input>
-            <ion-select fill="outline" label-placement="floating" label=${t('ui.colType')} .value=${this.newTaxType} @ionChange=${(e: any) => (this.newTaxType = e.target.value)}>${TAX_TYPES.map((v) => html`<ion-select-option .value=${v}>${t(`ui.taxType_${v}`)}</ion-select-option>`)}</ion-select>
+            <ion-input data-testid="taxes-rules-rate" fill="outline" label-placement="floating" label=${t('ui.colRate')} type="number" step="0.01" placeholder=${t('ui.phPercent')} .value=${this.newRatePct} @ionInput=${(e: any) => (this.newRatePct = e.target.value)}></ion-input>
+            <ion-select data-testid="taxes-rules-tax-type" fill="outline" label-placement="floating" label=${t('ui.colType')} .value=${this.newTaxType} @ionChange=${(e: any) => (this.newTaxType = e.target.value)}>${TAX_TYPES.map((v) => html`<ion-select-option .value=${v}>${t(`ui.taxType_${v}`)}</ion-select-option>`)}</ion-select>
             <!-- Fiscal qualification (ADR-0186, taxes#22): the reason only when exempt; regime optional. -->
-            <ion-select fill="outline" label-placement="floating" label=${t('ui.colOperationClass')} .value=${this.newOperationClass} @ionChange=${(e: any) => (this.newOperationClass = e.target.value ?? 'subject')}>${OPERATION_CLASSES.map((v) => html`<ion-select-option .value=${v}>${t(`ui.opClass_${v}`)}</ion-select-option>`)}</ion-select>
+            <ion-select data-testid="taxes-rules-operation-class" fill="outline" label-placement="floating" label=${t('ui.colOperationClass')} .value=${this.newOperationClass} @ionChange=${(e: any) => (this.newOperationClass = e.target.value ?? 'subject')}>${OPERATION_CLASSES.map((v) => html`<ion-select-option .value=${v}>${t(`ui.opClass_${v}`)}</ion-select-option>`)}</ion-select>
             ${this.newOperationClass === 'exempt'
-              ? html`<ion-input fill="outline" label-placement="floating" label=${t('ui.colExemptReason')} placeholder=${t('ui.phExemptReason')} maxlength="10" .value=${this.newExemptReason} @ionInput=${(e: any) => (this.newExemptReason = e.target.value)}></ion-input>`
+              ? html`<ion-input data-testid="taxes-rules-exempt-reason" fill="outline" label-placement="floating" label=${t('ui.colExemptReason')} placeholder=${t('ui.phExemptReason')} maxlength="10" .value=${this.newExemptReason} @ionInput=${(e: any) => (this.newExemptReason = e.target.value)}></ion-input>`
               : nothing}
-            <ion-input fill="outline" label-placement="floating" label=${t('ui.colRegimeKey')} placeholder=${t('ui.phRegimeKey')} maxlength="10" .value=${this.newRegimeKey} @ionInput=${(e: any) => (this.newRegimeKey = e.target.value)}></ion-input>
-            <ion-input fill="outline" label-placement="floating" label=${t('ui.colValidFrom')} type="date" .value=${this.newValidFrom} @ionInput=${(e: any) => (this.newValidFrom = e.target.value)}></ion-input>
-            <ion-input fill="outline" label-placement="floating" label=${t('ui.colValidTo')} type="date" .value=${this.newValidTo} @ionInput=${(e: any) => (this.newValidTo = e.target.value)}></ion-input>
+            <ion-input data-testid="taxes-rules-regime-key" fill="outline" label-placement="floating" label=${t('ui.colRegimeKey')} placeholder=${t('ui.phRegimeKey')} maxlength="10" .value=${this.newRegimeKey} @ionInput=${(e: any) => (this.newRegimeKey = e.target.value)}></ion-input>
+            <ion-input data-testid="taxes-rules-valid-from" fill="outline" label-placement="floating" label=${t('ui.colValidFrom')} type="date" .value=${this.newValidFrom} @ionInput=${(e: any) => (this.newValidFrom = e.target.value)}></ion-input>
+            <ion-input data-testid="taxes-rules-valid-to" fill="outline" label-placement="floating" label=${t('ui.colValidTo')} type="date" .value=${this.newValidTo} @ionInput=${(e: any) => (this.newValidTo = e.target.value)}></ion-input>
             <!-- Parent rule (multi-tax component): CHOSEN among the root rules compatible with the
                  country/region/category above (taxes#11) — never a free id. -->
-            <ion-select fill="outline" label-placement="floating" label=${t('ui.colParentRule')} placeholder=${this.parentCandidates.length ? t('ui.phParentRule') : t('ui.phParentRuleNone')} ?disabled=${!this.parentCandidates.length} .value=${this.newParentId} @ionChange=${(e: any) => (this.newParentId = e.target.value ?? '')}>
+            <ion-select data-testid="taxes-rules-parent" fill="outline" label-placement="floating" label=${t('ui.colParentRule')} placeholder=${this.parentCandidates.length ? t('ui.phParentRule') : t('ui.phParentRuleNone')} ?disabled=${!this.parentCandidates.length} .value=${this.newParentId} @ionChange=${(e: any) => (this.newParentId = e.target.value ?? '')}>
               <ion-select-option .value=${''}>${t('ui.optNoParent')}</ion-select-option>
               ${this.parentCandidates.map((r) => html`<ion-select-option .value=${r.id}>${Number(r.rate_pct).toFixed(2)}% · ${t(`ui.taxType_${r.tax_type}`)}${r.valid_from ? ` · ${r.valid_from}` : ''}</ion-select-option>`)}
             </ion-select>
-            <ion-input fill="outline" label-placement="floating" label=${t('ui.colComponentLabel')} placeholder=${t('ui.phComponentLabel')} .value=${this.newComponentLabel} @ionInput=${(e: any) => (this.newComponentLabel = e.target.value)}></ion-input>
+            <ion-input data-testid="taxes-rules-component-label" fill="outline" label-placement="floating" label=${t('ui.colComponentLabel')} placeholder=${t('ui.phComponentLabel')} .value=${this.newComponentLabel} @ionInput=${(e: any) => (this.newComponentLabel = e.target.value)}></ion-input>
             <p class="hint">${t('ui.rulesHint')}</p>
-            <ion-button type="submit" ?disabled=${this.saving || !this.newCountry || !this.newCategoryKey || this.newRatePct === ''}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
+            <ion-button data-testid="taxes-rules-submit" type="submit" ?disabled=${this.saving || !this.newCountry || !this.newCategoryKey || this.newRatePct === ''}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
           </form>
         </ok-data-table>
-        <ion-alert
+        <ion-alert data-testid="taxes-rules-deactivate-confirm"
           .isOpen=${this.pendingDeactivate !== null}
           header=${t('ui.deactivateConfirmTitle')}
           message=${t('ui.deactivateConfirmMessage')}
