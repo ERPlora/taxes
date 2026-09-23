@@ -317,6 +317,11 @@ fn rule_op_params(item: &Value, id: Value) -> Result<Map<String, Value>, String>
             ));
         }
     };
+    // taxes#59: a class that charges no tax (S2/E*/N1/N2 reach the AEAT without a quota) cannot
+    // carry a rate — the till would charge it and the invoice would refuse to seal the sale.
+    if operation_class != "subject" && rate_pct != 0.0 {
+        return Err(format!("`operation_class` `{operation_class}` charges no tax: `rate_pct` must be 0"));
+    }
     let exempt_reason = {
         let r = as_str(item.get("exempt_reason").unwrap_or(&Value::Null))
             .trim()
@@ -648,6 +653,33 @@ mod tests {
         let report = &out.events.last().unwrap().payload;
         assert_eq!(report["created"], json!(2));
         assert_eq!(report["errors"].as_array().unwrap().len(), 3);
+    }
+
+    #[test]
+    fn bulk_create_rules_refuses_a_rate_on_a_class_that_charges_no_tax() {
+        // taxes#59: a reverse-charge / exempt / not-subject rule reaches the AEAT without a quota.
+        // With a rate the till would charge it and the invoice would refuse to seal the sale, so the
+        // line is skipped (the batch goes on). At 0 % the same classes are legitimate, and `subject`
+        // keeps its rate — the controls that prove the guard is not refusing everything.
+        let input = with_payload(
+            ctx_rules(16),
+            json!({ "rules": [
+                { "country_code": "ES", "tax_category_key": "b2b.eu", "rate_pct": 21, "operation_class": "subject_reverse" },
+                { "country_code": "ES", "tax_category_key": "service.health", "rate_pct": 21, "operation_class": "exempt", "exempt_reason": "E1" },
+                { "country_code": "ES", "tax_category_key": "out.scope", "rate_pct": 0.01, "operation_class": "not_subject" },
+                { "country_code": "ES", "tax_category_key": "out.place", "rate_pct": 7, "operation_class": "NOT_SUBJECT_LOCATION" },
+                { "country_code": "ES", "tax_category_key": "b2b.eu", "rate_pct": 0, "operation_class": "subject_reverse" },
+                { "country_code": "ES", "tax_category_key": "service.health", "rate_pct": 0, "operation_class": "exempt", "exempt_reason": "E1" },
+                { "country_code": "ES", "tax_category_key": "product.generic", "rate_pct": 21, "operation_class": "subject" },
+            ] }),
+        );
+        let out = bulk_create_rules_pure(input);
+        let classes: Vec<&Value> = out.operations.iter().map(|o| &o.params["operation_class"]).collect();
+        assert_eq!(classes, vec![&json!("subject_reverse"), &json!("exempt"), &json!("subject")]);
+        let report = &out.events.last().unwrap().payload;
+        assert_eq!(report["created"], json!(3));
+        let refused: Vec<&Value> = report["errors"].as_array().unwrap().iter().map(|e| &e["index"]).collect();
+        assert_eq!(refused, vec![&json!(0), &json!(1), &json!(2), &json!(3)]);
     }
 
     // ── La CALIFICACIÓN fiscal (hub#292) ─────────────────────────────────────

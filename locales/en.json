@@ -16,7 +16,7 @@
     "description": "Set the VAT rates for the country you sell in, so the till can price a sale."
   },
   "errors": {
-    "taxes.rule_incoherent": "That rule could not be created: a component must hang from a root rule of this business with the same country, region and tax category, and its validity range cannot run backwards.",
+    "taxes.rule_incoherent": "That rule could not be created: a reverse-charge, exempt or not-subject rule charges no tax, so its rate must be 0 and no component with a rate can hang from it; a component must hang from a root rule of this business with the same country, region and tax category; and its validity range cannot run backwards.",
     "taxes.rule_not_deactivated": "That rule could not be brought back: it does not exist in this business, or it is already active."
   },
   "ui": {
@@ -89,6 +89,7 @@
     "taxType_igic": "IGIC (Canary Islands)",
     "taxType_ipsi": "IPSI (Ceuta/Melilla)",
     "colOperationClass": "Qualification",
+    "hintRateNoTax": "This operation carries no tax, so its rate is 0 %.",
     "opClass_subject": "Subject",
     "opClass_subject_reverse": "Reverse charge",
     "opClass_exempt": "Exempt",

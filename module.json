@@ -274,14 +274,14 @@
         "op": "min",
         "n": 1,
         "error": "taxes.rule_incoherent",
-        "message": "That rule could not be created: a component must hang from a root rule of this business with the same country, region and tax category, and its validity range cannot run backwards."
+        "message": "That rule could not be created: a reverse-charge, exempt or not-subject rule charges no tax, so its rate must be 0 and no component with a rate can hang from it; a component must hang from a root rule of this business with the same country, region and tax category; and its validity range cannot run backwards."
       },
       "schema": "schemas/rule_create.json",
       "emit": [
         "taxes.rule.created"
       ],
       "ai": {
-        "description": "Creates a tax rule (the % for a country+region+category) with its fiscal qualification (operation_class / regime_key / exempt_reason). Pass parent_id to add a multi-tax component (e.g. surcharge) to a root rule."
+        "description": "Creates a tax rule (the % for a country+region+category) with its fiscal qualification (operation_class / regime_key / exempt_reason). Any operation_class other than subject (reverse charge, exempt, not subject) charges no tax, so its rate_pct must be 0. Pass parent_id to add a multi-tax component (e.g. surcharge) to a root rule of class subject."
       }
     },
     "taxes.rules.bulk_create": {
@@ -293,7 +293,7 @@
       },
       "schema": "schemas/rules_bulk_create.json",
       "ai": {
-        "description": "Creates multiple tax rules at once (e.g. 'create the 2026 Spain VAT rates'). Invalid rows are skipped without aborting the batch. Components (parent_id) must be created individually."
+        "description": "Creates multiple tax rules at once (e.g. 'create the 2026 Spain VAT rates'). Invalid rows (including a non-subject operation_class with rate_pct > 0) are skipped without aborting the batch. Components (parent_id) must be created individually."
       }
     },
     "taxes.rules.deactivate": {
