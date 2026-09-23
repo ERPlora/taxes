@@ -320,6 +320,12 @@ def run() -> None:
     # classification must never leak into this hub's answer (every JOIN carries the hub_id, pm#89).
     seed("foreign-exempt-root", 0, "exempt", hub=OTHER_HUB, valid_from="2026-09-01")
     seed("orphan-comp", 5.2, parent="foreign-exempt-root")
+    # A live component under a SOFT-DELETED tax-free root: migration 004 leaves those in place on
+    # purpose (the resolver only reads components of the root it resolves, so they never apply).
+    # The deleted root is out of the picture: the component is judged by its own class alone, and
+    # since the repair refuses it too, the screen never offers a «Repair» that then fails.
+    seed("deleted-exempt-root", 21, "exempt", valid_from="2026-10-01", deleted=1)
+    seed("comp-under-deleted-root", 5.2, parent="deleted-exempt-root")
 
     print("\nThe list says which rules are incoherent:")
     page = list_page(include_archived=1)
@@ -345,6 +351,11 @@ def run() -> None:
         "a component naming the neighbour's tax-free root is judged by THIS hub only",
         0,
         flag(page, "orphan-comp"),
+    )
+    check(
+        "a component under a soft-deleted tax-free root is judged by its own class alone",
+        0,
+        flag(page, "comp-under-deleted-root"),
     )
 
     print("\nThe flag is a filter the assistant can ask for:")
@@ -372,6 +383,14 @@ def run() -> None:
     )
     check("repair of an unknown id", 0, repair("does-not-exist"))
     check("repair of that orphan component is refused too", 0, repair("orphan-comp"))
+    check(
+        "repair of the component under the soft-deleted root is refused too",
+        0,
+        repair("comp-under-deleted-root"),
+    )
+    check(
+        "that component keeps its rate", 5.2, stored("comp-under-deleted-root").get("rate")
+    )
     check("the coherent root keeps its rate", 21.0, stored("ok-root").get("rate"))
     check("the coherent component keeps its rate", 5.2, stored("ok-comp").get("rate"))
 
