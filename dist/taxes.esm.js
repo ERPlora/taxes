@@ -3858,7 +3858,8 @@ var es_default = {
   },
   errors: {
     "taxes.rule_incoherent": "No se ha podido crear la regla: una regla con inversi\xF3n del sujeto pasivo, exenta o no sujeta no cobra impuesto, as\xED que su tipo tiene que ser 0 y no puede colgar de ella un componente con tipo; un componente tiene que colgar de una regla ra\xEDz de este negocio con el mismo pa\xEDs, regi\xF3n y categor\xEDa fiscal; y su rango de validez no puede ir hacia atr\xE1s.",
-    "taxes.rule_not_deactivated": "No se ha podido recuperar la regla: no existe en este negocio, o ya est\xE1 activa."
+    "taxes.rule_not_deactivated": "No se ha podido recuperar la regla: no existe en este negocio, o ya est\xE1 activa.",
+    "taxes.rule_not_incoherent": "No se pudo reparar la regla: no existe en este negocio o no hay nada que reparar \u2014 solo se repara una regla que no lleva impuesto (inversi\xF3n del sujeto pasivo, exenta, no sujeta) pero tiene tipo, o un componente con tipo colgado de una regla as\xED."
   },
   ui: {
     colKey: "Clave",
@@ -3939,7 +3940,15 @@ var es_default = {
     colExemptReason: "Causa de exenci\xF3n",
     phExemptReason: "p. ej. E1 (c\xF3digo de la jurisdicci\xF3n)",
     colRegimeKey: "R\xE9gimen",
-    phRegimeKey: "opcional (c\xF3digo de la jurisdicci\xF3n, p. ej. 01)"
+    phRegimeKey: "opcional (c\xF3digo de la jurisdicci\xF3n, p. ej. 01)",
+    incoherentBadge: "debe ser 0 % en esta clase",
+    incoherentWarning: "{count} reglas cobran un tipo en una clase que no lleva impuesto (exenta, no sujeta o inversi\xF3n del sujeto pasivo). Sus ventas se cobran en caja pero no se pueden facturar. Usa \xABReparar\xBB en las filas marcadas.",
+    actionRepair: "Reparar",
+    repairConfirmTitle: "Reparar regla fiscal",
+    repairConfirmMessage: "Esta regla cobra un tipo, pero su clase no lleva impuesto, as\xED que sus ventas no se pueden facturar. Elige qu\xE9 quer\xEDas: sin impuesto (el tipo pasa a 0 %) o cobrar el tipo (la regla pasa a sujeta). Las ventas pasadas y las facturas emitidas no cambian.",
+    repairNoTax: "Sin impuesto (0 %)",
+    repairChargeTax: "Cobrar el tipo",
+    errRepairRule: "No se pudo reparar la regla"
   }
 };
 
@@ -3963,7 +3972,8 @@ var en_default = {
   },
   errors: {
     "taxes.rule_incoherent": "That rule could not be created: a reverse-charge, exempt or not-subject rule charges no tax, so its rate must be 0 and no component with a rate can hang from it; a component must hang from a root rule of this business with the same country, region and tax category; and its validity range cannot run backwards.",
-    "taxes.rule_not_deactivated": "That rule could not be brought back: it does not exist in this business, or it is already active."
+    "taxes.rule_not_deactivated": "That rule could not be brought back: it does not exist in this business, or it is already active.",
+    "taxes.rule_not_incoherent": "That rule could not be repaired: it does not exist in this business, or it has nothing to repair \u2014 only a rule that charges no tax (reverse charge, exempt, not subject) but still carries a rate, or a component with a rate under such a rule, can be repaired."
   },
   ui: {
     colKey: "Key",
@@ -4044,7 +4054,15 @@ var en_default = {
     colExemptReason: "Exemption reason",
     phExemptReason: "e.g. E1 (jurisdiction code)",
     colRegimeKey: "Regime",
-    phRegimeKey: "optional (jurisdiction code, e.g. 01)"
+    phRegimeKey: "optional (jurisdiction code, e.g. 01)",
+    incoherentBadge: "must be 0 % for this class",
+    incoherentWarning: "{count} tax rules charge a rate on a class that charges no tax (exempt, not subject or reverse charge). Sales under them are charged at the till but cannot be invoiced. Use \xABRepair\xBB on the marked rows.",
+    actionRepair: "Repair",
+    repairConfirmTitle: "Repair tax rule",
+    repairConfirmMessage: "This rule charges a rate, but its class charges no tax, so its sales cannot be invoiced. Choose what you meant: no tax (the rate becomes 0 %), or charge the rate (the rule becomes subject to tax). Past sales and issued invoices do not change.",
+    repairNoTax: "No tax (0 %)",
+    repairChargeTax: "Charge the rate",
+    errRepairRule: "Could not repair the rule"
   }
 };
 
@@ -5062,6 +5080,12 @@ var OPERATION_CLASSES = ["subject", "subject_reverse", "exempt", "not_subject", 
 function chargesNoTax(operationClass) {
   return !!operationClass && operationClass !== "subject";
 }
+function isIncoherent(row) {
+  return Number(row.is_incoherent) === 1;
+}
+function canRepairByChargingTax(row) {
+  return isIncoherent(row) && chargesNoTax(String(row.operation_class ?? ""));
+}
 function can3(permission) {
   return erplora3().hasPermission?.(permission) ?? true;
 }
@@ -5098,6 +5122,7 @@ var ErpTaxesRules = class extends i3 {
     this.newComponentLabel = "";
     this.saving = false;
     this.pendingDeactivate = null;
+    this.pendingRepair = null;
     this.showingArchived = false;
     this.categories = [];
     this.onLocaleChange = () => this.requestUpdate();
@@ -5154,7 +5179,8 @@ var ErpTaxesRules = class extends i3 {
         header: t5("ui.colRate"),
         align: "right",
         sortable: true,
-        format: (r6) => `${Number(r6.rate_pct).toFixed(2)}%`
+        // An incoherent rule keeps its rate readable and says what is wrong with it (taxes#63).
+        format: (r6) => isIncoherent(r6) ? `${Number(r6.rate_pct).toFixed(2)}% \xB7 ${t5("ui.incoherentBadge")}` : `${Number(r6.rate_pct).toFixed(2)}%`
       },
       {
         key: "tax_type",
@@ -5242,10 +5268,15 @@ var ErpTaxesRules = class extends i3 {
   get rowActions() {
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
     if (!can3("taxes.manage_tax")) return [];
+    const repair = (this.ctrl?.rows ?? []).some((r6) => isIncoherent(r6)) ? [{ id: "repair", label: t5("ui.actionRepair"), icon: "construct-outline", color: "warning", disabled: (row) => !isIncoherent(row) }] : [];
     if (this.showingArchived) {
-      return [{ id: "restore", label: t5("ui.actionRestore"), icon: "arrow-undo-outline", color: "success" }];
+      return [...repair, { id: "restore", label: t5("ui.actionRestore"), icon: "arrow-undo-outline", color: "success" }];
     }
-    return [{ id: "deactivate", label: t5("ui.actionDeactivate"), icon: "ban-outline", color: "danger" }];
+    return [...repair, { id: "deactivate", label: t5("ui.actionDeactivate"), icon: "ban-outline", color: "danger" }];
+  }
+  /** How many active rules of the hub are incoherent — all of them, not just the visible page. */
+  get incoherentCount() {
+    return this.allRules.filter((r6) => isIncoherent(r6)).length;
   }
   /**
    * Cambio de filtro de la tabla. `is_active = 0` no es un filtro más: las reglas desactivadas NO
@@ -5275,6 +5306,10 @@ var ErpTaxesRules = class extends i3 {
       void this.restoreRule(row);
       return;
     }
+    if (actionId === "repair") {
+      if (isIncoherent(row)) this.pendingRepair = row;
+      return;
+    }
     if (actionId !== "deactivate") return;
     if (!Number(row.is_active)) return;
     this.pendingDeactivate = row;
@@ -5302,6 +5337,20 @@ var ErpTaxesRules = class extends i3 {
       this.formError = e5 instanceof Error ? e5.message : erplora3().t(CATALOG3, "ui.errDeactivateRule");
     }
   }
+  /** Repairs the confirmed rule (`taxes.rules.repair`, taxes#63) in the way the owner chose. */
+  async onRepairDismiss(ev) {
+    const row = this.pendingRepair;
+    this.pendingRepair = null;
+    const mode = ev.detail?.role;
+    if (!row || mode !== "no_tax" && mode !== "charge_tax") return;
+    this.formError = "";
+    try {
+      await erplora3().command("taxes.rules.repair", { rule_id: row.id, mode });
+      await Promise.all([this.ctrl.load(), this.loadAllRules()]);
+    } catch (e5) {
+      this.formError = e5 instanceof Error ? e5.message : erplora3().t(CATALOG3, "ui.errRepairRule");
+    }
+  }
   async connectedCallback() {
     super.connectedCallback();
     window.addEventListener("erplora:locale-changed", this.onLocaleChange);
@@ -5318,7 +5367,8 @@ var ErpTaxesRules = class extends i3 {
       const offs = [
         erplora3().on("taxes.rule.created", () => refresh()),
         erplora3().on("taxes.rule.deactivated", () => refresh()),
-        erplora3().on("taxes.rule.activated", () => refresh())
+        erplora3().on("taxes.rule.activated", () => refresh()),
+        erplora3().on("taxes.rule.repaired", () => refresh())
       ];
       this.unsub = () => offs.forEach((o7) => o7());
     } catch {
@@ -5408,6 +5458,7 @@ var ErpTaxesRules = class extends i3 {
     return b2`<div class="page">
         ${can3("taxes.manage_tax") ? A : b2`<ok-inline-feedback data-testid="taxes-rules-readonly" tone="info" icon="lock-closed-outline">${t5("ui.readOnlyHint")}</ok-inline-feedback>`}
         ${this.formError ? b2`<ok-inline-feedback data-testid="taxes-rules-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
+        ${this.incoherentCount ? b2`<ok-inline-feedback data-testid="taxes-rules-incoherent-warning" tone="warning" icon="warning-outline">${erplora3().t(CATALOG3, "ui.incoherentWarning", { count: this.incoherentCount })}</ok-inline-feedback>` : A}
         ${this.ctrl?.error ? b2`<ok-inline-feedback data-testid="taxes-rules-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
         <ok-data-table testid="taxes-rules-table" .serverSide=${true} .fill=${true} .addable=${can3("taxes.manage_tax")} .views=${true} .defaultView=${window.innerWidth <= 834 ? "cards" : "table"} .cardTitle=${(row) => String(row.tax_category_key ?? row.country_code ?? "")} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCategoryCountry")} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @rowAction=${(e5) => this.onRowAction(e5)} @pageChange=${(e5) => this.ctrl.setPage(e5.detail)} @pageSizeChange=${(e5) => this.ctrl.setPageSize(e5.detail)} @sortChange=${(e5) => this.ctrl.setSort(e5.detail.sort, e5.detail.dir)} @searchChange=${(e5) => this.ctrl.setSearch(e5.detail)} @filterChange=${(e5) => this.onFilterChange(e5.detail.col, e5.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
@@ -5457,6 +5508,19 @@ var ErpTaxesRules = class extends i3 {
       { text: t5("ui.deactivateConfirmAction"), role: "confirm", cssClass: "alert-button-danger" }
     ]}
           @ionAlertDidDismiss=${(e5) => this.onDeactivateDismiss(e5)}
+        ></ion-alert>
+        <!-- Two readings of the same mistake (taxes#63): the class was right (0 %) or the rate was
+             right (charge it). «Keep the rate» only when the rule's own class is the problem. -->
+        <ion-alert data-testid="taxes-rules-repair-confirm"
+          .isOpen=${this.pendingRepair !== null}
+          header=${t5("ui.repairConfirmTitle")}
+          message=${t5("ui.repairConfirmMessage")}
+          .buttons=${[
+      { text: t5("ui.cancel"), role: "cancel" },
+      ...this.pendingRepair && canRepairByChargingTax(this.pendingRepair) ? [{ text: t5("ui.repairChargeTax"), role: "charge_tax" }] : [],
+      { text: t5("ui.repairNoTax"), role: "no_tax" }
+    ]}
+          @ionAlertDidDismiss=${(e5) => this.onRepairDismiss(e5)}
         ></ion-alert>
       </div>`;
   }
@@ -5509,6 +5573,9 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "pendingDeactivate", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "pendingRepair", 2);
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "showingArchived", 2);

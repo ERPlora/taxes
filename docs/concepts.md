@@ -82,6 +82,17 @@ country, the region and the rule that produced it.
 If a rate changes on a date, do not edit the old rule. Set its **valid to** and create a new one with
 the new **valid from**. The history stays correct.
 
+## A rule that charges no tax has no rate
+
+Any class other than **subject** reaches the tax authority without a quota, so its rate is 0 %, and
+so is any component hanging from it. Creating one with a rate is refused
+(`taxes.rule_incoherent`). Rules saved before that check are **not rewritten automatically** —
+changing a business's tax setup behind its back is not this module's call. Instead
+`taxes.rules.list` returns `is_incoherent = 1` for them, the screen marks them, and
+`taxes.rules.repair` fixes one at a time in the way the owner chooses (see
+[screens.md](screens.md)). Repairing edits the rule in place: sales and invoices already made keep
+the tax they froze on their lines.
+
 ## System categories cannot be deleted
 
 The six categories seeded at install are marked as system. They are the vocabulary the rest of the

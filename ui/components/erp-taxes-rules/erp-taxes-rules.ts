@@ -54,6 +54,8 @@ interface TaxRule {
   valid_from: string;
   valid_to: string;
   is_active: number;
+  /** 1 when the rule carries a rate on a class that charges no tax (taxes#63): see `isIncoherent`. */
+  is_incoherent?: number;
 }
 
 // Fila de `taxes.categories.list`: la categoría es la identidad enlazable (ADR-0085) y la FK
@@ -79,6 +81,21 @@ const OPERATION_CLASSES = ['subject', 'subject_reverse', 'exempt', 'not_subject'
 // server refuses anything else (`taxes.rule_incoherent`, taxes#59).
 export function chargesNoTax(operationClass: string | undefined): boolean {
   return !!operationClass && operationClass !== 'subject';
+}
+
+// A rate on a rule that charges no tax — its own class, or its root's, is not `subject` (taxes#63).
+// taxes#62 refuses those on create; the ones saved before that guard still resolve at the till and
+// the invoice refuses to seal the sale. The server decides (`is_incoherent` in `rules_list.sql`);
+// the screen only reads it.
+export function isIncoherent(row: Record<string, unknown> | TaxRule): boolean {
+  return Number((row as Record<string, unknown>).is_incoherent) === 1;
+}
+
+// Whether «keep the rate, charge the tax» can repair it: only when the rule's OWN class is the
+// problem. A subject component under a tax-free root cannot be fixed by changing the component
+// (`commands/rule_repair.sql` refuses it too).
+export function canRepairByChargingTax(row: Record<string, unknown> | TaxRule): boolean {
+  return isIncoherent(row) && chargesNoTax(String((row as Record<string, unknown>).operation_class ?? ''));
 }
 
 // The runtime enforces the permission on every command; this only shapes the surface (taxes#11):
@@ -162,6 +179,8 @@ export class ErpTaxesRules extends LitElement {
   @state() saving = false;
 
   @state() private pendingDeactivate: TaxRule | null = null;
+  /** The incoherent rule whose repair is being confirmed (taxes#63). */
+  @state() private pendingRepair: TaxRule | null = null;
   /** Si la tabla está mirando las reglas DESACTIVADAS (taxes#52): manda sobre el alcance de la
    *  lectura y sobre la acción que ofrece la fila. */
   @state() private showingArchived = false;
@@ -212,7 +231,9 @@ export class ErpTaxesRules extends LitElement {
         header: t('ui.colRate'),
         align: 'right',
         sortable: true,
-        format: (r) => `${Number(r.rate_pct).toFixed(2)}%`,
+        // An incoherent rule keeps its rate readable and says what is wrong with it (taxes#63).
+        format: (r) =>
+          isIncoherent(r) ? `${Number(r.rate_pct).toFixed(2)}% · ${t('ui.incoherentBadge')}` : `${Number(r.rate_pct).toFixed(2)}%`,
       },
       {
         key: 'tax_type',
@@ -302,10 +323,20 @@ export class ErpTaxesRules extends LitElement {
   private get rowActions(): DataTableAction[] {
     const t = (k: string): string => erplora().t(CATALOG, k);
     if (!can('taxes.manage_tax')) return [];
+    // «Repair» only shows up on a page that has something to repair, and only works on those rows
+    // (taxes#63): on a healthy hub it would be one more dead button on every row.
+    const repair: DataTableAction[] = ((this.ctrl?.rows ?? []) as TaxRule[]).some((r) => isIncoherent(r))
+      ? [{ id: 'repair', label: t('ui.actionRepair'), icon: 'construct-outline', color: 'warning', disabled: (row) => !isIncoherent(row) }]
+      : [];
     if (this.showingArchived) {
-      return [{ id: 'restore', label: t('ui.actionRestore'), icon: 'arrow-undo-outline', color: 'success' }];
+      return [...repair, { id: 'restore', label: t('ui.actionRestore'), icon: 'arrow-undo-outline', color: 'success' }];
     }
-    return [{ id: 'deactivate', label: t('ui.actionDeactivate'), icon: 'ban-outline', color: 'danger' }];
+    return [...repair, { id: 'deactivate', label: t('ui.actionDeactivate'), icon: 'ban-outline', color: 'danger' }];
+  }
+
+  /** How many active rules of the hub are incoherent — all of them, not just the visible page. */
+  private get incoherentCount(): number {
+    return this.allRules.filter((r) => isIncoherent(r)).length;
   }
 
   /**
@@ -339,6 +370,10 @@ export class ErpTaxesRules extends LitElement {
       void this.restoreRule(row);
       return;
     }
+    if (actionId === 'repair') {
+      if (isIncoherent(row)) this.pendingRepair = row as unknown as TaxRule;
+      return;
+    }
     if (actionId !== 'deactivate') return;
     if (!Number(row.is_active)) return;
     this.pendingDeactivate = row as unknown as TaxRule;
@@ -369,6 +404,21 @@ export class ErpTaxesRules extends LitElement {
     }
   }
 
+  /** Repairs the confirmed rule (`taxes.rules.repair`, taxes#63) in the way the owner chose. */
+  private async onRepairDismiss(ev: CustomEvent<{ role?: string }>) {
+    const row = this.pendingRepair;
+    this.pendingRepair = null;
+    const mode = ev.detail?.role;
+    if (!row || (mode !== 'no_tax' && mode !== 'charge_tax')) return;
+    this.formError = '';
+    try {
+      await erplora().command('taxes.rules.repair', { rule_id: row.id, mode });
+      await Promise.all([this.ctrl.load(), this.loadAllRules()]);
+    } catch (e) {
+      this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errRepairRule');
+    }
+  }
+
   private readonly onLocaleChange = (): void => this.requestUpdate();
 
   async connectedCallback() {
@@ -388,6 +438,7 @@ export class ErpTaxesRules extends LitElement {
         erplora().on('taxes.rule.created', () => refresh()),
         erplora().on('taxes.rule.deactivated', () => refresh()),
         erplora().on('taxes.rule.activated', () => refresh()),
+        erplora().on('taxes.rule.repaired', () => refresh()),
       ];
       this.unsub = () => offs.forEach((o) => o());
     } catch {
@@ -489,6 +540,9 @@ export class ErpTaxesRules extends LitElement {
     return html`<div class="page">
         ${can('taxes.manage_tax') ? nothing : html`<ok-inline-feedback data-testid="taxes-rules-readonly" tone="info" icon="lock-closed-outline">${t('ui.readOnlyHint')}</ok-inline-feedback>`}
         ${this.formError ? html`<ok-inline-feedback data-testid="taxes-rules-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
+        ${this.incoherentCount
+          ? html`<ok-inline-feedback data-testid="taxes-rules-incoherent-warning" tone="warning" icon="warning-outline">${erplora().t(CATALOG, 'ui.incoherentWarning', { count: this.incoherentCount })}</ok-inline-feedback>`
+          : nothing}
         ${this.ctrl?.error ? html`<ok-inline-feedback data-testid="taxes-rules-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
         <ok-data-table testid="taxes-rules-table" .serverSide=${true} .fill=${true} .addable=${can('taxes.manage_tax')} .views=${true} .defaultView=${window.innerWidth <= 834 ? 'cards' : 'table'} .cardTitle=${(row: Record<string, unknown>) => String(row.tax_category_key ?? row.country_code ?? '')} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCategoryCountry')} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRules')} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.onFilterChange(e.detail.col, e.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
@@ -540,6 +594,19 @@ export class ErpTaxesRules extends LitElement {
             { text: t('ui.deactivateConfirmAction'), role: 'confirm', cssClass: 'alert-button-danger' },
           ]}
           @ionAlertDidDismiss=${(e: CustomEvent<{ role?: string }>) => this.onDeactivateDismiss(e)}
+        ></ion-alert>
+        <!-- Two readings of the same mistake (taxes#63): the class was right (0 %) or the rate was
+             right (charge it). «Keep the rate» only when the rule's own class is the problem. -->
+        <ion-alert data-testid="taxes-rules-repair-confirm"
+          .isOpen=${this.pendingRepair !== null}
+          header=${t('ui.repairConfirmTitle')}
+          message=${t('ui.repairConfirmMessage')}
+          .buttons=${[
+            { text: t('ui.cancel'), role: 'cancel' },
+            ...(this.pendingRepair && canRepairByChargingTax(this.pendingRepair) ? [{ text: t('ui.repairChargeTax'), role: 'charge_tax' }] : []),
+            { text: t('ui.repairNoTax'), role: 'no_tax' },
+          ]}
+          @ionAlertDidDismiss=${(e: CustomEvent<{ role?: string }>) => this.onRepairDismiss(e)}
         ></ion-alert>
       </div>`;
   }

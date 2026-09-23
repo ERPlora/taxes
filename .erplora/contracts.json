@@ -13,14 +13,16 @@
       "taxes.categories.create",
       "taxes.rules.activate",
       "taxes.rules.create",
-      "taxes.rules.deactivate"
+      "taxes.rules.deactivate",
+      "taxes.rules.repair"
     ],
     "events": [
       "taxes.alias.created",
       "taxes.category.created",
       "taxes.rule.activated",
       "taxes.rule.created",
-      "taxes.rule.deactivated"
+      "taxes.rule.deactivated",
+      "taxes.rule.repaired"
     ],
     "slots": []
   }
