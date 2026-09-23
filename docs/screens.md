@@ -115,6 +115,27 @@ rest. **Components are not created this way**; add them individually afterwards.
 Deactivate it. It stops applying to new transactions, and everything already issued keeps the rate it
 froze. There is no "delete a rule" — see [concepts.md](concepts.md). Requires `taxes.manage_tax`.
 
+### Repair a rule marked «must be 0 % for this class»
+
+A rule whose class charges no tax — **exempt**, **not subject** or **reverse charge** — cannot carry
+a rate, and since taxes#62 the screen refuses to save one. Rules saved before that check may still
+have one (or a component with a rate hanging from such a rule). The till charges that rate, and the
+invoice then refuses the sale, so it stays **charged without an invoice**.
+
+The screen marks those rules: a warning above the table counts them across the whole hub, and the
+rate of each one reads «21.00% · must be 0 % for this class». To fix one:
+
+1. Tap **Repair** on the marked row (the action only appears on a page that has one).
+2. Choose what you meant:
+   - **No tax (0 %)** — the class was right: the rate becomes 0 %. On a root rule, its components'
+     rates go to 0 % too.
+   - **Charge the rate** — the rate was right: the rule becomes **subject** and the exemption reason
+     is dropped. Only offered when the rule's own class is the problem.
+3. New sales of that category are invoiced normally. Past sales and issued invoices do not change.
+
+Requires `taxes.manage_tax`. The assistant can do the same (`taxes.rules.repair`) — ask it «why is
+this sale not invoiced?».
+
 ## Aliases
 
 The translation table that lets a CSV import understand words that are not canonical keys

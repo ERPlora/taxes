@@ -44,6 +44,8 @@ dependency, so installing any of them installs Taxes automatically.
 | `taxes.category.created` | a fiscal category is created |
 | `taxes.rule.created` | a tax rule is created |
 | `taxes.rule.deactivated` | a rule is deactivated |
+| `taxes.rule.activated` | a deactivated rule is brought back |
+| `taxes.rule.repaired` | an incoherent rule is repaired (rate to 0 %, or made subject) |
 | `taxes.alias.created` | an import alias is learned |
 
 **Events it listens to** — none.

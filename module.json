@@ -181,12 +181,15 @@
           },
           "is_active": {
             "op": "eq"
+          },
+          "is_incoherent": {
+            "op": "eq"
           }
         },
         "page_size": 50
       },
       "ai": {
-        "description": "Lists all tax rules (rate + fiscal qualification by country+region+category, including multi-tax components). The qualification says whether the operation is subject, exempt or not subject, under which regime, and — when exempt — the exemption cause."
+        "description": "Lists all tax rules (rate + fiscal qualification by country+region+category, including multi-tax components). The qualification says whether the operation is subject, exempt or not subject, under which regime, and — when exempt — the exemption cause. `is_incoherent` = 1 marks a rule with a rate on a class that charges no tax (its own class, or its root's, is not subject): sales under it cannot be invoiced until it is repaired with `taxes.rules.repair` — filter with is_incoherent=1 to find them."
       },
       "expose_api": true
     },
@@ -331,6 +334,27 @@
       },
       "expose_api": true
     },
+    "taxes.rules.repair": {
+      "permission": "taxes.manage_tax",
+      "transaction": true,
+      "sql": [
+        "commands/rule_repair.sql"
+      ],
+      "schema": "schemas/rule_repair.json",
+      "expect_rows": {
+        "op": "min",
+        "n": 1,
+        "error": "taxes.rule_not_incoherent",
+        "message": "That rule could not be repaired: it does not exist in this business, or it has nothing to repair — only a rule that charges no tax (reverse charge, exempt, not subject) but still carries a rate, or a component with a rate under such a rule, can be repaired."
+      },
+      "emit": [
+        "taxes.rule.repaired"
+      ],
+      "ai": {
+        "description": "Repairs ONE incoherent tax rule (is_incoherent = 1 in taxes.rules.list): a rule that charges no tax (reverse charge, exempt, not subject) saved with a rate, or a component with a rate under such a root. Sales of that category are charged at the till but cannot be invoiced until it is repaired. mode 'no_tax' (default) sets the rate to 0 (and clears the rates of the root's components); mode 'charge_tax' keeps the rate and makes the rule subject (drops the exemption reason). Ask the owner which one they meant before calling it. Past sales and issued invoices are not changed."
+      },
+      "expose_api": true
+    },
     "taxes.aliases.create": {
       "permission": "taxes.manage_tax",
       "transaction": true,
@@ -374,7 +398,8 @@
   },
   "errors": {
     "taxes.rule_incoherent": {},
-    "taxes.rule_not_deactivated": {}
+    "taxes.rule_not_deactivated": {},
+    "taxes.rule_not_incoherent": {}
   },
   "events": {
     "listen": {},
@@ -384,6 +409,7 @@
       "taxes.rule.activated",
       "taxes.rule.created",
       "taxes.rule.deactivated",
+      "taxes.rule.repaired",
       "taxes.rules.bulk_create.report"
     ]
   },

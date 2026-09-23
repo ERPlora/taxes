@@ -35,7 +35,7 @@ rather than assuming all 100 landed. Components cannot be created in bulk.
 | To do this | You need |
 |---|---|
 | See categories, rules and aliases | `taxes.view_tax` |
-| Create a category, create or deactivate a rule, create an alias | `taxes.manage_tax` |
+| Create a category, create, deactivate, reactivate or repair a rule, create an alias | `taxes.manage_tax` |
 | Calculate a tax | `taxes.calculate_tax` |
 
 By role: **admin** has everything. **manager** has all three. **employee** can **see and calculate**

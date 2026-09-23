@@ -26,8 +26,20 @@ SELECT r.id, r.country_code, r.region_code, r.tax_category_key, r.rate_pct, r.ta
        r.operation_class, r.exempt_reason, r.regime_key,
        r.parent_id, r.component_label, r.valid_from, r.valid_to, r.is_active,
        COALESCE(NULLIF(l.label, ''), NULLIF(len.label, ''), NULLIF(c.name, ''), r.tax_category_key)
-           AS tax_category_display_name
+           AS tax_category_display_name,
+       -- `is_incoherent` (taxes#63): a rate on a rule that charges no tax — its own class is not
+       -- `subject`, or it is a component hanging from a root whose class is not. taxes#62 refuses
+       -- those on create, but rows saved BEFORE that guard still resolve in `sales`, the till charges
+       -- them and the invoice refuses to seal the sale (`invoice.quota_on_non_subject_class`). The
+       -- screen marks the row with it and `taxes.rules.repair` fixes it; it is never rewritten
+       -- blindly. Same conditions as `commands/rule_create.sql` §5 and `commands/rule_repair.sql`.
+       CASE WHEN r.rate_pct > 0
+                 AND (r.operation_class <> 'subject' OR COALESCE(p.operation_class, 'subject') <> 'subject')
+            THEN 1 ELSE 0 END AS is_incoherent
 FROM taxes_rule r
+-- The root a component hangs from (a root carries an empty `parent_id` and finds nothing). `id` is
+-- the key, so the join cannot duplicate rows.
+LEFT JOIN taxes_rule p ON p.id = r.parent_id AND p.hub_id = r.hub_id AND p.is_deleted = 0
 LEFT JOIN taxes_category c ON c.hub_id = r.hub_id AND c.key = r.tax_category_key AND c.is_deleted = 0
 LEFT JOIN taxes_category_label l   ON l.key   = r.tax_category_key AND l.lang   = (SELECT lang FROM caller_lang)
 LEFT JOIN taxes_category_label len ON len.key = r.tax_category_key AND len.lang = 'en'
