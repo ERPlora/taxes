@@ -17,7 +17,7 @@
     "description": "Configura los tipos de IVA del país en el que vendes para que el TPV pueda calcular el precio de una venta."
   },
   "errors": {
-    "taxes.rule_incoherent": "No se ha podido crear la regla: un componente tiene que colgar de una regla raíz de este negocio con el mismo país, región y categoría fiscal, y su rango de validez no puede ir hacia atrás.",
+    "taxes.rule_incoherent": "No se ha podido crear la regla: una regla con inversión del sujeto pasivo, exenta o no sujeta no cobra impuesto, así que su tipo tiene que ser 0 y no puede colgar de ella un componente con tipo; un componente tiene que colgar de una regla raíz de este negocio con el mismo país, región y categoría fiscal; y su rango de validez no puede ir hacia atrás.",
     "taxes.rule_not_deactivated": "No se ha podido recuperar la regla: no existe en este negocio, o ya está activa."
   },
   "ui": {
@@ -90,6 +90,7 @@
     "taxType_igic": "IGIC (Canarias)",
     "taxType_ipsi": "IPSI (Ceuta/Melilla)",
     "colOperationClass": "Calificación",
+    "hintRateNoTax": "Esta operación no lleva impuesto, así que su tipo es 0 %.",
     "opClass_subject": "Sujeta",
     "opClass_subject_reverse": "Inversión del sujeto pasivo",
     "opClass_exempt": "Exenta",

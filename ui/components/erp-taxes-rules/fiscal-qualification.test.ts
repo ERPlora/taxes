@@ -134,7 +134,8 @@ describe('the create panel exposes the fiscal qualification (taxes#22)', () => {
     el.newOperationClass = 'subject_reverse';
     el.newExemptReason = 'E1'; // typed while it was exempt, then the class changed
     await el.createRule(new Event('submit'));
-    expect(commands[0].payload).toEqual({ country_code: 'ES', tax_category_key: 'health.treatment', rate_pct: 21, tax_type: 'vat', operation_class: 'subject_reverse' });
+    // rate_pct 0, not the 21 typed: a reverse-charge rule carries no quota (taxes#59).
+    expect(commands[0].payload).toEqual({ country_code: 'ES', tax_category_key: 'health.treatment', rate_pct: 0, tax_type: 'vat', operation_class: 'subject_reverse' });
   });
 });
 

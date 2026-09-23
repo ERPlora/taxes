@@ -64,8 +64,8 @@ The list includes **components** as well as root rules — see [concepts.md](con
 7. Optionally set the **fiscal qualification**: whether the operation is `subject` (the default),
    `subject_reverse`, `exempt`, `not_subject` or `not_subject_location`. The **exemption reason**
    field only appears for an exempt rule (an opaque code of the jurisdiction, e.g. `E1` in Spain);
-   the **regime** is optional. The list shows the qualification next to the rate, and can be
-   filtered by it.
+   the **regime** is optional. Any qualification other than *Subject* charges no tax, so the rate is
+   set to 0 and locked. The list shows the qualification next to the rate, and can be filtered by it.
 8. Save.
 
 Requires `taxes.manage_tax`.

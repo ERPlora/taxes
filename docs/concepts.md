@@ -49,6 +49,11 @@ Every rule also carries how the operation is qualified:
 
 Plus an **exemption reason** and a **regime key** when the jurisdiction requires them.
 
+Only `subject` charges tax. Every other class reaches the tax authority without a quota, so its rule
+must have a **rate of 0** — a rule with any other class and a rate above 0 is refused, and so is a
+component with a rate under such a root. Otherwise the till would charge a tax the invoice cannot
+declare.
+
 This lives on the **rule**, not on the category, and that is deliberate: the rule is already keyed by
 country, region, category and validity — exactly the tuple in which this changes. A medical treatment
 is exempt in Spain and need not be somewhere else.

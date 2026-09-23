@@ -75,6 +75,12 @@ const TAX_TYPES = ['vat', 'igic', 'ipsi', 'surcharge', 'sales_tax', 'withholding
 // compliance module; this screen only lets the business state them (taxes#22).
 const OPERATION_CLASSES = ['subject', 'subject_reverse', 'exempt', 'not_subject', 'not_subject_location'] as const;
 
+// Every class but `subject` reaches the AEAT without a quota (S2/E*/N1/N2), so its rate is 0 — the
+// server refuses anything else (`taxes.rule_incoherent`, taxes#59).
+export function chargesNoTax(operationClass: string | undefined): boolean {
+  return !!operationClass && operationClass !== 'subject';
+}
+
 // The runtime enforces the permission on every command; this only shapes the surface (taxes#11):
 // a viewer (taxes.view_tax) gets a read-only table, a manager (taxes.manage_tax) the full one.
 function can(permission: string): boolean {
@@ -83,7 +89,8 @@ function can(permission: string): boolean {
 
 // Root rules a component may hang from (taxes#11): the same conditions the server enforces in
 // `commands/rule_create.sql` (taxes#9) — a ROOT of the same country/region/category — plus «valid
-// today», so the picker only shows what would be accepted and what still applies.
+// today», so the picker only shows what would be accepted and what still applies. A root that charges
+// no tax is left out: a component with a rate under it is refused (taxes#59).
 export function parentCandidates(rules: TaxRule[], country: string, region: string, category: string, today: string): TaxRule[] {
   const c = country.trim().toUpperCase();
   const r = region.trim().toUpperCase();
@@ -92,6 +99,7 @@ export function parentCandidates(rules: TaxRule[], country: string, region: stri
   return rules.filter(
     (x) =>
       !x.parent_id &&
+      !chargesNoTax(x.operation_class) &&
       Number(x.is_active) === 1 &&
       x.country_code === c &&
       (x.region_code ?? '') === r &&
@@ -422,6 +430,15 @@ export class ErpTaxesRules extends LitElement {
       | null;
   }
 
+  // A class that charges no tax pins the rate to 0 (taxes#59); leaving it asks for the rate again
+  // instead of keeping a 0 the owner never typed.
+  private setOperationClass(value: string) {
+    const wasNoTax = chargesNoTax(this.newOperationClass);
+    this.newOperationClass = value;
+    if (chargesNoTax(value)) this.newRatePct = '0';
+    else if (wasNoTax) this.newRatePct = '';
+  }
+
   private async createRule(ev: Event) {
     ev.preventDefault();
     if (!this.newCountry.trim() || !this.newCategoryKey.trim() || this.newRatePct === '') return;
@@ -431,7 +448,7 @@ export class ErpTaxesRules extends LitElement {
       const payload: Record<string, unknown> = {
         country_code: this.newCountry.trim().toUpperCase(),
         tax_category_key: this.newCategoryKey.trim(),
-        rate_pct: Number(this.newRatePct),
+        rate_pct: chargesNoTax(this.newOperationClass) ? 0 : Number(this.newRatePct),
         tax_type: this.newTaxType || 'vat',
       };
       if (this.newRegion.trim()) payload.region_code = this.newRegion.trim().toUpperCase();
@@ -493,10 +510,10 @@ export class ErpTaxesRules extends LitElement {
             <ion-select data-testid="taxes-rules-category" fill="outline" label-placement="floating" label=${t('ui.colCategory')} placeholder=${t('ui.phCategoryKey')} .value=${this.newCategoryKey} @ionChange=${(e: any) => (this.newCategoryKey = e.target.value)}>
               ${this.categories.map((c) => html`<ion-select-option .value=${c.key}>${taxCategoryDisplayName(c)} (${c.key})</ion-select-option>`)}
             </ion-select>
-            <ion-input data-testid="taxes-rules-rate" fill="outline" label-placement="floating" label=${t('ui.colRate')} type="number" step="0.01" placeholder=${t('ui.phPercent')} .value=${this.newRatePct} @ionInput=${(e: any) => (this.newRatePct = e.target.value)}></ion-input>
+            <ion-input data-testid="taxes-rules-rate" label-placement="floating" label=${t('ui.colRate')} type="number" step="0.01" placeholder=${t('ui.phPercent')} .disabled=${chargesNoTax(this.newOperationClass)} helper-text=${chargesNoTax(this.newOperationClass) ? t('ui.hintRateNoTax') : nothing} .value=${this.newRatePct} @ionInput=${(e: any) => (this.newRatePct = e.target.value)}></ion-input>
             <ion-select data-testid="taxes-rules-tax-type" fill="outline" label-placement="floating" label=${t('ui.colType')} .value=${this.newTaxType} @ionChange=${(e: any) => (this.newTaxType = e.target.value)}>${TAX_TYPES.map((v) => html`<ion-select-option .value=${v}>${t(`ui.taxType_${v}`)}</ion-select-option>`)}</ion-select>
             <!-- Fiscal qualification (ADR-0186, taxes#22): the reason only when exempt; regime optional. -->
-            <ion-select data-testid="taxes-rules-operation-class" fill="outline" label-placement="floating" label=${t('ui.colOperationClass')} .value=${this.newOperationClass} @ionChange=${(e: any) => (this.newOperationClass = e.target.value ?? 'subject')}>${OPERATION_CLASSES.map((v) => html`<ion-select-option .value=${v}>${t(`ui.opClass_${v}`)}</ion-select-option>`)}</ion-select>
+            <ion-select data-testid="taxes-rules-operation-class" label-placement="floating" label=${t('ui.colOperationClass')} .value=${this.newOperationClass} @ionChange=${(e: any) => this.setOperationClass(e.target.value ?? 'subject')}>${OPERATION_CLASSES.map((v) => html`<ion-select-option .value=${v}>${t(`ui.opClass_${v}`)}</ion-select-option>`)}</ion-select>
             ${this.newOperationClass === 'exempt'
               ? html`<ion-input data-testid="taxes-rules-exempt-reason" fill="outline" label-placement="floating" label=${t('ui.colExemptReason')} placeholder=${t('ui.phExemptReason')} maxlength="10" .value=${this.newExemptReason} @ionInput=${(e: any) => (this.newExemptReason = e.target.value)}></ion-input>`
               : nothing}
