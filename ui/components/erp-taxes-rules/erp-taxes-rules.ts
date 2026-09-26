@@ -718,7 +718,7 @@ export class ErpTaxesRules extends LitElement {
         ${can('taxes.manage_tax') ? nothing : html`<ok-inline-feedback data-testid="taxes-rules-readonly" tone="info" icon="lock-closed-outline">${t('ui.readOnlyHint')}</ok-inline-feedback>`}
         ${this.formError ? html`<ok-inline-feedback data-testid="taxes-rules-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
         ${this.incoherentCount
-          ? html`<ok-inline-feedback data-testid="taxes-rules-incoherent-warning" tone="warning" icon="warning-outline">${erplora().t(CATALOG, 'ui.incoherentWarning', { count: this.incoherentCount })}</ok-inline-feedback>`
+          ? html`<ok-inline-feedback data-testid="taxes-rules-incoherent-warning" tone="warning" icon="warning-outline">${erplora().t(CATALOG, this.incoherentCount === 1 ? 'ui.incoherentWarningOne' : 'ui.incoherentWarning', { count: this.incoherentCount })}</ok-inline-feedback>`
           : nothing}
         ${this.overlapCount
           ? html`<ok-inline-feedback data-testid="taxes-rules-overlap-warning" tone="warning" icon="warning-outline">${erplora().t(CATALOG, 'ui.overlapWarning', { count: this.overlapCount })}<ion-button slot="actions" data-testid="taxes-rules-overlap-filter" size="small" fill="outline" @click=${() => this.toggleOverlapFilter(!this.showingOverlaps)}>${this.showingOverlaps ? t('ui.overlapShowAll') : t('ui.overlapShow')}</ion-button></ok-inline-feedback>`

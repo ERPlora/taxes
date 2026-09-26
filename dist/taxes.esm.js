@@ -3950,6 +3950,7 @@ var es_default = {
     phRegimeKey: "opcional (c\xF3digo de la jurisdicci\xF3n, p. ej. 01)",
     incoherentBadge: "debe ser 0 % en esta clase",
     incoherentWarning: "{count} reglas cobran un tipo en una clase que no lleva impuesto (exenta, no sujeta o inversi\xF3n del sujeto pasivo). Sus ventas se cobran en caja pero no se pueden facturar. Usa \xABReparar\xBB en las filas marcadas.",
+    incoherentWarningOne: "1 regla cobra un tipo en una clase que no lleva impuesto (exenta, no sujeta o inversi\xF3n del sujeto pasivo). Sus ventas se cobran en caja pero no se pueden facturar. Usa \xABReparar\xBB en la fila marcada.",
     overlapBadge: "se solapa con otra regla",
     overlapWarning: "{count} reglas est\xE1n vigentes los mismos d\xEDas que otra regla del mismo pa\xEDs, regi\xF3n y categor\xEDa, y la caja cobra la que empieza m\xE1s tarde. En las filas marcadas, usa \xABPoner fecha de fin\xBB en la regla antigua (el d\xEDa antes de que empiece la nueva) o \xABDesactivar\xBB la que no deba aplicarse.",
     overlapShow: "Ver cu\xE1les",
@@ -4076,6 +4077,7 @@ var en_default = {
     phRegimeKey: "optional (jurisdiction code, e.g. 01)",
     incoherentBadge: "must be 0 % for this class",
     incoherentWarning: "{count} tax rules charge a rate on a class that charges no tax (exempt, not subject or reverse charge). Sales under them are charged at the till but cannot be invoiced. Use \xABRepair\xBB on the marked rows.",
+    incoherentWarningOne: "1 tax rule charges a rate on a class that charges no tax (exempt, not subject or reverse charge). Sales under it are charged at the till but cannot be invoiced. Use \xABRepair\xBB on the marked row.",
     overlapBadge: "overlaps another rule",
     overlapWarning: "{count} tax rules are in force on the same days as another rule for the same country, region and category, and the till charges the one that starts later. On the marked rows, use \xABSet end date\xBB on the older rule (the day before the newer one starts), or \xABDeactivate\xBB the one that should not apply.",
     overlapShow: "Show them",
@@ -5618,7 +5620,7 @@ var ErpTaxesRules = class extends i3 {
     return b2`<div class="page">
         ${can3("taxes.manage_tax") ? A : b2`<ok-inline-feedback data-testid="taxes-rules-readonly" tone="info" icon="lock-closed-outline">${t5("ui.readOnlyHint")}</ok-inline-feedback>`}
         ${this.formError ? b2`<ok-inline-feedback data-testid="taxes-rules-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
-        ${this.incoherentCount ? b2`<ok-inline-feedback data-testid="taxes-rules-incoherent-warning" tone="warning" icon="warning-outline">${erplora3().t(CATALOG3, "ui.incoherentWarning", { count: this.incoherentCount })}</ok-inline-feedback>` : A}
+        ${this.incoherentCount ? b2`<ok-inline-feedback data-testid="taxes-rules-incoherent-warning" tone="warning" icon="warning-outline">${erplora3().t(CATALOG3, this.incoherentCount === 1 ? "ui.incoherentWarningOne" : "ui.incoherentWarning", { count: this.incoherentCount })}</ok-inline-feedback>` : A}
         ${this.overlapCount ? b2`<ok-inline-feedback data-testid="taxes-rules-overlap-warning" tone="warning" icon="warning-outline">${erplora3().t(CATALOG3, "ui.overlapWarning", { count: this.overlapCount })}<ion-button slot="actions" data-testid="taxes-rules-overlap-filter" size="small" fill="outline" @click=${() => this.toggleOverlapFilter(!this.showingOverlaps)}>${this.showingOverlaps ? t5("ui.overlapShowAll") : t5("ui.overlapShow")}</ion-button></ok-inline-feedback>` : A}
         ${this.ctrl?.error ? b2`<ok-inline-feedback data-testid="taxes-rules-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
         <ok-data-table testid="taxes-rules-table" .serverSide=${true} .fill=${!this.phone} .addable=${can3("taxes.manage_tax")} .views=${true} .defaultView=${window.innerWidth <= 834 ? "cards" : "table"} .cardTitle=${cardTitle} .renderCard=${(row) => this.renderRuleCard(row)} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCategoryCountry")} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @rowAction=${(e6) => this.onRowAction(e6)} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @pageSizeChange=${(e6) => this.ctrl.setPageSize(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.onFilterChange(e6.detail.col, e6.detail.value)} @columnsChange=${(e6) => this.hiddenColumns = new Set(this.columns.map((c5) => c5.key).filter((k2) => !e6.detail.visible.includes(k2)))}>

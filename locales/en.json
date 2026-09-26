@@ -109,6 +109,7 @@
     "phRegimeKey": "optional (jurisdiction code, e.g. 01)",
     "incoherentBadge": "must be 0 % for this class",
     "incoherentWarning": "{count} tax rules charge a rate on a class that charges no tax (exempt, not subject or reverse charge). Sales under them are charged at the till but cannot be invoiced. Use «Repair» on the marked rows.",
+    "incoherentWarningOne": "1 tax rule charges a rate on a class that charges no tax (exempt, not subject or reverse charge). Sales under it are charged at the till but cannot be invoiced. Use «Repair» on the marked row.",
     "overlapBadge": "overlaps another rule",
     "overlapWarning": "{count} tax rules are in force on the same days as another rule for the same country, region and category, and the till charges the one that starts later. On the marked rows, use «Set end date» on the older rule (the day before the newer one starts), or «Deactivate» the one that should not apply.",
     "overlapShow": "Show them",
