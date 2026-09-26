@@ -294,7 +294,7 @@
         "taxes.rule.created"
       ],
       "ai": {
-        "description": "Creates a tax rule (the % for a country+region+category) with its fiscal qualification (operation_class / regime_key / exempt_reason). Any operation_class other than subject (reverse charge, exempt, not subject) charges no tax, so its rate_pct must be 0. Pass parent_id to add a multi-tax component (e.g. surcharge) to a root rule of class subject. Two active rules of the same country, region and tax category cannot overlap in dates (refused with taxes.rule_overlaps); to change a rate, end the old rule the day before the new one starts (contiguous ranges are fine)."
+        "description": "Creates a tax rule (the % for a country+region+category) with its fiscal qualification (operation_class / regime_key / exempt_reason). Any operation_class other than subject (reverse charge, exempt, not subject) charges no tax, so its rate_pct must be 0. Pass parent_id to add a multi-tax component (e.g. surcharge) to a root rule of class subject. Two active rules of the same country, region and tax category cannot overlap in dates (refused with taxes.rule_overlaps); end the old rule the day before the new one starts with taxes.rules.end."
       }
     },
     "taxes.rules.bulk_create": {
@@ -349,7 +349,33 @@
         "taxes.rule.activated"
       ],
       "ai": {
-        "description": "Brings a deactivated tax rule back so it applies to new transactions again (undoes `taxes.rules.deactivate`). Its rate, jurisdiction, category, validity and components are untouched — deactivating never changed them. Two active rules of the same country, region and tax category cannot overlap in dates (refused with taxes.rule_overlaps); to change a rate, end the old rule the day before the new one starts (contiguous ranges are fine)."
+        "description": "Brings a deactivated tax rule back so it applies to new transactions again (undoes `taxes.rules.deactivate`). Its rate, jurisdiction, category, validity and components are untouched — deactivating never changed them. Two active rules of the same country, region and tax category cannot overlap in dates (refused with taxes.rule_overlaps); end the old rule the day before the new one starts with taxes.rules.end."
+      },
+      "expose_api": true
+    },
+    "taxes.rules.end": {
+      "permission": "taxes.manage_tax",
+      "transaction": true,
+      "sql": [
+        "commands/rule_end.sql",
+        "commands/_rule_overlap_assert.sql"
+      ],
+      "schema": "schemas/rule_end.json",
+      "expect_rows": {
+        "op": "min",
+        "n": 1,
+        "error": "taxes.rule_end_invalid",
+        "message": "That rule could not be given that end date: it does not exist in this business, or the end date is before the day it starts.",
+        "statement": "commands/rule_end.sql"
+      },
+      "on_unique": {
+        "taxes_rule_overlaps": "taxes.rule_overlaps"
+      },
+      "emit": [
+        "taxes.rule.ended"
+      ],
+      "ai": {
+        "description": "Sets the last day (valid_to, YYYY-MM-DD, inclusive) a tax rule is in force. This is how a rate change is scheduled: end the current rule the day before the new rate starts, then create the new rule from that day with taxes.rules.create. Refused with taxes.rule_end_invalid if the date is before the rule's start, and with taxes.rule_overlaps if the new end runs into another active rule of the same country, region and tax category. Issued invoices are not changed."
       },
       "expose_api": true
     },
@@ -417,6 +443,7 @@
     }
   },
   "errors": {
+    "taxes.rule_end_invalid": {},
     "taxes.rule_incoherent": {},
     "taxes.rule_not_deactivated": {},
     "taxes.rule_not_incoherent": {},
@@ -430,6 +457,7 @@
       "taxes.rule.activated",
       "taxes.rule.created",
       "taxes.rule.deactivated",
+      "taxes.rule.ended",
       "taxes.rule.repaired",
       "taxes.rules.bulk_create.report"
     ]

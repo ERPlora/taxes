@@ -35,7 +35,7 @@ rather than assuming all 100 landed. Components cannot be created in bulk.
 | To do this | You need |
 |---|---|
 | See categories, rules and aliases | `taxes.view_tax` |
-| Create a category, create, deactivate, reactivate or repair a rule, create an alias | `taxes.manage_tax` |
+| Create a category, create, deactivate, reactivate, end or repair a rule, create an alias | `taxes.manage_tax` |
 | Calculate a tax | `taxes.calculate_tax` |
 
 By role: **admin** has everything. **manager** has all three. **employee** can **see and calculate**
@@ -75,7 +75,9 @@ own tax when the document is issued. If you wanted the old documents to change, 
 rectifying invoice, not editing a rule.
 
 **"I changed the VAT and new sales still use the old rate."** The old rule is probably still active.
-Deactivate it, or close it with a `valid_to` and create the new one with a `valid_from`.
+Deactivate it, or close it with **Set end date** (`valid_to`) and create the new one with a
+`valid_from` — two active rules of the same country, region and category cannot overlap in dates, so
+give the old one an end date the day before the new one starts.
 
 **"The surcharge is being charged on top of the VAT amount."** It is not. A component applies to the
 **same base** as its root. Check that the component's parent is set — a component with no parent is

@@ -3857,10 +3857,11 @@ var es_default = {
     description: "Configura los tipos de IVA del pa\xEDs en el que vendes para que el TPV pueda calcular el precio de una venta."
   },
   errors: {
+    "taxes.rule_end_invalid": "Esa regla no puede terminar en esa fecha: la fecha de fin es anterior al d\xEDa en que empieza la regla.",
     "taxes.rule_incoherent": "No se ha podido crear la regla: una regla con inversi\xF3n del sujeto pasivo, exenta o no sujeta no cobra impuesto, as\xED que su tipo tiene que ser 0 y no puede colgar de ella un componente con tipo; un componente tiene que colgar de una regla ra\xEDz de este negocio con el mismo pa\xEDs, regi\xF3n y categor\xEDa fiscal; y su rango de validez no puede ir hacia atr\xE1s.",
     "taxes.rule_not_deactivated": "No se ha podido recuperar la regla: no existe en este negocio, o ya est\xE1 activa.",
     "taxes.rule_not_incoherent": "No se pudo reparar la regla: no existe en este negocio o no hay nada que reparar \u2014 solo se repara una regla que no lleva impuesto (inversi\xF3n del sujeto pasivo, exenta, no sujeta) pero tiene tipo, o un componente con tipo colgado de una regla as\xED.",
-    "taxes.rule_overlaps": "Esa regla se solapa con otra regla activa del mismo pa\xEDs, regi\xF3n y categor\xEDa fiscal: no puede haber dos tipos vigentes el mismo d\xEDa. Pon fin a la regla actual el d\xEDa antes de que empiece la nueva, o desact\xEDvala."
+    "taxes.rule_overlaps": "Esa regla se solapa con otra regla activa del mismo pa\xEDs, regi\xF3n y categor\xEDa fiscal: no puede haber dos tipos vigentes el mismo d\xEDa. Pon fecha de fin a la regla actual el d\xEDa antes de que empiece la nueva (Poner fecha de fin), o desact\xEDvala."
   },
   ui: {
     colKey: "Clave",
@@ -3914,15 +3915,20 @@ var es_default = {
     emptyAliases: "Sin alias de categor\xEDas.",
     actionDeactivate: "Desactivar",
     actionRestore: "Reactivar",
+    actionEndRule: "Poner fecha de fin",
     cancel: "Cancelar",
     deactivateConfirmTitle: "Desactivar regla fiscal",
     deactivateConfirmMessage: "La regla dejar\xE1 de aplicarse a operaciones nuevas. Los documentos fiscales ya emitidos no se modifican.",
     deactivateConfirmAction: "Desactivar regla",
+    endRuleTitle: "Fecha de fin de la regla",
+    endRuleMessage: "\xDAltimo d\xEDa en que se aplica esta regla. Para cambiar el tipo, ponle fin el d\xEDa antes de que empiece el nuevo y despu\xE9s a\xF1ade la regla nueva desde ese d\xEDa. Los documentos ya emitidos no cambian.",
+    endRuleAction: "Guardar fecha de fin",
     rulesHint: "Cada regla fija el % de una categor\xEDa en un pa\xEDs (y opcionalmente una regi\xF3n). Para multi-tributo (p. ej. recargo de equivalencia), elige en \xABRegla ra\xEDz\xBB la regla de la que cuelga y dale una \xABEtiqueta del componente\xBB.",
     errCreateCategory: "No se pudo crear la categor\xEDa",
     errCreateRule: "No se pudo crear la regla",
     errDeactivateRule: "No se pudo desactivar la regla",
     errRestoreRule: "No se pudo reactivar la regla",
+    errEndRule: "No se pudo poner la fecha de fin a la regla",
     errCreateAlias: "No se pudo crear el alias",
     colParentRule: "Regla ra\xEDz (componente de)",
     phParentRule: "Elige una regla ra\xEDz",
@@ -3950,7 +3956,7 @@ var es_default = {
     repairNoTax: "Sin impuesto (0 %)",
     repairChargeTax: "Cobrar el tipo",
     errRepairRule: "No se pudo reparar la regla",
-    errRuleOverlaps: "Se solapa con otra regla activa de este pa\xEDs, regi\xF3n y categor\xEDa. Elige fechas que no se solapen."
+    errRuleOverlaps: "Se solapa con otra regla activa de este pa\xEDs, regi\xF3n y categor\xEDa. Pon antes fecha de fin a la regla actual, o elige fechas que no se solapen."
   }
 };
 
@@ -3973,10 +3979,11 @@ var en_default = {
     description: "Set the VAT rates for the country you sell in, so the till can price a sale."
   },
   errors: {
+    "taxes.rule_end_invalid": "That rule cannot end on that date: the end date is before the day the rule starts.",
     "taxes.rule_incoherent": "That rule could not be created: a reverse-charge, exempt or not-subject rule charges no tax, so its rate must be 0 and no component with a rate can hang from it; a component must hang from a root rule of this business with the same country, region and tax category; and its validity range cannot run backwards.",
     "taxes.rule_not_deactivated": "That rule could not be brought back: it does not exist in this business, or it is already active.",
     "taxes.rule_not_incoherent": "That rule could not be repaired: it does not exist in this business, or it has nothing to repair \u2014 only a rule that charges no tax (reverse charge, exempt, not subject) but still carries a rate, or a component with a rate under such a rule, can be repaired.",
-    "taxes.rule_overlaps": "That rule overlaps another active rule for the same country, region and tax category: two rates cannot be in force on the same day. End the current rule the day before the new one starts, or deactivate it."
+    "taxes.rule_overlaps": "That rule overlaps another active rule for the same country, region and tax category: two rates cannot be in force on the same day. End the current rule the day before the new one starts (Set end date), or deactivate it."
   },
   ui: {
     colKey: "Key",
@@ -4030,15 +4037,20 @@ var en_default = {
     emptyAliases: "No category aliases.",
     actionDeactivate: "Deactivate",
     actionRestore: "Restore",
+    actionEndRule: "Set end date",
     cancel: "Cancel",
     deactivateConfirmTitle: "Deactivate tax rule",
     deactivateConfirmMessage: "The rule will no longer apply to new transactions. Previously issued fiscal documents will not change.",
     deactivateConfirmAction: "Deactivate rule",
+    endRuleTitle: "End this tax rule",
+    endRuleMessage: "Last day this rule applies. To change the rate, end it the day before the new rate starts and then add the new rule from that day. Issued documents do not change.",
+    endRuleAction: "Save end date",
     rulesHint: "Each rule sets the % for a category in a country (and optionally a region). For multi-tax (e.g. equivalence surcharge), choose the root rule it hangs from in \u201CRoot rule\u201D and give it a \u201CComponent label\u201D.",
     errCreateCategory: "Could not create the category",
     errCreateRule: "Could not create the rule",
     errDeactivateRule: "Could not deactivate the rule",
     errRestoreRule: "Could not bring the rule back",
+    errEndRule: "Could not set the end date of the rule",
     errCreateAlias: "Could not create the alias",
     colParentRule: "Root rule (component of)",
     phParentRule: "Choose a root rule",
@@ -4066,7 +4078,7 @@ var en_default = {
     repairNoTax: "No tax (0 %)",
     repairChargeTax: "Charge the rate",
     errRepairRule: "Could not repair the rule",
-    errRuleOverlaps: "Overlaps another active rule for this country, region and category. Pick dates that do not overlap."
+    errRuleOverlaps: "Overlaps another active rule for this country, region and category. Set an end date on the current rule first, or pick dates that do not overlap."
   }
 };
 
@@ -5156,6 +5168,7 @@ var ErpTaxesRules = class extends i3 {
     this.saving = false;
     this.pendingDeactivate = null;
     this.pendingRepair = null;
+    this.pendingEnd = null;
     this.showingArchived = false;
     this.categories = [];
     this.onLocaleChange = () => this.requestUpdate();
@@ -5297,6 +5310,12 @@ var ErpTaxesRules = class extends i3 {
    * fila), y lo que este mismo repo ya hace en `services` (services#44) — la acción vive en la
    * fila, nunca dentro de la ficha: el «ábrelo, baja del todo, reactiva y vuelve a cambiar el
    * estado» de Shopify son seis toques y dos pantallas para una decisión.
+   *
+   * On an active row, «Set end date» sits next to «Deactivate» (taxes#66): once two active rules
+   * of the same slot can no longer overlap, ending the rule in force is the legal way to schedule
+   * a rate change — the way Oracle E-Business Tax and Dynamics 365 let the owner end-date the
+   * current rate before the next one starts, instead of deactivating (which drops the rule outright
+   * and leaves the slot with no rate at all in the meantime).
    */
   get rowActions() {
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
@@ -5305,7 +5324,11 @@ var ErpTaxesRules = class extends i3 {
     if (this.showingArchived) {
       return [...repair, { id: "restore", label: t5("ui.actionRestore"), icon: "arrow-undo-outline", color: "success" }];
     }
-    return [...repair, { id: "deactivate", label: t5("ui.actionDeactivate"), icon: "ban-outline", color: "danger" }];
+    return [
+      ...repair,
+      { id: "end", label: t5("ui.actionEndRule"), icon: "calendar-outline" },
+      { id: "deactivate", label: t5("ui.actionDeactivate"), icon: "ban-outline", color: "danger" }
+    ];
   }
   /** How many active rules of the hub are incoherent — all of them, not just the visible page. */
   get incoherentCount() {
@@ -5343,6 +5366,10 @@ var ErpTaxesRules = class extends i3 {
       if (isIncoherent(row)) this.pendingRepair = row;
       return;
     }
+    if (actionId === "end") {
+      if (Number(row.is_active)) this.pendingEnd = row;
+      return;
+    }
     if (actionId !== "deactivate") return;
     if (!Number(row.is_active)) return;
     this.pendingDeactivate = row;
@@ -5368,6 +5395,21 @@ var ErpTaxesRules = class extends i3 {
       await this.ctrl.load();
     } catch (e6) {
       this.formError = e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errDeactivateRule");
+    }
+  }
+  /** Ends the confirmed rule on the chosen date (`taxes.rules.end`, taxes#66): the legal way to
+   *  schedule a rate change once overlapping active rules of the same slot are refused. */
+  async onEndDismiss(ev) {
+    const row = this.pendingEnd;
+    this.pendingEnd = null;
+    const validTo = ev.detail?.data?.values?.valid_to?.trim();
+    if (ev.detail?.role !== "confirm" || !row || !validTo) return;
+    this.formError = "";
+    try {
+      await erplora3().command("taxes.rules.end", { rule_id: String(row.id), valid_to: validTo });
+      await Promise.all([this.ctrl.load(), this.loadAllRules()]);
+    } catch (e6) {
+      this.formError = errorCode(e6) === "taxes.rule_overlaps" ? erplora3().t(CATALOG3, "ui.errRuleOverlaps") : e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errEndRule");
     }
   }
   /** Repairs the confirmed rule (`taxes.rules.repair`, taxes#63) in the way the owner chose. */
@@ -5401,7 +5443,8 @@ var ErpTaxesRules = class extends i3 {
         erplora3().on("taxes.rule.created", () => refresh()),
         erplora3().on("taxes.rule.deactivated", () => refresh()),
         erplora3().on("taxes.rule.activated", () => refresh()),
-        erplora3().on("taxes.rule.repaired", () => refresh())
+        erplora3().on("taxes.rule.repaired", () => refresh()),
+        erplora3().on("taxes.rule.ended", () => refresh())
       ];
       this.unsub = () => offs.forEach((o7) => o7());
     } catch {
@@ -5549,6 +5592,20 @@ var ErpTaxesRules = class extends i3 {
     ]}
           @ionAlertDidDismiss=${(e6) => this.onDeactivateDismiss(e6)}
         ></ion-alert>
+        <!-- Scheduling a rate change (taxes#66): the overlap guard refuses a new active rule while
+             the current one is still open-ended, so ending it on a chosen date is what makes the
+             change possible, not another way to deactivate. -->
+        <ion-alert data-testid="taxes-rules-end-confirm"
+          .isOpen=${this.pendingEnd !== null}
+          header=${t5("ui.endRuleTitle")}
+          message=${t5("ui.endRuleMessage")}
+          .inputs=${[{ name: "valid_to", type: "date", value: this.pendingEnd?.valid_to ?? "" }]}
+          .buttons=${[
+      { text: t5("ui.cancel"), role: "cancel" },
+      { text: t5("ui.endRuleAction"), role: "confirm" }
+    ]}
+          @ionAlertDidDismiss=${(e6) => this.onEndDismiss(e6)}
+        ></ion-alert>
         <!-- Two readings of the same mistake (taxes#63): the class was right (0 %) or the rate was
              right (charge it). «Keep the rate» only when the rule's own class is the problem. -->
         <ion-alert data-testid="taxes-rules-repair-confirm"
@@ -5619,6 +5676,9 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "pendingRepair", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "pendingEnd", 2);
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "showingArchived", 2);

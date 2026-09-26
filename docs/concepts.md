@@ -82,6 +82,12 @@ country, the region and the rule that produced it.
 If a rate changes on a date, do not edit the old rule. Set its **valid to** and create a new one with
 the new **valid from**. The history stays correct.
 
+Two **active** rules of the same country, region and tax category can never overlap in dates — one
+must end before or the day the other starts (`taxes.rule_overlaps`). That is what makes "set its
+valid to" a real command, `taxes.rules.end`: it ends the rule in force, and `taxes.rules.create` adds
+the next one from the following day, so the change is scheduled without ever leaving two rates valid
+on the same day.
+
 ## A rule that charges no tax has no rate
 
 Any class other than **subject** reaches the tax authority without a quota, so its rate is 0 %, and

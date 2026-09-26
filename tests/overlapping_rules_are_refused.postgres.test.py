@@ -54,6 +54,8 @@ MANIFEST = json.loads((MODULE_DIR / "module.json").read_text(encoding="utf-8"))
 CONTAINER = os.environ.get("TAXES_TEST_PG_CONTAINER", "erplora-test-pg-5433")
 
 CODE = "taxes.rule_overlaps"
+# The end date the owner gave is before the rule's own start, or the rule is not of this hub.
+END_INVALID = "taxes.rule_end_invalid"
 HUB = "hub-under-test"
 OTHER_HUB = "hub-next-door"
 USER = "u-owner"
@@ -258,6 +260,10 @@ def deactivate(rule_id: str, hub: str = HUB) -> None:
 
 def activate(rule_id: str, hub: str = HUB) -> str:
     return run("taxes.rules.activate", {"rule_id": rule_id}, hub)
+
+
+def end(rule_id: str, valid_to: str, hub: str = HUB) -> str:
+    return run("taxes.rules.end", {"rule_id": rule_id, "valid_to": valid_to}, hub)
 
 
 def count(hub: str = HUB) -> int:
@@ -580,6 +586,91 @@ def scenario() -> None:
         got,
     )
 
+    print(
+        "\nScheduling a rate change: end the rule in force, then add the next one (`taxes.rules.end`):"
+    )
+    got, at_old = create(
+        country_code="AT",
+        tax_category_key="general",
+        rate_pct=20,
+        valid_from="2016-01-01",
+    )
+    check("AT · general 20 % open since 2016", "ok", got)
+    got, _ = create(
+        country_code="AT",
+        tax_category_key="general",
+        rate_pct=22,
+        valid_from="2027-01-01",
+    )
+    check("AT · general 22 % from 2027 is refused while the 20 % is open", CODE, got)
+    check(
+        "the 20 % is ended on 2026-12-31",
+        "ok",
+        end(at_old, "2026-12-31"),
+    )
+    check(
+        "and its end date is stored",
+        ["2026-12-31"],
+        [
+            r["valid_to"]
+            for r in rows(
+                f"SELECT valid_to FROM taxes_rule WHERE id = {literal(at_old)}"
+            )
+        ],
+    )
+    got, _ = create(
+        country_code="AT",
+        tax_category_key="general",
+        rate_pct=22,
+        valid_from="2027-01-01",
+    )
+    check(
+        "now AT · general 22 % from 2027-01-01 is saved: the change is scheduled",
+        "ok",
+        got,
+    )
+    check(
+        "pushing the 20 % end into the 22 % range is refused as an overlap",
+        CODE,
+        end(at_old, "2027-06-30"),
+    )
+    check(
+        "an end date before the rule's own start is refused",
+        END_INVALID,
+        end(at_old, "2015-12-31"),
+    )
+    got, one_day = create(
+        country_code="AT",
+        tax_category_key="reduced",
+        rate_pct=10,
+        valid_from="2026-05-01",
+    )
+    check(
+        "a rule can end on the very day it starts (a one-day rate, ends are inclusive)",
+        "ok",
+        end(one_day, "2026-05-01"),
+    )
+    check(
+        "a DELETED rule cannot be given an end date",
+        END_INVALID,
+        end("deleted-lu", "2030-12-31"),
+    )
+    check(
+        "the hub next door cannot end our rule",
+        END_INVALID,
+        end(at_old, "2025-12-31", hub=OTHER_HUB),
+    )
+    check(
+        "and after every refusal the stored end date is still 2026-12-31",
+        ["2026-12-31"],
+        [
+            r["valid_to"]
+            for r in rows(
+                f"SELECT valid_to FROM taxes_rule WHERE id = {literal(at_old)}"
+            )
+        ],
+    )
+
     print("\nThe bulk door (`taxes.rules.bulk_create` → `taxes._insert_rule`):")
     check(
         "a bulk row overlapping PT · general is refused with the same code",
@@ -667,15 +758,40 @@ def scenario() -> None:
 
 def contract() -> None:
     print("\nThe refusal speaks:")
-    check(
-        "the code is declared in `errors`", True, CODE in (MANIFEST.get("errors") or {})
-    )
-    for lang in ("en", "es"):
-        catalog = json.loads(
-            (MODULE_DIR / "locales" / f"{lang}.json").read_text(encoding="utf-8")
+    for code in (CODE, END_INVALID):
+        check(
+            f"`{code}` is declared in `errors`",
+            True,
+            code in (MANIFEST.get("errors") or {}),
         )
-        text = (catalog.get("errors") or {}).get(CODE, "")
-        check(f"and translated in `{lang}`", True, bool(text.strip()))
+        for lang in ("en", "es"):
+            catalog = json.loads(
+                (MODULE_DIR / "locales" / f"{lang}.json").read_text(encoding="utf-8")
+            )
+            text = (catalog.get("errors") or {}).get(code, "")
+            check(f"and translated in `{lang}`", True, bool(text.strip()))
+    ending = MANIFEST["commands"].get("taxes.rules.end") or {}
+    check(
+        "ending a rule is a public door with the manage permission",
+        ("taxes.manage_tax", True),
+        (ending.get("permission"), bool(ending.get("expose_api"))),
+    )
+    schema_file = MODULE_DIR / (ending.get("schema") or "schemas/rule_end.json")
+    schema = (
+        json.loads(schema_file.read_text(encoding="utf-8"))
+        if schema_file.is_file()
+        else {}
+    )
+    check(
+        "its payload requires the rule and the end date",
+        ["rule_id", "valid_to"],
+        sorted(schema.get("required") or []),
+    )
+    check(
+        "it announces `taxes.rule.ended`, declared in `events.emits`",
+        (["taxes.rule.ended"], True),
+        (ending.get("emit"), "taxes.rule.ended" in ((MANIFEST.get("events") or {}).get("emits") or [])),
+    )
     floor = (
         (MANIFEST.get("compatibility") or {}).get("min_erplora_version") or "0.0.0"
     ).split(".")

@@ -115,6 +115,12 @@ rest. **Components are not created this way**; add them individually afterwards.
 Deactivate it. It stops applying to new transactions, and everything already issued keeps the rate it
 froze. There is no "delete a rule" — see [concepts.md](concepts.md). Requires `taxes.manage_tax`.
 
+### Change a rate on a date
+
+Two active rules of the same country, region and category can never overlap in dates. To change a
+rate: on the current rule, use **Set end date** and give it the last day it applies (the day before
+the new rate starts); then create the new rule from that day. Requires `taxes.manage_tax`.
+
 ### Repair a rule marked «must be 0 % for this class»
 
 A rule whose class charges no tax — **exempt**, **not subject** or **reverse charge** — cannot carry

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "taxes.rules.end",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rule_id", "valid_to"],
+  "properties": {
+    "rule_id": { "type": "string", "minLength": 1 },
+    "valid_to": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    }
+  }
+}
