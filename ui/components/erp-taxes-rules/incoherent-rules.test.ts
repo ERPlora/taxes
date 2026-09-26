@@ -16,6 +16,7 @@
 //
 // The server half is proved in `tests/incoherent_rules_are_flagged_and_repairable.postgres.test.py`.
 import { beforeEach, describe, expect, it } from 'vitest';
+import { render } from 'lit';
 
 const CATEGORIES = [{ id: 'c1', key: 'product.generic', name: 'Generic' }];
 
@@ -104,7 +105,7 @@ async function mount(): Promise<El> {
 }
 
 type Action = { id: string; disabled?: (row: Record<string, unknown>) => boolean };
-type Table = HTMLElement & { actions: Action[]; columns: { key: string; format?: (r: Record<string, unknown>) => string }[] };
+type Table = HTMLElement & { actions: Action[]; columns: { key: string; format?: (r: Record<string, unknown>) => string; render?: (r: Record<string, unknown>) => unknown }[] };
 const table = (el: El) => el.shadowRoot.querySelector('ok-data-table') as Table;
 type Alert = HTMLElement & { isOpen: boolean; buttons: { text: string; role: string }[] };
 const repairAlert = (el: El) => el.shadowRoot.querySelector('[data-testid="taxes-rules-repair-confirm"]') as Alert | null;
@@ -122,6 +123,13 @@ async function dismissRepair(el: El, role: string) {
 
 const rate = (el: El, row: Record<string, unknown>) =>
   table(el).columns.find((c) => c.key === 'rate_pct')?.format?.(row) ?? '';
+// What the table actually paints in the cell: `render` wins over `format` in ok-data-table.
+const rateCell = (el: El, row: Record<string, unknown>) => {
+  const cell = document.createElement('div');
+  const col = table(el).columns.find((c) => c.key === 'rate_pct');
+  render(col?.render ? col.render(row) : col?.format?.(row) ?? '', cell);
+  return cell;
+};
 
 describe('an incoherent rule is visible where it is configured (taxes#63)', () => {
   it('its rate carries the warning; a fine rule does not', async () => {
@@ -129,6 +137,21 @@ describe('an incoherent rule is visible where it is configured (taxes#63)', () =
     expect(rate(el, BAD_ROOT)).toContain('ui.incoherentBadge');
     expect(rate(el, BAD_ROOT), 'the rate itself must still be readable').toContain('21.00%');
     expect(rate(el, FINE)).not.toContain('ui.incoherentBadge');
+  });
+
+  it('the warning sits on its own line under the rate, so the narrow % column cannot cut it off', async () => {
+    // Found on the real bench for taxes#68: a `format` string is ellipsised to one line by
+    // ok-data-table, and «23.00% · d…» was all the owner saw at 1280 px.
+    const el = await mount();
+    const bad = rateCell(el, BAD_ROOT);
+    const mark = bad.querySelector('[data-testid="taxes-rules-incoherent-mark"]');
+    expect(mark, 'the incoherent mark is not a separate, wrappable element').toBeTruthy();
+    expect(mark?.textContent).toContain('ui.incoherentBadge');
+    expect(bad.firstElementChild?.tagName, 'the cell root is a <span>, which the table clips to one line').not.toBe('SPAN');
+    expect(bad.textContent).toContain('21.00%');
+    const fine = rateCell(el, FINE);
+    expect(fine.querySelector('[data-testid="taxes-rules-incoherent-mark"]')).toBeNull();
+    expect(fine.textContent).not.toContain('ui.incoherentBadge');
   });
 
   it('a banner counts them across the WHOLE hub, not just the visible page', async () => {

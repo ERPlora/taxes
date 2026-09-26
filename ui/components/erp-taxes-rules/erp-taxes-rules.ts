@@ -1,6 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
+import { styleMap } from 'lit/directives/style-map.js';
 import { define } from '@erplora/outfitkit/define';
 import '@erplora/outfitkit/ok-inline-feedback';
 import '@erplora/outfitkit/ok-data-table';
@@ -57,6 +58,8 @@ interface TaxRule {
   is_active: number;
   /** 1 when the rule carries a rate on a class that charges no tax (taxes#63): see `isIncoherent`. */
   is_incoherent?: number;
+  /** 1 when the rule is in force on some day together with another active rule of its slot (taxes#68). */
+  overlaps?: number;
 }
 
 // Fila de `taxes.categories.list`: la categoría es la identidad enlazable (ADR-0085) y la FK
@@ -90,6 +93,14 @@ export function chargesNoTax(operationClass: string | undefined): boolean {
 // the screen only reads it.
 export function isIncoherent(row: Record<string, unknown> | TaxRule): boolean {
   return Number((row as Record<string, unknown>).is_incoherent) === 1;
+}
+
+// An active root rule in force on some day together with another active rule of the same country,
+// region and category (taxes#68). taxes#66 refuses that on every write; pairs saved before it are
+// still there and the till charges whichever starts later. The server decides (`overlaps` in
+// `rules_list.sql`, the same predicate as the #66 guard); the screen only reads it.
+export function overlaps(row: Record<string, unknown> | TaxRule): boolean {
+  return Number((row as Record<string, unknown>).overlaps) === 1;
 }
 
 // Whether «keep the rate, charge the tax» can repair it: only when the rule's OWN class is the
@@ -139,12 +150,34 @@ function errorCode(e: unknown): string {
   return typeof code === 'string' ? code : '';
 }
 
+// A row's warning mark goes on its own line under the value (taxes#63, taxes#68). ok-data-table
+// ellipsises a `format` string — and any `.gcell > span` — to one line, so a mark appended to the
+// value was cut to «2012-09-01 …» at 1280 px: the root is a <div>, which wraps. It is painted inside
+// the table's shadow root, where this component's styles do not reach, so it carries its own (via
+// CSSOM, which the hub's CSP allows). Plain warning yellow is unreadable as small text on white: it
+// is darkened toward the text colour (lightened in dark mode).
+const MARK_STYLE = {
+  color: 'color-mix(in srgb, var(--ion-color-warning, #ffc409) 40%, var(--ion-text-color, #000))',
+  fontWeight: '600',
+};
+
+function markedCell(value: string, mark: unknown) {
+  return html`<div>${value}<br />${mark}</div>`;
+}
+
+/** The rule's rate as the list shows it: a tax percentage, not an amount (see money-display-guard). */
+function ratePct(r: Record<string, unknown>): string {
+  return `${Number(r.rate_pct).toFixed(2)}%`;
+}
+
 export class ErpTaxesRules extends LitElement {
   static styles = css`
     :host { display:flex; flex-direction:column; height:100%; min-height:0; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
-    /* La vista llena el alto: el data-table ocupa todo (scroll interno, pie fijo). */
-    .page { display:flex; flex-direction:column; min-height:0; flex:1 1 auto; }
-    .page > ok-data-table { flex:1 1 auto; min-height:0; }
+    /* The view fills the height: the data-table takes what is left (inner scroll, fixed footer).
+       But never less than a usable minimum (taxes#68): on a phone, stacked warnings left it 30 px
+       tall with no card in sight — past that minimum the page scrolls and the warnings go by. */
+    .page { display:flex; flex-direction:column; min-height:0; flex:1 1 auto; overflow-y:auto; }
+    .page > ok-data-table { flex:1 0 auto; min-height:min(28rem, 70vh); }
     /* El alta vive en el panel lateral de la tabla (estrecho): los campos van APILADOS. */
     .form { display:flex; flex-direction:column; gap:.7rem; }
     .form ion-button { align-self:flex-end; }
@@ -200,6 +233,9 @@ export class ErpTaxesRules extends LitElement {
    *  lectura y sobre la acción que ofrece la fila. */
   @state() private showingArchived = false;
 
+  // The table narrowed to the rules that overlap another one (taxes#68), from the banner.
+  @state() private showingOverlaps = false;
+
   // Categorías fiscales del hub: pueblan el selector del alta y el filtro de la columna.
   @state() private categories: TaxCategory[] = [];
 
@@ -246,9 +282,13 @@ export class ErpTaxesRules extends LitElement {
         header: t('ui.colRate'),
         align: 'right',
         sortable: true,
-        // An incoherent rule keeps its rate readable and says what is wrong with it (taxes#63).
-        format: (r) =>
-          isIncoherent(r) ? `${Number(r.rate_pct).toFixed(2)}% · ${t('ui.incoherentBadge')}` : `${Number(r.rate_pct).toFixed(2)}%`,
+        // An incoherent rule keeps its rate readable and says what is wrong with it (taxes#63), on
+        // its own line: see `markedCell`.
+        format: (r) => (isIncoherent(r) ? `${ratePct(r)} · ${t('ui.incoherentBadge')}` : ratePct(r)),
+        render: (r) =>
+          isIncoherent(r)
+            ? markedCell(ratePct(r), html`<small data-testid="taxes-rules-incoherent-mark" style=${styleMap(MARK_STYLE)}>${t('ui.incoherentBadge')}</small>`)
+            : ratePct(r),
       },
       {
         key: 'tax_type',
@@ -272,7 +312,23 @@ export class ErpTaxesRules extends LitElement {
           return cls === 'exempt' && reason ? `${t(`ui.opClass_${cls}`)} · ${reason}` : t(`ui.opClass_${cls}`);
         },
       },
-      { key: 'valid_from', header: t('ui.colValidFrom'), sortable: true, format: (r) => String(r.valid_from ?? '') || '—' },
+      // A rule that overlaps another one keeps its date readable and says what is wrong with it
+      // (taxes#68): the start date is where the two ranges collide. On its own line: see `markedCell`.
+      {
+        key: 'valid_from',
+        header: t('ui.colValidFrom'),
+        sortable: true,
+        format: (r) => {
+          const from = String(r.valid_from ?? '') || '—';
+          return overlaps(r) ? `${from} · ${t('ui.overlapBadge')}` : from;
+        },
+        render: (r) => {
+          const from = String(r.valid_from ?? '') || '—';
+          return overlaps(r)
+            ? markedCell(from, html`<small data-testid="taxes-rules-overlap-mark" style=${styleMap(MARK_STYLE)}>${t('ui.overlapBadge')}</small>`)
+            : from;
+        },
+      },
       { key: 'valid_to', header: t('ui.colValidTo'), sortable: true, format: (r) => String(r.valid_to ?? '') || '—' },
       // Filtrable otra vez (taxes#52). taxes#50 la dejó sin filtro con razón —`rules_list.sql`
       // terminaba en `AND r.is_active = 1`, así que «No» no podía devolver una fila jamás—, pero
@@ -364,6 +420,11 @@ export class ErpTaxesRules extends LitElement {
     return this.allRules.filter((r) => isIncoherent(r)).length;
   }
 
+  /** How many active rules of the hub overlap another one — all of them, not just the visible page. */
+  private get overlapCount(): number {
+    return this.allRules.filter((r) => overlaps(r)).length;
+  }
+
   /**
    * Cambio de filtro de la tabla. `is_active = 0` no es un filtro más: las reglas desactivadas NO
    * están en la respuesta por defecto de `taxes.rules.list` —el keystone (ADR-0069) consume esa
@@ -374,6 +435,12 @@ export class ErpTaxesRules extends LitElement {
    * El alcance se escribe directo en el contexto del controlador y la recarga se deja en manos de
    * `setFilter`: `setContext` recargaría por su cuenta y el mismo toque costaría DOS viajes al hub.
    */
+  /** The banner's way to the overlapping rules: narrows the table to them, and back (taxes#68). */
+  private toggleOverlapFilter(on: boolean): void {
+    this.showingOverlaps = on;
+    this.ctrl.setFilter('overlaps', on ? '1' : '');
+  }
+
   private onFilterChange(col: string, value: unknown): void {
     if (col === 'is_active') {
       this.showingArchived = String(value ?? '') === '0';
@@ -427,7 +494,8 @@ export class ErpTaxesRules extends LitElement {
     this.formError = '';
     try {
       await erplora().command('taxes.rules.deactivate', { rule_id: row.id });
-      await this.ctrl.load();
+      // The whole hub too, not just the page: the banners count every active rule (taxes#68).
+      await Promise.all([this.ctrl.load(), this.loadAllRules()]);
     } catch (e) {
       this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errDeactivateRule');
     }
@@ -525,6 +593,9 @@ export class ErpTaxesRules extends LitElement {
     } catch {
       this.allRules = [];
     }
+    // The last overlap is gone, and with it the banner that could undo the filter: undo it here
+    // rather than leave an empty table with no word about why (taxes#68).
+    if (this.showingOverlaps && this.overlapCount === 0) this.toggleOverlapFilter(false);
   }
 
   // Referencia al ok-data-table para abrir/cerrar su panel lateral (el alta se proyecta dentro).
@@ -599,6 +670,9 @@ export class ErpTaxesRules extends LitElement {
         ${this.formError ? html`<ok-inline-feedback data-testid="taxes-rules-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
         ${this.incoherentCount
           ? html`<ok-inline-feedback data-testid="taxes-rules-incoherent-warning" tone="warning" icon="warning-outline">${erplora().t(CATALOG, 'ui.incoherentWarning', { count: this.incoherentCount })}</ok-inline-feedback>`
+          : nothing}
+        ${this.overlapCount
+          ? html`<ok-inline-feedback data-testid="taxes-rules-overlap-warning" tone="warning" icon="warning-outline">${erplora().t(CATALOG, 'ui.overlapWarning', { count: this.overlapCount })}<ion-button slot="actions" data-testid="taxes-rules-overlap-filter" size="small" fill="outline" @click=${() => this.toggleOverlapFilter(!this.showingOverlaps)}>${this.showingOverlaps ? t('ui.overlapShowAll') : t('ui.overlapShow')}</ion-button></ok-inline-feedback>`
           : nothing}
         ${this.ctrl?.error ? html`<ok-inline-feedback data-testid="taxes-rules-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
         <ok-data-table testid="taxes-rules-table" .serverSide=${true} .fill=${true} .addable=${can('taxes.manage_tax')} .views=${true} .defaultView=${window.innerWidth <= 834 ? 'cards' : 'table'} .cardTitle=${(row: Record<string, unknown>) => String(row.tax_category_key ?? row.country_code ?? '')} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCategoryCountry')} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRules')} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.onFilterChange(e.detail.col, e.detail.value)}>

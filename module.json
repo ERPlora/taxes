@@ -188,12 +188,15 @@
           },
           "is_incoherent": {
             "op": "eq"
+          },
+          "overlaps": {
+            "op": "eq"
           }
         },
         "page_size": 50
       },
       "ai": {
-        "description": "Lists all tax rules (rate + fiscal qualification by country+region+category, including multi-tax components). The qualification says whether the operation is subject, exempt or not subject, under which regime, and — when exempt — the exemption cause. `is_incoherent` = 1 marks a rule with a rate on a class that charges no tax (its own class, or its root's, is not subject): sales under it cannot be invoiced until it is repaired with `taxes.rules.repair` — filter with is_incoherent=1 to find them."
+        "description": "Lists all tax rules (rate + fiscal qualification by country+region+category, including multi-tax components). The qualification says whether the operation is subject, exempt or not subject, under which regime, and — when exempt — the exemption cause. `is_incoherent` = 1 marks a rule with a rate on a class that charges no tax (its own class, or its root's, is not subject): sales under it cannot be invoiced until it is repaired with `taxes.rules.repair` — filter with is_incoherent=1 to find them. `overlaps` = 1 marks an active rule that is in force on some day together with another active rule of the same country, region and tax category (saved before overlaps were refused): the till charges the one that starts later — resolve it with taxes.rules.end (end the older rule the day before the newer one starts) or taxes.rules.deactivate; filter with overlaps=1 to find them."
       },
       "expose_api": true
     },

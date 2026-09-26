@@ -3950,6 +3950,10 @@ var es_default = {
     phRegimeKey: "opcional (c\xF3digo de la jurisdicci\xF3n, p. ej. 01)",
     incoherentBadge: "debe ser 0 % en esta clase",
     incoherentWarning: "{count} reglas cobran un tipo en una clase que no lleva impuesto (exenta, no sujeta o inversi\xF3n del sujeto pasivo). Sus ventas se cobran en caja pero no se pueden facturar. Usa \xABReparar\xBB en las filas marcadas.",
+    overlapBadge: "se solapa con otra regla",
+    overlapWarning: "{count} reglas est\xE1n vigentes los mismos d\xEDas que otra regla del mismo pa\xEDs, regi\xF3n y categor\xEDa, y la caja cobra la que empieza m\xE1s tarde. En las filas marcadas, usa \xABPoner fecha de fin\xBB en la regla antigua (el d\xEDa antes de que empiece la nueva) o \xABDesactivar\xBB la que no deba aplicarse.",
+    overlapShow: "Ver cu\xE1les",
+    overlapShowAll: "Ver todas las reglas",
     actionRepair: "Reparar",
     repairConfirmTitle: "Reparar regla fiscal",
     repairConfirmMessage: "Esta regla cobra un tipo, pero su clase no lleva impuesto, as\xED que sus ventas no se pueden facturar. Elige qu\xE9 quer\xEDas: sin impuesto (el tipo pasa a 0 %) o cobrar el tipo (la regla pasa a sujeta). Las ventas pasadas y las facturas emitidas no cambian.",
@@ -4072,6 +4076,10 @@ var en_default = {
     phRegimeKey: "optional (jurisdiction code, e.g. 01)",
     incoherentBadge: "must be 0 % for this class",
     incoherentWarning: "{count} tax rules charge a rate on a class that charges no tax (exempt, not subject or reverse charge). Sales under them are charged at the till but cannot be invoiced. Use \xABRepair\xBB on the marked rows.",
+    overlapBadge: "overlaps another rule",
+    overlapWarning: "{count} tax rules are in force on the same days as another rule for the same country, region and category, and the till charges the one that starts later. On the marked rows, use \xABSet end date\xBB on the older rule (the day before the newer one starts), or \xABDeactivate\xBB the one that should not apply.",
+    overlapShow: "Show them",
+    overlapShowAll: "Show all rules",
     actionRepair: "Repair",
     repairConfirmTitle: "Repair tax rule",
     repairConfirmMessage: "This rule charges a rate, but its class charges no tax, so its sales cannot be invoiced. Choose what you meant: no tax (the rate becomes 0 %), or charge the rate (the rule becomes subject to tax). Past sales and issued invoices do not change.",
@@ -5123,6 +5131,9 @@ function chargesNoTax(operationClass) {
 function isIncoherent(row) {
   return Number(row.is_incoherent) === 1;
 }
+function overlaps(row) {
+  return Number(row.overlaps) === 1;
+}
 function canRepairByChargingTax(row) {
   return isIncoherent(row) && chargesNoTax(String(row.operation_class ?? ""));
 }
@@ -5147,6 +5158,16 @@ function errorCode(e6) {
   const code = e6?.code;
   return typeof code === "string" ? code : "";
 }
+var MARK_STYLE = {
+  color: "color-mix(in srgb, var(--ion-color-warning, #ffc409) 40%, var(--ion-text-color, #000))",
+  fontWeight: "600"
+};
+function markedCell(value, mark) {
+  return b2`<div>${value}<br />${mark}</div>`;
+}
+function ratePct(r6) {
+  return `${Number(r6.rate_pct).toFixed(2)}%`;
+}
 var ErpTaxesRules = class extends i3 {
   constructor() {
     super(...arguments);
@@ -5170,15 +5191,18 @@ var ErpTaxesRules = class extends i3 {
     this.pendingRepair = null;
     this.pendingEnd = null;
     this.showingArchived = false;
+    this.showingOverlaps = false;
     this.categories = [];
     this.onLocaleChange = () => this.requestUpdate();
   }
   static {
     this.styles = i`
     :host { display:flex; flex-direction:column; height:100%; min-height:0; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
-    /* La vista llena el alto: el data-table ocupa todo (scroll interno, pie fijo). */
-    .page { display:flex; flex-direction:column; min-height:0; flex:1 1 auto; }
-    .page > ok-data-table { flex:1 1 auto; min-height:0; }
+    /* The view fills the height: the data-table takes what is left (inner scroll, fixed footer).
+       But never less than a usable minimum (taxes#68): on a phone, stacked warnings left it 30 px
+       tall with no card in sight — past that minimum the page scrolls and the warnings go by. */
+    .page { display:flex; flex-direction:column; min-height:0; flex:1 1 auto; overflow-y:auto; }
+    .page > ok-data-table { flex:1 0 auto; min-height:min(28rem, 70vh); }
     /* El alta vive en el panel lateral de la tabla (estrecho): los campos van APILADOS. */
     .form { display:flex; flex-direction:column; gap:.7rem; }
     .form ion-button { align-self:flex-end; }
@@ -5225,8 +5249,10 @@ var ErpTaxesRules = class extends i3 {
         header: t5("ui.colRate"),
         align: "right",
         sortable: true,
-        // An incoherent rule keeps its rate readable and says what is wrong with it (taxes#63).
-        format: (r6) => isIncoherent(r6) ? `${Number(r6.rate_pct).toFixed(2)}% \xB7 ${t5("ui.incoherentBadge")}` : `${Number(r6.rate_pct).toFixed(2)}%`
+        // An incoherent rule keeps its rate readable and says what is wrong with it (taxes#63), on
+        // its own line: see `markedCell`.
+        format: (r6) => isIncoherent(r6) ? `${ratePct(r6)} \xB7 ${t5("ui.incoherentBadge")}` : ratePct(r6),
+        render: (r6) => isIncoherent(r6) ? markedCell(ratePct(r6), b2`<small data-testid="taxes-rules-incoherent-mark" style=${o6(MARK_STYLE)}>${t5("ui.incoherentBadge")}</small>`) : ratePct(r6)
       },
       {
         key: "tax_type",
@@ -5250,7 +5276,21 @@ var ErpTaxesRules = class extends i3 {
           return cls === "exempt" && reason ? `${t5(`ui.opClass_${cls}`)} \xB7 ${reason}` : t5(`ui.opClass_${cls}`);
         }
       },
-      { key: "valid_from", header: t5("ui.colValidFrom"), sortable: true, format: (r6) => String(r6.valid_from ?? "") || "\u2014" },
+      // A rule that overlaps another one keeps its date readable and says what is wrong with it
+      // (taxes#68): the start date is where the two ranges collide. On its own line: see `markedCell`.
+      {
+        key: "valid_from",
+        header: t5("ui.colValidFrom"),
+        sortable: true,
+        format: (r6) => {
+          const from = String(r6.valid_from ?? "") || "\u2014";
+          return overlaps(r6) ? `${from} \xB7 ${t5("ui.overlapBadge")}` : from;
+        },
+        render: (r6) => {
+          const from = String(r6.valid_from ?? "") || "\u2014";
+          return overlaps(r6) ? markedCell(from, b2`<small data-testid="taxes-rules-overlap-mark" style=${o6(MARK_STYLE)}>${t5("ui.overlapBadge")}</small>`) : from;
+        }
+      },
       { key: "valid_to", header: t5("ui.colValidTo"), sortable: true, format: (r6) => String(r6.valid_to ?? "") || "\u2014" },
       // Filtrable otra vez (taxes#52). taxes#50 la dejó sin filtro con razón —`rules_list.sql`
       // terminaba en `AND r.is_active = 1`, así que «No» no podía devolver una fila jamás—, pero
@@ -5334,6 +5374,10 @@ var ErpTaxesRules = class extends i3 {
   get incoherentCount() {
     return this.allRules.filter((r6) => isIncoherent(r6)).length;
   }
+  /** How many active rules of the hub overlap another one — all of them, not just the visible page. */
+  get overlapCount() {
+    return this.allRules.filter((r6) => overlaps(r6)).length;
+  }
   /**
    * Cambio de filtro de la tabla. `is_active = 0` no es un filtro más: las reglas desactivadas NO
    * están en la respuesta por defecto de `taxes.rules.list` —el keystone (ADR-0069) consume esa
@@ -5344,6 +5388,11 @@ var ErpTaxesRules = class extends i3 {
    * El alcance se escribe directo en el contexto del controlador y la recarga se deja en manos de
    * `setFilter`: `setContext` recargaría por su cuenta y el mismo toque costaría DOS viajes al hub.
    */
+  /** The banner's way to the overlapping rules: narrows the table to them, and back (taxes#68). */
+  toggleOverlapFilter(on) {
+    this.showingOverlaps = on;
+    this.ctrl.setFilter("overlaps", on ? "1" : "");
+  }
   onFilterChange(col, value) {
     if (col === "is_active") {
       this.showingArchived = String(value ?? "") === "0";
@@ -5392,7 +5441,7 @@ var ErpTaxesRules = class extends i3 {
     this.formError = "";
     try {
       await erplora3().command("taxes.rules.deactivate", { rule_id: row.id });
-      await this.ctrl.load();
+      await Promise.all([this.ctrl.load(), this.loadAllRules()]);
     } catch (e6) {
       this.formError = e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errDeactivateRule");
     }
@@ -5474,6 +5523,7 @@ var ErpTaxesRules = class extends i3 {
     } catch {
       this.allRules = [];
     }
+    if (this.showingOverlaps && this.overlapCount === 0) this.toggleOverlapFilter(false);
   }
   // Referencia al ok-data-table para abrir/cerrar su panel lateral (el alta se proyecta dentro).
   dataTable() {
@@ -5537,6 +5587,7 @@ var ErpTaxesRules = class extends i3 {
         ${can3("taxes.manage_tax") ? A : b2`<ok-inline-feedback data-testid="taxes-rules-readonly" tone="info" icon="lock-closed-outline">${t5("ui.readOnlyHint")}</ok-inline-feedback>`}
         ${this.formError ? b2`<ok-inline-feedback data-testid="taxes-rules-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
         ${this.incoherentCount ? b2`<ok-inline-feedback data-testid="taxes-rules-incoherent-warning" tone="warning" icon="warning-outline">${erplora3().t(CATALOG3, "ui.incoherentWarning", { count: this.incoherentCount })}</ok-inline-feedback>` : A}
+        ${this.overlapCount ? b2`<ok-inline-feedback data-testid="taxes-rules-overlap-warning" tone="warning" icon="warning-outline">${erplora3().t(CATALOG3, "ui.overlapWarning", { count: this.overlapCount })}<ion-button slot="actions" data-testid="taxes-rules-overlap-filter" size="small" fill="outline" @click=${() => this.toggleOverlapFilter(!this.showingOverlaps)}>${this.showingOverlaps ? t5("ui.overlapShowAll") : t5("ui.overlapShow")}</ion-button></ok-inline-feedback>` : A}
         ${this.ctrl?.error ? b2`<ok-inline-feedback data-testid="taxes-rules-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
         <ok-data-table testid="taxes-rules-table" .serverSide=${true} .fill=${true} .addable=${can3("taxes.manage_tax")} .views=${true} .defaultView=${window.innerWidth <= 834 ? "cards" : "table"} .cardTitle=${(row) => String(row.tax_category_key ?? row.country_code ?? "")} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCategoryCountry")} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @rowAction=${(e6) => this.onRowAction(e6)} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @pageSizeChange=${(e6) => this.ctrl.setPageSize(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.onFilterChange(e6.detail.col, e6.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
@@ -5682,6 +5733,9 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "showingArchived", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "showingOverlaps", 2);
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "categories", 2);
