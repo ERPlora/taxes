@@ -50,6 +50,11 @@ permission on every command regardless of what the screen shows.
 
 The list includes **components** as well as root rules — see [concepts.md](concepts.md).
 
+On a phone or a narrow tablet the list opens as **cards** and scrolls as one page: the record count
+comes after the last card. Each card is titled by the category's name (a component adds its label,
+e.g. «↳ Product — generic · RE») and lists the other fields below it. On a wider screen the table fills
+the view with its pager fixed at the bottom.
+
 ### Create a rule
 
 1. Open **Tax Rules** and create a new one.
