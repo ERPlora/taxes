@@ -46,7 +46,9 @@ OTHER_CATEGORY = "product.reduced"
 PARAM = re.compile(r"(?<!:):([a-z_][a-z0-9_]*)", re.IGNORECASE)
 IDENT = re.compile(r"^[a-z_][a-z0-9_]*$")
 UNIQUE = re.compile(r'violates unique constraint "([^"]+)"')
-TAG = re.compile(r"^(?:INSERT \d+ (\d+)|UPDATE (\d+)|DELETE (\d+))$")
+# A SELECT statement (the per-hub write lock of taxes#69) prints no tag, only its row footer; the
+# dispatcher counts it as the rows it returned, as sqlx's `rows_affected` does.
+TAG = re.compile(r"^(?:INSERT \d+ (\d+)|UPDATE (\d+)|DELETE (\d+)|\((\d+) rows?\))$")
 DB = f"taxes_overlap_flag_{os.getpid()}_{uuid.uuid4().hex[:6]}"
 
 failures: list[str] = []

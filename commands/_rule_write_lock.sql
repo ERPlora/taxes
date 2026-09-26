@@ -1,0 +1,28 @@
+-- Serialises, per hub, every write that can make two active tax rules overlap (taxes#69).
+--
+-- `commands/_rule_overlap_assert.sql` (taxes#66) refuses a rule whose dates run into another
+-- active rule of the same slot, but it runs in READ COMMITTED: it only sees rules that are already
+-- committed. Two writers saving overlapping rules at the same instant (two people, or the assistant
+-- and a person) each ran their check while the other was still open, neither saw the other, and
+-- both committed. The unique index on the natural key does not catch it either: it includes
+-- `valid_from`, and two overlapping ranges rarely start on the same day.
+--
+-- This statement runs FIRST in `taxes.rules.create`, `taxes.rules.activate`, `taxes.rules.end` and
+-- `taxes._insert_rule` (the bulk import). It takes a transaction-scoped advisory lock, so the second
+-- writer waits here until the first one commits or rolls back. In READ COMMITTED every later
+-- statement takes a fresh snapshot, so the overlap check of the second writer then sees the first
+-- rule and refuses with `taxes.rule_overlaps` — the same notice the owner gets from taxes#66.
+--
+-- WHY PER HUB AND NOT PER SLOT (country + region + category): the bulk import writes several slots
+-- in ONE transaction, in the order of the file. Two imports taking per-slot locks in different
+-- orders deadlock, and Postgres kills one of them with a bare database error. One lock per hub is
+-- taken once and re-entered by the following rows of the same transaction, so it can never
+-- deadlock; and tax rules are configuration written a few times a year, so making two writers of
+-- the same hub wait a few milliseconds for each other costs nothing.
+--
+-- Scoped by `:hub_id`: a hub never waits for another one. The lock dies with the transaction
+-- (`_xact_`), so a command that fails releases it on its rollback. `hashtext` and not a hash of our
+-- own: every hub process has to compute the same key, and the runtime's own locks use the same
+-- shape (`pg_advisory_xact_lock(hashtext(...))`). A collision with another key only makes two
+-- writers wait for each other; it can never let an overlap through.
+SELECT pg_advisory_xact_lock(hashtext(CONCAT('taxes.rule_write:', CAST(:hub_id AS TEXT))));
