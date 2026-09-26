@@ -17,9 +17,11 @@
     "description": "Configura los tipos de IVA del país en el que vendes para que el TPV pueda calcular el precio de una venta."
   },
   "errors": {
+    "taxes.rule_end_invalid": "Esa regla no puede terminar en esa fecha: la fecha de fin es anterior al día en que empieza la regla.",
     "taxes.rule_incoherent": "No se ha podido crear la regla: una regla con inversión del sujeto pasivo, exenta o no sujeta no cobra impuesto, así que su tipo tiene que ser 0 y no puede colgar de ella un componente con tipo; un componente tiene que colgar de una regla raíz de este negocio con el mismo país, región y categoría fiscal; y su rango de validez no puede ir hacia atrás.",
     "taxes.rule_not_deactivated": "No se ha podido recuperar la regla: no existe en este negocio, o ya está activa.",
-    "taxes.rule_not_incoherent": "No se pudo reparar la regla: no existe en este negocio o no hay nada que reparar — solo se repara una regla que no lleva impuesto (inversión del sujeto pasivo, exenta, no sujeta) pero tiene tipo, o un componente con tipo colgado de una regla así."
+    "taxes.rule_not_incoherent": "No se pudo reparar la regla: no existe en este negocio o no hay nada que reparar — solo se repara una regla que no lleva impuesto (inversión del sujeto pasivo, exenta, no sujeta) pero tiene tipo, o un componente con tipo colgado de una regla así.",
+    "taxes.rule_overlaps": "Esa regla se solapa con otra regla activa del mismo país, región y categoría fiscal: no puede haber dos tipos vigentes el mismo día. Pon fecha de fin a la regla actual el día antes de que empiece la nueva (Poner fecha de fin), o desactívala."
   },
   "ui": {
     "colKey": "Clave",
@@ -73,15 +75,20 @@
     "emptyAliases": "Sin alias de categorías.",
     "actionDeactivate": "Desactivar",
     "actionRestore": "Reactivar",
+    "actionEndRule": "Poner fecha de fin",
     "cancel": "Cancelar",
     "deactivateConfirmTitle": "Desactivar regla fiscal",
     "deactivateConfirmMessage": "La regla dejará de aplicarse a operaciones nuevas. Los documentos fiscales ya emitidos no se modifican.",
     "deactivateConfirmAction": "Desactivar regla",
+    "endRuleTitle": "Fecha de fin de la regla",
+    "endRuleMessage": "Último día en que se aplica esta regla. Para cambiar el tipo, ponle fin el día antes de que empiece el nuevo y después añade la regla nueva desde ese día. Los documentos ya emitidos no cambian.",
+    "endRuleAction": "Guardar fecha de fin",
     "rulesHint": "Cada regla fija el % de una categoría en un país (y opcionalmente una región). Para multi-tributo (p. ej. recargo de equivalencia), elige en «Regla raíz» la regla de la que cuelga y dale una «Etiqueta del componente».",
     "errCreateCategory": "No se pudo crear la categoría",
     "errCreateRule": "No se pudo crear la regla",
     "errDeactivateRule": "No se pudo desactivar la regla",
     "errRestoreRule": "No se pudo reactivar la regla",
+    "errEndRule": "No se pudo poner la fecha de fin a la regla",
     "errCreateAlias": "No se pudo crear el alias",
     "colParentRule": "Regla raíz (componente de)",
     "phParentRule": "Elige una regla raíz",
@@ -108,6 +115,7 @@
     "repairConfirmMessage": "Esta regla cobra un tipo, pero su clase no lleva impuesto, así que sus ventas no se pueden facturar. Elige qué querías: sin impuesto (el tipo pasa a 0 %) o cobrar el tipo (la regla pasa a sujeta). Las ventas pasadas y las facturas emitidas no cambian.",
     "repairNoTax": "Sin impuesto (0 %)",
     "repairChargeTax": "Cobrar el tipo",
-    "errRepairRule": "No se pudo reparar la regla"
+    "errRepairRule": "No se pudo reparar la regla",
+    "errRuleOverlaps": "Se solapa con otra regla activa de este país, región y categoría. Pon antes fecha de fin a la regla actual, o elige fechas que no se solapen."
   }
 }

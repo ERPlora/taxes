@@ -169,7 +169,7 @@ describe('the owner can repair it from the row (taxes#63)', () => {
     pageRows = [FINE];
     allRows = [FINE];
     const el = await mount();
-    expect(table(el).actions.map((a) => a.id)).toEqual(['deactivate']);
+    expect(table(el).actions.map((a) => a.id)).toEqual(['end', 'deactivate']);
   });
 
   it('it asks which reading of the mistake was meant: no tax, or charge the rate', async () => {

@@ -16,9 +16,11 @@
     "description": "Set the VAT rates for the country you sell in, so the till can price a sale."
   },
   "errors": {
+    "taxes.rule_end_invalid": "That rule cannot end on that date: the end date is before the day the rule starts.",
     "taxes.rule_incoherent": "That rule could not be created: a reverse-charge, exempt or not-subject rule charges no tax, so its rate must be 0 and no component with a rate can hang from it; a component must hang from a root rule of this business with the same country, region and tax category; and its validity range cannot run backwards.",
     "taxes.rule_not_deactivated": "That rule could not be brought back: it does not exist in this business, or it is already active.",
-    "taxes.rule_not_incoherent": "That rule could not be repaired: it does not exist in this business, or it has nothing to repair — only a rule that charges no tax (reverse charge, exempt, not subject) but still carries a rate, or a component with a rate under such a rule, can be repaired."
+    "taxes.rule_not_incoherent": "That rule could not be repaired: it does not exist in this business, or it has nothing to repair — only a rule that charges no tax (reverse charge, exempt, not subject) but still carries a rate, or a component with a rate under such a rule, can be repaired.",
+    "taxes.rule_overlaps": "That rule overlaps another active rule for the same country, region and tax category: two rates cannot be in force on the same day. End the current rule the day before the new one starts (Set end date), or deactivate it."
   },
   "ui": {
     "colKey": "Key",
@@ -72,15 +74,20 @@
     "emptyAliases": "No category aliases.",
     "actionDeactivate": "Deactivate",
     "actionRestore": "Restore",
+    "actionEndRule": "Set end date",
     "cancel": "Cancel",
     "deactivateConfirmTitle": "Deactivate tax rule",
     "deactivateConfirmMessage": "The rule will no longer apply to new transactions. Previously issued fiscal documents will not change.",
     "deactivateConfirmAction": "Deactivate rule",
+    "endRuleTitle": "End this tax rule",
+    "endRuleMessage": "Last day this rule applies. To change the rate, end it the day before the new rate starts and then add the new rule from that day. Issued documents do not change.",
+    "endRuleAction": "Save end date",
     "rulesHint": "Each rule sets the % for a category in a country (and optionally a region). For multi-tax (e.g. equivalence surcharge), choose the root rule it hangs from in “Root rule” and give it a “Component label”.",
     "errCreateCategory": "Could not create the category",
     "errCreateRule": "Could not create the rule",
     "errDeactivateRule": "Could not deactivate the rule",
     "errRestoreRule": "Could not bring the rule back",
+    "errEndRule": "Could not set the end date of the rule",
     "errCreateAlias": "Could not create the alias",
     "colParentRule": "Root rule (component of)",
     "phParentRule": "Choose a root rule",
@@ -107,6 +114,7 @@
     "repairConfirmMessage": "This rule charges a rate, but its class charges no tax, so its sales cannot be invoiced. Choose what you meant: no tax (the rate becomes 0 %), or charge the rate (the rule becomes subject to tax). Past sales and issued invoices do not change.",
     "repairNoTax": "No tax (0 %)",
     "repairChargeTax": "Charge the rate",
-    "errRepairRule": "Could not repair the rule"
+    "errRepairRule": "Could not repair the rule",
+    "errRuleOverlaps": "Overlaps another active rule for this country, region and category. Set an end date on the current rule first, or pick dates that do not overlap."
   }
 }

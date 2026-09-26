@@ -1,5 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
+import { classMap } from 'lit/directives/class-map.js';
 import { define } from '@erplora/outfitkit/define';
 import '@erplora/outfitkit/ok-inline-feedback';
 import '@erplora/outfitkit/ok-data-table';
@@ -132,6 +133,12 @@ function erplora(): ErploraClientLike {
   return c;
 }
 
+/** The `code` of a runtime error, or `''` when what arrived carries none (it is not the hub's). */
+function errorCode(e: unknown): string {
+  const code = (e as { code?: unknown } | null | undefined)?.code;
+  return typeof code === 'string' ? code : '';
+}
+
 export class ErpTaxesRules extends LitElement {
   static styles = css`
     :host { display:flex; flex-direction:column; height:100%; min-height:0; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
@@ -165,6 +172,12 @@ export class ErpTaxesRules extends LitElement {
 
   @state() newValidFrom = '';
 
+  /** Set when the create command was refused with `taxes.rule_overlaps` (taxes#66): marks «Valid
+   *  from» with its own sentence instead of leaving the owner to guess which of the twelve fields
+   *  of the form was wrong. Every `createRule()` attempt rewrites it (set on this refusal, cleared
+   *  on any other outcome), and editing the date clears it. */
+  @state() validFromError = '';
+
   @state() newValidTo = '';
 
   // Multi-tax component (optional): hangs from an existing root rule, CHOSEN among the compatible
@@ -181,6 +194,8 @@ export class ErpTaxesRules extends LitElement {
   @state() private pendingDeactivate: TaxRule | null = null;
   /** The incoherent rule whose repair is being confirmed (taxes#63). */
   @state() private pendingRepair: TaxRule | null = null;
+  /** The active rule being given an end date, dialog open while set (taxes#66). */
+  @state() private pendingEnd: TaxRule | null = null;
   /** Si la tabla está mirando las reglas DESACTIVADAS (taxes#52): manda sobre el alcance de la
    *  lectura y sobre la acción que ofrece la fila. */
   @state() private showingArchived = false;
@@ -319,6 +334,12 @@ export class ErpTaxesRules extends LitElement {
    * fila), y lo que este mismo repo ya hace en `services` (services#44) — la acción vive en la
    * fila, nunca dentro de la ficha: el «ábrelo, baja del todo, reactiva y vuelve a cambiar el
    * estado» de Shopify son seis toques y dos pantallas para una decisión.
+   *
+   * On an active row, «Set end date» sits next to «Deactivate» (taxes#66): once two active rules
+   * of the same slot can no longer overlap, ending the rule in force is the legal way to schedule
+   * a rate change — the way Oracle E-Business Tax and Dynamics 365 let the owner end-date the
+   * current rate before the next one starts, instead of deactivating (which drops the rule outright
+   * and leaves the slot with no rate at all in the meantime).
    */
   private get rowActions(): DataTableAction[] {
     const t = (k: string): string => erplora().t(CATALOG, k);
@@ -331,7 +352,11 @@ export class ErpTaxesRules extends LitElement {
     if (this.showingArchived) {
       return [...repair, { id: 'restore', label: t('ui.actionRestore'), icon: 'arrow-undo-outline', color: 'success' }];
     }
-    return [...repair, { id: 'deactivate', label: t('ui.actionDeactivate'), icon: 'ban-outline', color: 'danger' }];
+    return [
+      ...repair,
+      { id: 'end', label: t('ui.actionEndRule'), icon: 'calendar-outline' },
+      { id: 'deactivate', label: t('ui.actionDeactivate'), icon: 'ban-outline', color: 'danger' },
+    ];
   }
 
   /** How many active rules of the hub are incoherent — all of them, not just the visible page. */
@@ -374,6 +399,10 @@ export class ErpTaxesRules extends LitElement {
       if (isIncoherent(row)) this.pendingRepair = row as unknown as TaxRule;
       return;
     }
+    if (actionId === 'end') {
+      if (Number(row.is_active)) this.pendingEnd = row as unknown as TaxRule;
+      return;
+    }
     if (actionId !== 'deactivate') return;
     if (!Number(row.is_active)) return;
     this.pendingDeactivate = row as unknown as TaxRule;
@@ -401,6 +430,29 @@ export class ErpTaxesRules extends LitElement {
       await this.ctrl.load();
     } catch (e) {
       this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errDeactivateRule');
+    }
+  }
+
+  /** Ends the confirmed rule on the chosen date (`taxes.rules.end`, taxes#66): the legal way to
+   *  schedule a rate change once overlapping active rules of the same slot are refused. */
+  private async onEndDismiss(ev: CustomEvent<{ role?: string; data?: { values?: { valid_to?: string } } }>) {
+    const row = this.pendingEnd;
+    this.pendingEnd = null;
+    const validTo = ev.detail?.data?.values?.valid_to?.trim();
+    if (ev.detail?.role !== 'confirm' || !row || !validTo) return;
+    this.formError = '';
+    try {
+      await erplora().command('taxes.rules.end', { rule_id: String(row.id), valid_to: validTo });
+      await Promise.all([this.ctrl.load(), this.loadAllRules()]);
+    } catch (e) {
+      // A refusal on the overlap check (taxes#66) explains itself instead of leaving the generic
+      // banner as the only clue, the same treatment `createRule()` gives it.
+      this.formError =
+        errorCode(e) === 'taxes.rule_overlaps'
+          ? erplora().t(CATALOG, 'ui.errRuleOverlaps')
+          : e instanceof Error
+            ? e.message
+            : erplora().t(CATALOG, 'ui.errEndRule');
     }
   }
 
@@ -439,6 +491,7 @@ export class ErpTaxesRules extends LitElement {
         erplora().on('taxes.rule.deactivated', () => refresh()),
         erplora().on('taxes.rule.activated', () => refresh()),
         erplora().on('taxes.rule.repaired', () => refresh()),
+        erplora().on('taxes.rule.ended', () => refresh()),
       ];
       this.unsub = () => offs.forEach((o) => o());
     } catch {
@@ -525,9 +578,13 @@ export class ErpTaxesRules extends LitElement {
       this.newValidTo = '';
       this.newParentId = '';
       this.newComponentLabel = '';
+      this.validFromError = '';
       this.dataTable()?.close(); // el panel de alta se cierra solo tras crear
       await Promise.all([this.ctrl.load(), this.loadAllRules()]);
     } catch (e) {
+      // A refusal on the overlap check (taxes#66) blames the field the owner has to change instead
+      // of leaving the generic banner as the only clue; any other refusal leaves the date alone.
+      this.validFromError = errorCode(e) === 'taxes.rule_overlaps' ? erplora().t(CATALOG, 'ui.errRuleOverlaps') : '';
       this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errCreateRule');
     } finally {
       this.saving = false;
@@ -572,7 +629,9 @@ export class ErpTaxesRules extends LitElement {
               ? html`<ion-input data-testid="taxes-rules-exempt-reason" fill="outline" label-placement="floating" label=${t('ui.colExemptReason')} placeholder=${t('ui.phExemptReason')} maxlength="10" .value=${this.newExemptReason} @ionInput=${(e: any) => (this.newExemptReason = e.target.value)}></ion-input>`
               : nothing}
             <ion-input data-testid="taxes-rules-regime-key" fill="outline" label-placement="floating" label=${t('ui.colRegimeKey')} placeholder=${t('ui.phRegimeKey')} maxlength="10" .value=${this.newRegimeKey} @ionInput=${(e: any) => (this.newRegimeKey = e.target.value)}></ion-input>
-            <ion-input data-testid="taxes-rules-valid-from" fill="outline" label-placement="floating" label=${t('ui.colValidFrom')} type="date" .value=${this.newValidFrom} @ionInput=${(e: any) => (this.newValidFrom = e.target.value)}></ion-input>
+            <!-- A refusal on the overlap check (taxes#66) marks THIS field with its own sentence
+                 instead of leaving the generic banner above as the only clue. -->
+            <ion-input data-testid="taxes-rules-valid-from" fill="outline" label-placement="floating" label=${t('ui.colValidFrom')} type="date" class=${classMap({ 'ion-invalid': !!this.validFromError, 'ion-touched': !!this.validFromError })} error-text=${this.validFromError ? this.validFromError : nothing} .value=${this.newValidFrom} @ionInput=${(e: any) => { this.newValidFrom = e.target.value; this.validFromError = ''; }}></ion-input>
             <ion-input data-testid="taxes-rules-valid-to" fill="outline" label-placement="floating" label=${t('ui.colValidTo')} type="date" .value=${this.newValidTo} @ionInput=${(e: any) => (this.newValidTo = e.target.value)}></ion-input>
             <!-- Parent rule (multi-tax component): CHOSEN among the root rules compatible with the
                  country/region/category above (taxes#11) — never a free id. -->
@@ -594,6 +653,20 @@ export class ErpTaxesRules extends LitElement {
             { text: t('ui.deactivateConfirmAction'), role: 'confirm', cssClass: 'alert-button-danger' },
           ]}
           @ionAlertDidDismiss=${(e: CustomEvent<{ role?: string }>) => this.onDeactivateDismiss(e)}
+        ></ion-alert>
+        <!-- Scheduling a rate change (taxes#66): the overlap guard refuses a new active rule while
+             the current one is still open-ended, so ending it on a chosen date is what makes the
+             change possible, not another way to deactivate. -->
+        <ion-alert data-testid="taxes-rules-end-confirm"
+          .isOpen=${this.pendingEnd !== null}
+          header=${t('ui.endRuleTitle')}
+          message=${t('ui.endRuleMessage')}
+          .inputs=${[{ name: 'valid_to', type: 'date', value: this.pendingEnd?.valid_to ?? '' }]}
+          .buttons=${[
+            { text: t('ui.cancel'), role: 'cancel' },
+            { text: t('ui.endRuleAction'), role: 'confirm' },
+          ]}
+          @ionAlertDidDismiss=${(e: CustomEvent<{ role?: string; data?: { values?: { valid_to?: string } } }>) => this.onEndDismiss(e)}
         ></ion-alert>
         <!-- Two readings of the same mistake (taxes#63): the class was right (0 %) or the rate was
              right (charge it). «Keep the rate» only when the rule's own class is the problem. -->

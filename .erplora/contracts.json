@@ -14,6 +14,7 @@
       "taxes.rules.activate",
       "taxes.rules.create",
       "taxes.rules.deactivate",
+      "taxes.rules.end",
       "taxes.rules.repair"
     ],
     "events": [
@@ -22,6 +23,7 @@
       "taxes.rule.activated",
       "taxes.rule.created",
       "taxes.rule.deactivated",
+      "taxes.rule.ended",
       "taxes.rule.repaired"
     ],
     "slots": []

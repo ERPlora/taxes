@@ -193,7 +193,7 @@ describe('the deactivated rules can be asked for (taxes#52)', () => {
 describe('a deactivated rule can come back (taxes#52)', () => {
   it('the row offers the way back instead of an offer to do nothing', async () => {
     const el = await mount();
-    expect(table(el).actions.map((a) => a.id)).toEqual(['deactivate']);
+    expect(table(el).actions.map((a) => a.id)).toEqual(['end', 'deactivate']);
     await filterBy(el, 'is_active', '0');
     expect(
       table(el).actions.map((a) => a.id),
