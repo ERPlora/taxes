@@ -181,6 +181,18 @@ describe('a rule card says each thing once (taxes#67)', () => {
     expect(rows).toContain('ui.colRate 21.00%');
   });
 
+  it('the body leaves out the columns the person hid with the column picker, as the default card does', async () => {
+    // ok-data-table's own card body paints only its visible columns; a custom body that painted
+    // every column would bring a hidden field back the moment the view switches to cards.
+    const el = await mount();
+    const visible = table(el).columns.map((c) => c.key).filter((k) => k !== 'region_code');
+    table(el).dispatchEvent(new CustomEvent('columnsChange', { detail: { visible } }));
+    await settle(el);
+    const rows = cardRows(el, ROOT);
+    expect(rows.some((r) => r.startsWith('ui.colRegion')), 'a hidden column is back on the card').toBe(false);
+    expect(rows).toContain('ui.colCountry ES');
+  });
+
   it('the body keeps the warning marks of the table cells (taxes#63, taxes#68)', async () => {
     const el = await mount();
     const host = document.createElement('div');

@@ -261,6 +261,10 @@ export class ErpTaxesRules extends LitElement {
 
   private phoneQuery?: MediaQueryList;
 
+  // Columns the person hid with the table's column picker: the custom card body leaves them out,
+  // as ok-data-table's own card body does.
+  @state() private hiddenColumns = new Set<string>();
+
   private readonly onPhoneChange = (e: { matches: boolean }): void => {
     this.phone = e.matches;
   };
@@ -632,14 +636,14 @@ export class ErpTaxesRules extends LitElement {
   }
 
   /**
-   * A card's body: every field but the category, which is already its title (taxes#67). Painted with
+   * A card's body: every visible field but the category, which is already its title (taxes#67). Painted with
    * ok-data-table's own card-row markup (`.rrow`/`.rk`/`.rv`, styled in its shadow root, where this
    * renders) so it looks exactly like the cards it does not customise; `render` wins over `format`
    * as it does in the table, so the warning marks of taxes#63/#68 stay.
    */
   private renderRuleCard(row: Record<string, unknown>) {
     return this.columns
-      .filter((c) => c.key !== 'tax_category_key')
+      .filter((c) => c.key !== 'tax_category_key' && !this.hiddenColumns.has(c.key))
       .map((c) => html`<div class="rrow"><span class="rk">${c.header}</span><span class="rv">${c.render ? c.render(row) : c.format ? c.format(row) : String(row[c.key] ?? '')}</span></div>`);
   }
 
@@ -720,7 +724,7 @@ export class ErpTaxesRules extends LitElement {
           ? html`<ok-inline-feedback data-testid="taxes-rules-overlap-warning" tone="warning" icon="warning-outline">${erplora().t(CATALOG, 'ui.overlapWarning', { count: this.overlapCount })}<ion-button slot="actions" data-testid="taxes-rules-overlap-filter" size="small" fill="outline" @click=${() => this.toggleOverlapFilter(!this.showingOverlaps)}>${this.showingOverlaps ? t('ui.overlapShowAll') : t('ui.overlapShow')}</ion-button></ok-inline-feedback>`
           : nothing}
         ${this.ctrl?.error ? html`<ok-inline-feedback data-testid="taxes-rules-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
-        <ok-data-table testid="taxes-rules-table" .serverSide=${true} .fill=${!this.phone} .addable=${can('taxes.manage_tax')} .views=${true} .defaultView=${window.innerWidth <= 834 ? 'cards' : 'table'} .cardTitle=${cardTitle} .renderCard=${(row: Record<string, unknown>) => this.renderRuleCard(row)} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCategoryCountry')} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRules')} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.onFilterChange(e.detail.col, e.detail.value)}>
+        <ok-data-table testid="taxes-rules-table" .serverSide=${true} .fill=${!this.phone} .addable=${can('taxes.manage_tax')} .views=${true} .defaultView=${window.innerWidth <= 834 ? 'cards' : 'table'} .cardTitle=${cardTitle} .renderCard=${(row: Record<string, unknown>) => this.renderRuleCard(row)} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCategoryCountry')} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRules')} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.onFilterChange(e.detail.col, e.detail.value)} @columnsChange=${(e: CustomEvent<{ visible: string[] }>) => (this.hiddenColumns = new Set(this.columns.map((c) => c.key).filter((k) => !e.detail.visible.includes(k))))}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
           <form data-testid="taxes-rules-form" slot="create" class="form" @submit=${(e: Event) => this.createRule(e)}>

@@ -5200,6 +5200,7 @@ var ErpTaxesRules = class extends i3 {
     this.showingOverlaps = false;
     this.categories = [];
     this.phone = false;
+    this.hiddenColumns = /* @__PURE__ */ new Set();
     this.onPhoneChange = (e6) => {
       this.phone = e6.matches;
     };
@@ -5548,13 +5549,13 @@ var ErpTaxesRules = class extends i3 {
     if (this.showingOverlaps && this.overlapCount === 0) this.toggleOverlapFilter(false);
   }
   /**
-   * A card's body: every field but the category, which is already its title (taxes#67). Painted with
+   * A card's body: every visible field but the category, which is already its title (taxes#67). Painted with
    * ok-data-table's own card-row markup (`.rrow`/`.rk`/`.rv`, styled in its shadow root, where this
    * renders) so it looks exactly like the cards it does not customise; `render` wins over `format`
    * as it does in the table, so the warning marks of taxes#63/#68 stay.
    */
   renderRuleCard(row) {
-    return this.columns.filter((c5) => c5.key !== "tax_category_key").map((c5) => b2`<div class="rrow"><span class="rk">${c5.header}</span><span class="rv">${c5.render ? c5.render(row) : c5.format ? c5.format(row) : String(row[c5.key] ?? "")}</span></div>`);
+    return this.columns.filter((c5) => c5.key !== "tax_category_key" && !this.hiddenColumns.has(c5.key)).map((c5) => b2`<div class="rrow"><span class="rk">${c5.header}</span><span class="rv">${c5.render ? c5.render(row) : c5.format ? c5.format(row) : String(row[c5.key] ?? "")}</span></div>`);
   }
   // Referencia al ok-data-table para abrir/cerrar su panel lateral (el alta se proyecta dentro).
   dataTable() {
@@ -5620,7 +5621,7 @@ var ErpTaxesRules = class extends i3 {
         ${this.incoherentCount ? b2`<ok-inline-feedback data-testid="taxes-rules-incoherent-warning" tone="warning" icon="warning-outline">${erplora3().t(CATALOG3, "ui.incoherentWarning", { count: this.incoherentCount })}</ok-inline-feedback>` : A}
         ${this.overlapCount ? b2`<ok-inline-feedback data-testid="taxes-rules-overlap-warning" tone="warning" icon="warning-outline">${erplora3().t(CATALOG3, "ui.overlapWarning", { count: this.overlapCount })}<ion-button slot="actions" data-testid="taxes-rules-overlap-filter" size="small" fill="outline" @click=${() => this.toggleOverlapFilter(!this.showingOverlaps)}>${this.showingOverlaps ? t5("ui.overlapShowAll") : t5("ui.overlapShow")}</ion-button></ok-inline-feedback>` : A}
         ${this.ctrl?.error ? b2`<ok-inline-feedback data-testid="taxes-rules-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
-        <ok-data-table testid="taxes-rules-table" .serverSide=${true} .fill=${!this.phone} .addable=${can3("taxes.manage_tax")} .views=${true} .defaultView=${window.innerWidth <= 834 ? "cards" : "table"} .cardTitle=${cardTitle} .renderCard=${(row) => this.renderRuleCard(row)} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCategoryCountry")} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @rowAction=${(e6) => this.onRowAction(e6)} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @pageSizeChange=${(e6) => this.ctrl.setPageSize(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.onFilterChange(e6.detail.col, e6.detail.value)}>
+        <ok-data-table testid="taxes-rules-table" .serverSide=${true} .fill=${!this.phone} .addable=${can3("taxes.manage_tax")} .views=${true} .defaultView=${window.innerWidth <= 834 ? "cards" : "table"} .cardTitle=${cardTitle} .renderCard=${(row) => this.renderRuleCard(row)} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchCategoryCountry")} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyRules")} @rowAction=${(e6) => this.onRowAction(e6)} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @pageSizeChange=${(e6) => this.ctrl.setPageSize(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.onFilterChange(e6.detail.col, e6.detail.value)} @columnsChange=${(e6) => this.hiddenColumns = new Set(this.columns.map((c5) => c5.key).filter((k2) => !e6.detail.visible.includes(k2)))}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
           <form data-testid="taxes-rules-form" slot="create" class="form" @submit=${(e6) => this.createRule(e6)}>
@@ -5773,4 +5774,7 @@ __decorateClass([
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "phone", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "hiddenColumns", 2);
 define("erp-taxes-rules", ErpTaxesRules);
