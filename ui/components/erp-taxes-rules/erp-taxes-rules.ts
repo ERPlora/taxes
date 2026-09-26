@@ -165,6 +165,17 @@ function markedCell(value: string, mark: unknown) {
   return html`<div>${value}<br />${mark}</div>`;
 }
 
+// A phone: where the screen opens in cards and lays the list out as one scrolling page (taxes#67).
+const PHONE_QUERY = '(max-width: 834px)';
+
+/** A card's title: the category a person reads (resolved by `rules_list.sql`), never its bare key
+ *  unless that is all the row carries. A component names its root category and its own label. */
+function cardTitle(r: Record<string, unknown>): string {
+  const name = taxCategoryDisplayName({ key: String(r.tax_category_key ?? ''), display_name: String(r.tax_category_display_name ?? '') }) || '—';
+  const label = String(r.component_label ?? '');
+  return r.parent_id && label ? `↳ ${name} · ${label}` : name;
+}
+
 /** The rule's rate as the list shows it: a tax percentage, not an amount (see money-display-guard). */
 function ratePct(r: Record<string, unknown>): string {
   return `${Number(r.rate_pct).toFixed(2)}%`;
@@ -180,6 +191,9 @@ export class ErpTaxesRules extends LitElement {
        (it is height:100% in fill mode) and one banner pushed the pager off screen. */
     .page { display:flex; flex-direction:column; min-height:0; flex:1 1 auto; overflow-y:auto; }
     .page > ok-data-table { flex:1 1 auto; min-height:min(28rem, 70vh); }
+    /* On a phone the table does not fill (taxes#67): it keeps its full height and the page scrolls,
+       footer after the last card. Shrinking it to the floor above would spill the cards over it. */
+    .page > ok-data-table:not([fill]) { flex:0 0 auto; }
     /* El alta vive en el panel lateral de la tabla (estrecho): los campos van APILADOS. */
     .form { display:flex; flex-direction:column; gap:.7rem; }
     .form ion-button { align-self:flex-end; }
@@ -240,6 +254,16 @@ export class ErpTaxesRules extends LitElement {
 
   // Categorías fiscales del hub: pueblan el selector del alta y el filtro de la columna.
   @state() private categories: TaxCategory[] = [];
+
+  // On a phone the list is one scrolling page instead of a filling table (taxes#67): `fill` pinned
+  // «N records» under a 376 px box the cards scrolled through one at a time.
+  @state() private phone = false;
+
+  private phoneQuery?: MediaQueryList;
+
+  private readonly onPhoneChange = (e: { matches: boolean }): void => {
+    this.phone = e.matches;
+  };
 
   private ctrl!: ListController<TaxRule>;
 
@@ -546,6 +570,11 @@ export class ErpTaxesRules extends LitElement {
   async connectedCallback() {
     super.connectedCallback();
     window.addEventListener('erplora:locale-changed', this.onLocaleChange);
+    if (typeof window.matchMedia === 'function') {
+      this.phoneQuery = window.matchMedia(PHONE_QUERY);
+      this.phone = this.phoneQuery.matches;
+      this.phoneQuery.addEventListener('change', this.onPhoneChange);
+    }
     this.ctrl = createListController<TaxRule>(erplora(), 'taxes.rules.list', () => this.requestUpdate(), {
       pageSize: 50,
       sort: 'country_code',
@@ -571,6 +600,8 @@ export class ErpTaxesRules extends LitElement {
 
   disconnectedCallback() {
     window.removeEventListener('erplora:locale-changed', this.onLocaleChange);
+    this.phoneQuery?.removeEventListener('change', this.onPhoneChange);
+    this.phoneQuery = undefined;
     super.disconnectedCallback();
     this.unsub?.();
   }
@@ -598,6 +629,18 @@ export class ErpTaxesRules extends LitElement {
     // The last overlap is gone, and with it the banner that could undo the filter: undo it here
     // rather than leave an empty table with no word about why (taxes#68).
     if (this.showingOverlaps && this.overlapCount === 0) this.toggleOverlapFilter(false);
+  }
+
+  /**
+   * A card's body: every field but the category, which is already its title (taxes#67). Painted with
+   * ok-data-table's own card-row markup (`.rrow`/`.rk`/`.rv`, styled in its shadow root, where this
+   * renders) so it looks exactly like the cards it does not customise; `render` wins over `format`
+   * as it does in the table, so the warning marks of taxes#63/#68 stay.
+   */
+  private renderRuleCard(row: Record<string, unknown>) {
+    return this.columns
+      .filter((c) => c.key !== 'tax_category_key')
+      .map((c) => html`<div class="rrow"><span class="rk">${c.header}</span><span class="rv">${c.render ? c.render(row) : c.format ? c.format(row) : String(row[c.key] ?? '')}</span></div>`);
   }
 
   // Referencia al ok-data-table para abrir/cerrar su panel lateral (el alta se proyecta dentro).
@@ -677,7 +720,7 @@ export class ErpTaxesRules extends LitElement {
           ? html`<ok-inline-feedback data-testid="taxes-rules-overlap-warning" tone="warning" icon="warning-outline">${erplora().t(CATALOG, 'ui.overlapWarning', { count: this.overlapCount })}<ion-button slot="actions" data-testid="taxes-rules-overlap-filter" size="small" fill="outline" @click=${() => this.toggleOverlapFilter(!this.showingOverlaps)}>${this.showingOverlaps ? t('ui.overlapShowAll') : t('ui.overlapShow')}</ion-button></ok-inline-feedback>`
           : nothing}
         ${this.ctrl?.error ? html`<ok-inline-feedback data-testid="taxes-rules-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
-        <ok-data-table testid="taxes-rules-table" .serverSide=${true} .fill=${true} .addable=${can('taxes.manage_tax')} .views=${true} .defaultView=${window.innerWidth <= 834 ? 'cards' : 'table'} .cardTitle=${(row: Record<string, unknown>) => String(row.tax_category_key ?? row.country_code ?? '')} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCategoryCountry')} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRules')} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.onFilterChange(e.detail.col, e.detail.value)}>
+        <ok-data-table testid="taxes-rules-table" .serverSide=${true} .fill=${!this.phone} .addable=${can('taxes.manage_tax')} .views=${true} .defaultView=${window.innerWidth <= 834 ? 'cards' : 'table'} .cardTitle=${cardTitle} .renderCard=${(row: Record<string, unknown>) => this.renderRuleCard(row)} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchCategoryCountry')} .actions=${this.rowActions} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyRules')} @rowAction=${(e: CustomEvent<{ actionId: string; row: Record<string, unknown> }>) => this.onRowAction(e)} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.onFilterChange(e.detail.col, e.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
                el «+» de la barra desplegaría un panel vacío. -->
           <form data-testid="taxes-rules-form" slot="create" class="form" @submit=${(e: Event) => this.createRule(e)}>
