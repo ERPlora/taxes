@@ -1,7 +1,7 @@
 {
   "file": "dist/taxes.esm.js",
-  "sources_sha256": "d07b192af3a537a0dae5ab340511b17114a2e8bf5bc5795be72e4de48522ed6d",
+  "sources_sha256": "888b8ff3532c65c5a58d7a8bfc69a68806daa5d5f4da075290efb36f6be47d0c",
   "locales_sha256": "91b9c375b9e045808d9ef531d019db30dcdc2bcc44c9225b7828de775f51c00f",
-  "bundle_sha256": "cfe5927874b5c42daab6980cd0b022a7cdb1cec38415efc50fc0069e8e52ed73",
-  "built_at": "2026-09-26T16:19:49.229Z"
+  "bundle_sha256": "c19aaaa802f2c9c0f89b9edf1a21a2764a94aa03a578f25e78d838a56f51f431",
+  "built_at": "2026-09-26T17:06:40.008Z"
 }
