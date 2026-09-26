@@ -121,6 +121,25 @@ Two active rules of the same country, region and category can never overlap in d
 rate: on the current rule, use **Set end date** and give it the last day it applies (the day before
 the new rate starts); then create the new rule from that day. Requires `taxes.manage_tax`.
 
+### Fix rules marked «overlaps another rule»
+
+Rules saved before overlaps were refused may still be in force on the same days as another rule of
+the same country, region and category. Both look valid, and the till charges the one that **starts
+later** — which may not be the one you meant.
+
+The screen marks those rules: a warning above the table counts them across the whole hub, and the
+**Valid from** of each one shows «overlaps another rule» under the date. **Show them** in the warning
+narrows the table to those rules (**Show all rules** brings the rest back; it also comes back on its
+own once the last pair is fixed). To fix a pair:
+
+- If one rate should replace the other on a date, tap **Set end date** on the older rule and give it
+  the day before the newer one starts.
+- If one of them should not apply at all, tap **Deactivate** on it.
+
+Nothing is changed for you: which rate was meant is your call. If the end date you give still runs
+into the other rule, it is refused — deactivate one of them instead. Requires `taxes.manage_tax`;
+the assistant can find them for you (`taxes.rules.list` with `overlaps = 1`).
+
 ### Repair a rule marked «must be 0 % for this class»
 
 A rule whose class charges no tax — **exempt**, **not subject** or **reverse charge** — cannot carry

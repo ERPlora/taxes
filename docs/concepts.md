@@ -88,6 +88,12 @@ valid to" a real command, `taxes.rules.end`: it ends the rule in force, and `tax
 the next one from the following day, so the change is scheduled without ever leaving two rates valid
 on the same day.
 
+Rules saved before that check may still overlap. They are **not rewritten automatically** — which of
+the two rates the owner meant is theirs to say. `taxes.rules.list` returns `overlaps = 1` for every
+active rule in force on some day together with another one of its slot (the till charges the one
+that starts later), the screen marks them, and the owner resolves each pair with
+`taxes.rules.end` or `taxes.rules.deactivate` (see [screens.md](screens.md)).
+
 ## A rule that charges no tax has no rate
 
 Any class other than **subject** reaches the tax authority without a quota, so its rate is 0 %, and

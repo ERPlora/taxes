@@ -77,7 +77,7 @@ export function handFormattedMoney(src: string): string[] {
  *  through `erplora().formatMoney(minor)` or `<ok-money>`. Add an entry only with the reason it
  *  is not a screen amount. */
 const NOT_DISPLAY: Record<string, string> = {
-  "components/erp-taxes-rules/erp-taxes-rules.ts: isIncoherent(r) ? `${Number(r.rate_pct).toFixed(2)}% · ${t('ui.incoherentBadge')}` : `${Number(r.rate_pct).toFixed(2)}%`,":
+  "components/erp-taxes-rules/erp-taxes-rules.ts: return `${Number(r.rate_pct).toFixed(2)}%`;":
     'rate column of the rules list: a tax PERCENTAGE (rate_pct), not an amount — no currency, no scale',
   "components/erp-taxes-rules/erp-taxes-rules.ts: ${this.parentCandidates.map((r) => html`<ion-select-option .value=${r.id}>${Number(r.rate_pct).toFixed(2)}% · ${t(`ui.taxType_${r.tax_type}`)}${r.valid_from ? ` · ${r.valid_from}` : ''}</ion-select-option>`)}":
     'parent-rule picker label: the parent rule\'s tax PERCENTAGE (rate_pct), not an amount',

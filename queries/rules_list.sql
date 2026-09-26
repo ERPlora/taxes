@@ -35,7 +35,27 @@ SELECT r.id, r.country_code, r.region_code, r.tax_category_key, r.rate_pct, r.ta
        -- blindly. Same conditions as `commands/rule_create.sql` §5 and `commands/rule_repair.sql`.
        CASE WHEN r.rate_pct > 0
                  AND (r.operation_class <> 'subject' OR COALESCE(p.operation_class, 'subject') <> 'subject')
-            THEN 1 ELSE 0 END AS is_incoherent
+            THEN 1 ELSE 0 END AS is_incoherent,
+       -- `overlaps` (taxes#68): this ACTIVE root rule is in force on at least one day together with
+       -- another active root rule of the same slot. taxes#66 refuses that on every write
+       -- (`commands/_rule_overlap_assert.sql`), but pairs saved BEFORE that guard are still here and
+       -- the till charges whichever starts later without the owner ever seeing it. The screen marks
+       -- the row and the owner resolves it with «Set end date» or «Deactivate»; nothing is rewritten
+       -- blindly. Same predicate as the assert: same hub, country, region (empty = whole country),
+       -- category, both roots, both active, inclusive ISO-text ranges (empty = open).
+       CASE WHEN r.is_active = 1 AND COALESCE(NULLIF(r.parent_id, ''), '') = '' AND EXISTS (
+                 SELECT 1 FROM taxes_rule o
+                 WHERE o.hub_id = r.hub_id
+                   AND o.id <> r.id
+                   AND o.is_deleted = 0
+                   AND o.is_active = 1
+                   AND COALESCE(NULLIF(o.parent_id, ''), '') = ''
+                   AND o.country_code = r.country_code
+                   AND COALESCE(o.region_code, '') = COALESCE(r.region_code, '')
+                   AND o.tax_category_key = r.tax_category_key
+                   AND (COALESCE(o.valid_from, '') = '' OR COALESCE(r.valid_to, '') = '' OR o.valid_from <= r.valid_to)
+                   AND (COALESCE(r.valid_from, '') = '' OR COALESCE(o.valid_to, '') = '' OR r.valid_from <= o.valid_to))
+            THEN 1 ELSE 0 END AS overlaps
 FROM taxes_rule r
 -- The root a component hangs from (a root carries an empty `parent_id` and finds nothing). `id` is
 -- the key, so the join cannot duplicate rows.
