@@ -18,7 +18,8 @@
   "errors": {
     "taxes.rule_incoherent": "That rule could not be created: a reverse-charge, exempt or not-subject rule charges no tax, so its rate must be 0 and no component with a rate can hang from it; a component must hang from a root rule of this business with the same country, region and tax category; and its validity range cannot run backwards.",
     "taxes.rule_not_deactivated": "That rule could not be brought back: it does not exist in this business, or it is already active.",
-    "taxes.rule_not_incoherent": "That rule could not be repaired: it does not exist in this business, or it has nothing to repair — only a rule that charges no tax (reverse charge, exempt, not subject) but still carries a rate, or a component with a rate under such a rule, can be repaired."
+    "taxes.rule_not_incoherent": "That rule could not be repaired: it does not exist in this business, or it has nothing to repair — only a rule that charges no tax (reverse charge, exempt, not subject) but still carries a rate, or a component with a rate under such a rule, can be repaired.",
+    "taxes.rule_overlaps": "That rule overlaps another active rule for the same country, region and tax category: two rates cannot be in force on the same day. End the current rule the day before the new one starts, or deactivate it."
   },
   "ui": {
     "colKey": "Key",
@@ -107,6 +108,7 @@
     "repairConfirmMessage": "This rule charges a rate, but its class charges no tax, so its sales cannot be invoiced. Choose what you meant: no tax (the rate becomes 0 %), or charge the rate (the rule becomes subject to tax). Past sales and issued invoices do not change.",
     "repairNoTax": "No tax (0 %)",
     "repairChargeTax": "Charge the rate",
-    "errRepairRule": "Could not repair the rule"
+    "errRepairRule": "Could not repair the rule",
+    "errRuleOverlaps": "Overlaps another active rule for this country, region and category. Pick dates that do not overlap."
   }
 }

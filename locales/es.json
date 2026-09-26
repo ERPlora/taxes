@@ -19,7 +19,8 @@
   "errors": {
     "taxes.rule_incoherent": "No se ha podido crear la regla: una regla con inversión del sujeto pasivo, exenta o no sujeta no cobra impuesto, así que su tipo tiene que ser 0 y no puede colgar de ella un componente con tipo; un componente tiene que colgar de una regla raíz de este negocio con el mismo país, región y categoría fiscal; y su rango de validez no puede ir hacia atrás.",
     "taxes.rule_not_deactivated": "No se ha podido recuperar la regla: no existe en este negocio, o ya está activa.",
-    "taxes.rule_not_incoherent": "No se pudo reparar la regla: no existe en este negocio o no hay nada que reparar — solo se repara una regla que no lleva impuesto (inversión del sujeto pasivo, exenta, no sujeta) pero tiene tipo, o un componente con tipo colgado de una regla así."
+    "taxes.rule_not_incoherent": "No se pudo reparar la regla: no existe en este negocio o no hay nada que reparar — solo se repara una regla que no lleva impuesto (inversión del sujeto pasivo, exenta, no sujeta) pero tiene tipo, o un componente con tipo colgado de una regla así.",
+    "taxes.rule_overlaps": "Esa regla se solapa con otra regla activa del mismo país, región y categoría fiscal: no puede haber dos tipos vigentes el mismo día. Pon fin a la regla actual el día antes de que empiece la nueva, o desactívala."
   },
   "ui": {
     "colKey": "Clave",
@@ -108,6 +109,7 @@
     "repairConfirmMessage": "Esta regla cobra un tipo, pero su clase no lleva impuesto, así que sus ventas no se pueden facturar. Elige qué querías: sin impuesto (el tipo pasa a 0 %) o cobrar el tipo (la regla pasa a sujeta). Las ventas pasadas y las facturas emitidas no cambian.",
     "repairNoTax": "Sin impuesto (0 %)",
     "repairChargeTax": "Cobrar el tipo",
-    "errRepairRule": "No se pudo reparar la regla"
+    "errRepairRule": "No se pudo reparar la regla",
+    "errRuleOverlaps": "Se solapa con otra regla activa de este país, región y categoría. Elige fechas que no se solapen."
   }
 }

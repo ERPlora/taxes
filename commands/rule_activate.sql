@@ -9,10 +9,15 @@
 -- estaba activo toca 0 filas y sale como `taxes.rule_not_deactivated`, nunca como un OK silencioso
 -- sobre una fila que no se movió. Lo mismo para una regla de OTRO hub: el `hub_id` no casa.
 --
--- No puede chocar con nadie al volver: `ix_tax_rule_root_natural` (migración 004) es UNIQUE sobre
--- (hub_id, country_code, tax_category_key, region_code, valid_from) SIN `is_active`, así que la
--- regla desactivada nunca dejó de ocupar su clave natural — reactivarla no crea un duplicado que
--- no existiera ya.
+-- It cannot collide on its natural key coming back: `ix_tax_rule_root_natural` (migration 004) is
+-- UNIQUE over (hub_id, country_code, tax_category_key, region_code, valid_from) WITHOUT
+-- `is_active`, so the deactivated rule never stopped occupying its natural key — reactivating it
+-- does not create a duplicate that did not already exist.
+--
+-- It CAN still collide on OVERLAP, though (taxes#66): the natural key says nothing about another
+-- ACTIVE root rule that already covers these dates under a DIFFERENT `valid_from`. That is what
+-- the later `commands/_rule_overlap_assert.sql` statement of this same command refuses, with
+-- `taxes.rule_overlaps`.
 UPDATE taxes_rule
 SET is_active = 1,
     updated_by = :current_user_id,

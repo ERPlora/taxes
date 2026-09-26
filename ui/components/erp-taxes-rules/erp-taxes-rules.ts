@@ -1,5 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
+import { classMap } from 'lit/directives/class-map.js';
 import { define } from '@erplora/outfitkit/define';
 import '@erplora/outfitkit/ok-inline-feedback';
 import '@erplora/outfitkit/ok-data-table';
@@ -132,6 +133,12 @@ function erplora(): ErploraClientLike {
   return c;
 }
 
+/** The `code` of a runtime error, or `''` when what arrived carries none (it is not the hub's). */
+function errorCode(e: unknown): string {
+  const code = (e as { code?: unknown } | null | undefined)?.code;
+  return typeof code === 'string' ? code : '';
+}
+
 export class ErpTaxesRules extends LitElement {
   static styles = css`
     :host { display:flex; flex-direction:column; height:100%; min-height:0; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
@@ -164,6 +171,12 @@ export class ErpTaxesRules extends LitElement {
   @state() newRegimeKey = '';
 
   @state() newValidFrom = '';
+
+  /** Set when the create command was refused with `taxes.rule_overlaps` (taxes#66): marks «Valid
+   *  from» with its own sentence instead of leaving the owner to guess which of the twelve fields
+   *  of the form was wrong. Every `createRule()` attempt rewrites it (set on this refusal, cleared
+   *  on any other outcome), and editing the date clears it. */
+  @state() validFromError = '';
 
   @state() newValidTo = '';
 
@@ -525,9 +538,13 @@ export class ErpTaxesRules extends LitElement {
       this.newValidTo = '';
       this.newParentId = '';
       this.newComponentLabel = '';
+      this.validFromError = '';
       this.dataTable()?.close(); // el panel de alta se cierra solo tras crear
       await Promise.all([this.ctrl.load(), this.loadAllRules()]);
     } catch (e) {
+      // A refusal on the overlap check (taxes#66) blames the field the owner has to change instead
+      // of leaving the generic banner as the only clue; any other refusal leaves the date alone.
+      this.validFromError = errorCode(e) === 'taxes.rule_overlaps' ? erplora().t(CATALOG, 'ui.errRuleOverlaps') : '';
       this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errCreateRule');
     } finally {
       this.saving = false;
@@ -572,7 +589,9 @@ export class ErpTaxesRules extends LitElement {
               ? html`<ion-input data-testid="taxes-rules-exempt-reason" fill="outline" label-placement="floating" label=${t('ui.colExemptReason')} placeholder=${t('ui.phExemptReason')} maxlength="10" .value=${this.newExemptReason} @ionInput=${(e: any) => (this.newExemptReason = e.target.value)}></ion-input>`
               : nothing}
             <ion-input data-testid="taxes-rules-regime-key" fill="outline" label-placement="floating" label=${t('ui.colRegimeKey')} placeholder=${t('ui.phRegimeKey')} maxlength="10" .value=${this.newRegimeKey} @ionInput=${(e: any) => (this.newRegimeKey = e.target.value)}></ion-input>
-            <ion-input data-testid="taxes-rules-valid-from" fill="outline" label-placement="floating" label=${t('ui.colValidFrom')} type="date" .value=${this.newValidFrom} @ionInput=${(e: any) => (this.newValidFrom = e.target.value)}></ion-input>
+            <!-- A refusal on the overlap check (taxes#66) marks THIS field with its own sentence
+                 instead of leaving the generic banner above as the only clue. -->
+            <ion-input data-testid="taxes-rules-valid-from" fill="outline" label-placement="floating" label=${t('ui.colValidFrom')} type="date" class=${classMap({ 'ion-invalid': !!this.validFromError, 'ion-touched': !!this.validFromError })} error-text=${this.validFromError ? this.validFromError : nothing} .value=${this.newValidFrom} @ionInput=${(e: any) => { this.newValidFrom = e.target.value; this.validFromError = ''; }}></ion-input>
             <ion-input data-testid="taxes-rules-valid-to" fill="outline" label-placement="floating" label=${t('ui.colValidTo')} type="date" .value=${this.newValidTo} @ionInput=${(e: any) => (this.newValidTo = e.target.value)}></ion-input>
             <!-- Parent rule (multi-tax component): CHOSEN among the root rules compatible with the
                  country/region/category above (taxes#11) — never a free id. -->

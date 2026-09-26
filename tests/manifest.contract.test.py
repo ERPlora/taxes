@@ -60,6 +60,8 @@ KNOWN_TOP_LEVEL = {
     "version",
     "description",
     "depends_on",
+    # Which cores can run the module (hub#521); taxes#66 needs one that knows `on_unique`.
+    "compatibility",
     "permissions",
     "role_permissions",
     "navigation",

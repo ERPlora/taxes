@@ -17,6 +17,9 @@
     ]
   },
   "depends_on": [],
+  "compatibility": {
+    "min_erplora_version": "1.1.27"
+  },
   "permissions": [
     "taxes.view_tax",
     "taxes.manage_tax",
@@ -66,7 +69,8 @@
       "migrations/postgres/002_fiscal_qualification.sql",
       "migrations/postgres/003_backfill_es_vat_baseline.sql",
       "migrations/postgres/004_taxes_rule_natural_key.sql",
-      "migrations/postgres/005_category_labels.sql"
+      "migrations/postgres/005_category_labels.sql",
+      "migrations/postgres/006_rule_overlap_gate.sql"
     ]
   },
   "seed": {
@@ -271,20 +275,26 @@
       "permission": "taxes.manage_tax",
       "transaction": true,
       "sql": [
-        "commands/rule_create.sql"
+        "commands/rule_create.sql",
+        "commands/_rule_overlap_assert.sql"
       ],
       "expect_rows": {
         "op": "min",
         "n": 1,
         "error": "taxes.rule_incoherent",
-        "message": "That rule could not be created: a reverse-charge, exempt or not-subject rule charges no tax, so its rate must be 0 and no component with a rate can hang from it; a component must hang from a root rule of this business with the same country, region and tax category; and its validity range cannot run backwards."
+        "message": "That rule could not be created: a reverse-charge, exempt or not-subject rule charges no tax, so its rate must be 0 and no component with a rate can hang from it; a component must hang from a root rule of this business with the same country, region and tax category; and its validity range cannot run backwards.",
+        "statement": "commands/rule_create.sql"
+      },
+      "on_unique": {
+        "taxes_rule_overlaps": "taxes.rule_overlaps",
+        "ix_tax_rule_root_natural": "taxes.rule_overlaps"
       },
       "schema": "schemas/rule_create.json",
       "emit": [
         "taxes.rule.created"
       ],
       "ai": {
-        "description": "Creates a tax rule (the % for a country+region+category) with its fiscal qualification (operation_class / regime_key / exempt_reason). Any operation_class other than subject (reverse charge, exempt, not subject) charges no tax, so its rate_pct must be 0. Pass parent_id to add a multi-tax component (e.g. surcharge) to a root rule of class subject."
+        "description": "Creates a tax rule (the % for a country+region+category) with its fiscal qualification (operation_class / regime_key / exempt_reason). Any operation_class other than subject (reverse charge, exempt, not subject) charges no tax, so its rate_pct must be 0. Pass parent_id to add a multi-tax component (e.g. surcharge) to a root rule of class subject. Two active rules of the same country, region and tax category cannot overlap in dates (refused with taxes.rule_overlaps); to change a rate, end the old rule the day before the new one starts (contiguous ranges are fine)."
       }
     },
     "taxes.rules.bulk_create": {
@@ -294,9 +304,13 @@
         "file": "dist/handler.wasm",
         "function": "bulk_create_rules"
       },
+      "on_unique": {
+        "taxes_rule_overlaps": "taxes.rule_overlaps",
+        "ix_tax_rule_root_natural": "taxes.rule_overlaps"
+      },
       "schema": "schemas/rules_bulk_create.json",
       "ai": {
-        "description": "Creates multiple tax rules at once (e.g. 'create the 2026 Spain VAT rates'). Invalid rows (including a non-subject operation_class with rate_pct > 0) are skipped without aborting the batch. Components (parent_id) must be created individually."
+        "description": "Creates multiple tax rules at once (e.g. 'create the 2026 Spain VAT rates'). Invalid rows (including a non-subject operation_class with rate_pct > 0) are skipped without aborting the batch. Components (parent_id) must be created individually. Two active rules of the same country, region and tax category cannot overlap in dates: an overlapping row makes the whole batch fail with taxes.rule_overlaps."
       }
     },
     "taxes.rules.deactivate": {
@@ -317,20 +331,25 @@
       "permission": "taxes.manage_tax",
       "transaction": true,
       "sql": [
-        "commands/rule_activate.sql"
+        "commands/rule_activate.sql",
+        "commands/_rule_overlap_assert.sql"
       ],
       "schema": "schemas/rule_activate.json",
       "expect_rows": {
         "op": "min",
         "n": 1,
         "error": "taxes.rule_not_deactivated",
-        "message": "That rule could not be brought back: it does not exist in this business, or it is already active."
+        "message": "That rule could not be brought back: it does not exist in this business, or it is already active.",
+        "statement": "commands/rule_activate.sql"
+      },
+      "on_unique": {
+        "taxes_rule_overlaps": "taxes.rule_overlaps"
       },
       "emit": [
         "taxes.rule.activated"
       ],
       "ai": {
-        "description": "Brings a deactivated tax rule back so it applies to new transactions again (undoes `taxes.rules.deactivate`). Its rate, jurisdiction, category, validity and components are untouched — deactivating never changed them."
+        "description": "Brings a deactivated tax rule back so it applies to new transactions again (undoes `taxes.rules.deactivate`). Its rate, jurisdiction, category, validity and components are untouched — deactivating never changed them. Two active rules of the same country, region and tax category cannot overlap in dates (refused with taxes.rule_overlaps); to change a rate, end the old rule the day before the new one starts (contiguous ranges are fine)."
       },
       "expose_api": true
     },
@@ -378,7 +397,8 @@
     "taxes._insert_rule": {
       "permission": "taxes.manage_tax",
       "sql": [
-        "commands/_insert_rule.sql"
+        "commands/_insert_rule.sql",
+        "commands/_rule_overlap_assert.sql"
       ]
     },
     "taxes.calculate": {
@@ -399,7 +419,8 @@
   "errors": {
     "taxes.rule_incoherent": {},
     "taxes.rule_not_deactivated": {},
-    "taxes.rule_not_incoherent": {}
+    "taxes.rule_not_incoherent": {},
+    "taxes.rule_overlaps": {}
   },
   "events": {
     "listen": {},
