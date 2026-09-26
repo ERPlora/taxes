@@ -66,7 +66,9 @@ ON_UNIQUE_CORE = (1, 1, 30)
 
 PARAM = re.compile(r"(?<!:):([a-z_][a-z0-9_]*)", re.IGNORECASE)
 UNIQUE = re.compile(r'violates unique constraint "([^"]+)"')
-TAG = re.compile(r"^(?:INSERT \d+ (\d+)|UPDATE (\d+)|DELETE (\d+))$")
+# A SELECT statement (the per-hub write lock of taxes#69) prints no tag, only its row footer; the
+# dispatcher counts it as the rows it returned, as sqlx's `rows_affected` does.
+TAG = re.compile(r"^(?:INSERT \d+ (\d+)|UPDATE (\d+)|DELETE (\d+)|\((\d+) rows?\))$")
 
 failures: list[str] = []
 

@@ -278,6 +278,7 @@
       "permission": "taxes.manage_tax",
       "transaction": true,
       "sql": [
+        "commands/_rule_write_lock.sql",
         "commands/rule_create.sql",
         "commands/_rule_overlap_assert.sql"
       ],
@@ -334,6 +335,7 @@
       "permission": "taxes.manage_tax",
       "transaction": true,
       "sql": [
+        "commands/_rule_write_lock.sql",
         "commands/rule_activate.sql",
         "commands/_rule_overlap_assert.sql"
       ],
@@ -360,6 +362,7 @@
       "permission": "taxes.manage_tax",
       "transaction": true,
       "sql": [
+        "commands/_rule_write_lock.sql",
         "commands/rule_end.sql",
         "commands/_rule_overlap_assert.sql"
       ],
@@ -426,6 +429,7 @@
     "taxes._insert_rule": {
       "permission": "taxes.manage_tax",
       "sql": [
+        "commands/_rule_write_lock.sql",
         "commands/_insert_rule.sql",
         "commands/_rule_overlap_assert.sql"
       ]

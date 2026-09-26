@@ -180,13 +180,14 @@ def rows(sql: str) -> list[dict]:
 
 
 def execute(sql: str) -> int:
-    """Runs a statement and returns the number of rows it touched (`UPDATE n`)."""
+    """Runs a statement and returns the number of rows it touched (`UPDATE n`) — or, for a SELECT
+    (the per-hub write lock of taxes#69), the rows it returned, as sqlx's `rows_affected` does."""
     out = psql(["-c", sql], db=DB).strip().splitlines()
     tag = out[-1] if out else ""
-    match = re.match(r"^(?:UPDATE|INSERT \d+|DELETE)\s+(\d+)$", tag.strip())
+    match = re.match(r"^(?:(?:UPDATE|INSERT \d+|DELETE)\s+(\d+)|\((\d+) rows?\))$", tag.strip())
     if not match:
         raise RuntimeError(f"unexpected command tag from psql: {tag!r}")
-    return int(match.group(1))
+    return int(match.group(1) or match.group(2))
 
 
 # ── the list engine, only the part under test ────────────────────────────────────────────────
@@ -254,10 +255,10 @@ def list_page(hub: str = HUB, include_archived=_ABSENT, **filters) -> list[dict]
 
 
 def activate(rule_id: str, hub: str = HUB) -> int:
-    """`taxes.rules.activate` as the runtime runs it: the module's own statement, bound."""
-    sql = (MODULE_DIR / MANIFEST["commands"][ACTIVATE]["sql"][0]).read_text(
-        encoding="utf-8"
-    )
+    """`taxes.rules.activate` as the runtime runs it: the module's own statement, bound. It is the
+    statement `expect_rows` anchors to — not `sql[0]`, which is the per-hub write lock (taxes#69)."""
+    anchor = MANIFEST["commands"][ACTIVATE]["expect_rows"]["statement"]
+    sql = (MODULE_DIR / anchor).read_text(encoding="utf-8")
     return execute(
         bind(sql, {"rule_id": rule_id, "hub_id": hub, "current_user_id": USER, "now": NOW})
     )
