@@ -59,8 +59,10 @@ END_INVALID = "taxes.rule_end_invalid"
 HUB = "hub-under-test"
 OTHER_HUB = "hub-next-door"
 USER = "u-owner"
-# First core that renames a unique violation through `on_unique` (hub#2081, released in v1.1.27).
-ON_UNIQUE_CORE = (1, 1, 27)
+# First core that renames a unique violation through `on_unique` (hub#2081, merged 2026-09-25 as
+# hub#2092). No tag up to v1.1.29 (2026-09-19) carries it, and those cores REFUSE a manifest with an
+# unknown command field, so the floor is the first release cut after it: v1.1.30.
+ON_UNIQUE_CORE = (1, 1, 30)
 
 PARAM = re.compile(r"(?<!:):([a-z_][a-z0-9_]*)", re.IGNORECASE)
 UNIQUE = re.compile(r'violates unique constraint "([^"]+)"')

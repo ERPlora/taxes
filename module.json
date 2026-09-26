@@ -18,7 +18,7 @@
   },
   "depends_on": [],
   "compatibility": {
-    "min_erplora_version": "1.1.27"
+    "min_erplora_version": "1.1.30"
   },
   "permissions": [
     "taxes.view_tax",
