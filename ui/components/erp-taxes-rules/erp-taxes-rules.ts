@@ -175,9 +175,11 @@ export class ErpTaxesRules extends LitElement {
     :host { display:flex; flex-direction:column; height:100%; min-height:0; font-family: system-ui, sans-serif; color: var(--ion-text-color, #1c1b18); }
     /* The view fills the height: the data-table takes what is left (inner scroll, fixed footer).
        But never less than a usable minimum (taxes#68): on a phone, stacked warnings left it 30 px
-       tall with no card in sight — past that minimum the page scrolls and the warnings go by. */
+       tall with no card in sight — past that minimum the page scrolls and the warnings go by. It
+       still shrinks down to that minimum: with a flex-shrink of 0 it kept the page's full height
+       (it is height:100% in fill mode) and one banner pushed the pager off screen. */
     .page { display:flex; flex-direction:column; min-height:0; flex:1 1 auto; overflow-y:auto; }
-    .page > ok-data-table { flex:1 0 auto; min-height:min(28rem, 70vh); }
+    .page > ok-data-table { flex:1 1 auto; min-height:min(28rem, 70vh); }
     /* El alta vive en el panel lateral de la tabla (estrecho): los campos van APILADOS. */
     .form { display:flex; flex-direction:column; gap:.7rem; }
     .form ion-button { align-self:flex-end; }
@@ -425,6 +427,12 @@ export class ErpTaxesRules extends LitElement {
     return this.allRules.filter((r) => overlaps(r)).length;
   }
 
+  /** The banner's way to the overlapping rules: narrows the table to them, and back (taxes#68). */
+  private toggleOverlapFilter(on: boolean): void {
+    this.showingOverlaps = on;
+    this.ctrl.setFilter('overlaps', on ? '1' : '');
+  }
+
   /**
    * Cambio de filtro de la tabla. `is_active = 0` no es un filtro más: las reglas desactivadas NO
    * están en la respuesta por defecto de `taxes.rules.list` —el keystone (ADR-0069) consume esa
@@ -435,12 +443,6 @@ export class ErpTaxesRules extends LitElement {
    * El alcance se escribe directo en el contexto del controlador y la recarga se deja en manos de
    * `setFilter`: `setContext` recargaría por su cuenta y el mismo toque costaría DOS viajes al hub.
    */
-  /** The banner's way to the overlapping rules: narrows the table to them, and back (taxes#68). */
-  private toggleOverlapFilter(on: boolean): void {
-    this.showingOverlaps = on;
-    this.ctrl.setFilter('overlaps', on ? '1' : '');
-  }
-
   private onFilterChange(col: string, value: unknown): void {
     if (col === 'is_active') {
       this.showingArchived = String(value ?? '') === '0';

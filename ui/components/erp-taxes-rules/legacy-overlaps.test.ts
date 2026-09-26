@@ -248,6 +248,10 @@ describe('the warnings never squeeze the rules off a phone screen (taxes#68)', (
     const css = Ctor.styles.cssText.replace(/\s+/g, ' ');
     expect(css, 'the page does not scroll: banners push the table out of reach').toMatch(/\.page \{[^}]*overflow-y: ?auto/);
     expect(css, 'the table can shrink to nothing under the banners').toMatch(/\.page > ok-data-table \{[^}]*min-height: ?min\(/);
-    expect(css, 'the table shrinks below its minimum').toMatch(/\.page > ok-data-table \{[^}]*flex: ?1 0 auto/);
+    // Above that minimum the table must still SHRINK to what is left: `ok-data-table[fill]` is
+    // `height:100%`, so with `flex-shrink:0` it keeps the page's full height, and a single banner
+    // already pushed the pager below the fold — on a 1280 px desktop too (measured in Chromium in
+    // the review of taxes#72). The floor is `min-height`, not a flex-shrink of 0.
+    expect(css, 'the table never shrinks: one banner pushes its pager off screen').toMatch(/\.page > ok-data-table \{[^}]*flex: ?1 1 auto/);
   });
 });
