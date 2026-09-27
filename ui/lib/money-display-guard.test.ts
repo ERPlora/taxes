@@ -107,8 +107,10 @@ describe('money display goes through the shared formatter (pm#289)', () => {
     // an amount would be painted first: a scan over empty or over-stripped content would otherwise
     // stay green forever (HALLAZGO of the review of appointments#226).
     const carriers: string[] = [];
+    const scanned: string[] = [];
     for (const f of uiSources(uiRoot)) {
       const rel = f.slice(uiRoot.length + 1);
+      scanned.push(rel);
       const src = readFileSync(f, 'utf8');
       if (stripComments(src).includes('format: (r)')) carriers.push(rel);
       for (const h of handFormattedMoney(src)) found.push(`${rel}: ${h}`);
@@ -120,6 +122,11 @@ describe('money display goes through the shared formatter (pm#289)', () => {
         'components/erp-taxes-aliases/erp-taxes-aliases.ts',
       ]),
     );
+    // `lib/` is where a shared money helper would land first, and it carries no column formatter.
+    expect(scanned).toEqual(expect.arrayContaining(['lib/tax-category-name.ts', 'lib/countries.ts']));
+    // Witness on the detector's OUTPUT, not only on what the loop read: the triaged percentages of
+    // Rules must come out of this very scan, or the detector was fed something else (empty, cut).
+    expect(Object.keys(NOT_DISPLAY).filter((k) => !found.includes(k))).toEqual([]);
     const unexpected = unexpectedHits(found, NOT_DISPLAY);
     expect(
       unexpected,
