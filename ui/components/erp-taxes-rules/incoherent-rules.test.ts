@@ -17,6 +17,8 @@
 // The server half is proved in `tests/incoherent_rules_are_flagged_and_repairable.postgres.test.py`.
 import { beforeEach, describe, expect, it } from 'vitest';
 import { render } from 'lit';
+import enLocale from '../../../locales/en.json';
+import esLocale from '../../../locales/es.json';
 
 const CATEGORIES = [{ id: 'c1', key: 'product.generic', name: 'Generic' }];
 
@@ -162,6 +164,25 @@ describe('an incoherent rule is visible where it is configured (taxes#63)', () =
     expect(banner, 'two incoherent rules and no word about it on screen').toBeTruthy();
     expect(banner?.getAttribute('tone')).toBe('warning');
     expect(banner?.textContent).toContain('ui.incoherentWarning{"count":2}');
+  });
+
+  // taxes#71: «1 reglas cobran…». Only the catalogue knows the singular, so the count picks the key
+  // (`…One` for 1, like flows' plain-language plurals) and the catalogue carries both forms.
+  it('a single incoherent rule is counted in the singular', async () => {
+    pageRows = [FINE, BAD_ROOT];
+    allRows = [FINE, BAD_ROOT];
+    const el = await mount();
+    const banner = el.shadowRoot.querySelector('[data-testid="taxes-rules-incoherent-warning"]');
+    expect(banner?.textContent).toContain('ui.incoherentWarningOne{"count":1}');
+    expect(banner?.textContent).not.toContain('ui.incoherentWarning{');
+  });
+
+  it('the catalogue has the singular and the plural of the banner in en and es', () => {
+    const ui = (locale: unknown) => (locale as { ui: Record<string, string> }).ui;
+    expect(ui(esLocale).incoherentWarningOne).toMatch(/^1 regla cobra /);
+    expect(ui(esLocale).incoherentWarning).toMatch(/^\{count\} reglas cobran /);
+    expect(ui(enLocale).incoherentWarningOne).toMatch(/^1 tax rule charges /);
+    expect(ui(enLocale).incoherentWarning).toMatch(/^\{count\} tax rules charge /);
   });
 
   it('no banner when every rule is fine', async () => {

@@ -110,6 +110,7 @@
     "phRegimeKey": "opcional (código de la jurisdicción, p. ej. 01)",
     "incoherentBadge": "debe ser 0 % en esta clase",
     "incoherentWarning": "{count} reglas cobran un tipo en una clase que no lleva impuesto (exenta, no sujeta o inversión del sujeto pasivo). Sus ventas se cobran en caja pero no se pueden facturar. Usa «Reparar» en las filas marcadas.",
+    "incoherentWarningOne": "1 regla cobra un tipo en una clase que no lleva impuesto (exenta, no sujeta o inversión del sujeto pasivo). Sus ventas se cobran en caja pero no se pueden facturar. Usa «Reparar» en la fila marcada.",
     "overlapBadge": "se solapa con otra regla",
     "overlapWarning": "{count} reglas están vigentes los mismos días que otra regla del mismo país, región y categoría, y la caja cobra la que empieza más tarde. En las filas marcadas, usa «Poner fecha de fin» en la regla antigua (el día antes de que empiece la nueva) o «Desactivar» la que no deba aplicarse.",
     "overlapShow": "Ver cuáles",
