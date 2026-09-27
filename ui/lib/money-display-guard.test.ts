@@ -9,8 +9,9 @@ import { fileURLToPath } from 'node:url';
 // the shell's single formatter — `erplora().formatMoney(minor)` (currency and scale of the hub,
 // JPY 0 decimals, KWD 3) — or `<ok-money>` / `formatMinor` from OutfitKit (by string, no float).
 // A `(cents / 100).toFixed(2)` — or `.toFixed(scale)`, same float path — or a hand-built
-// `Intl.NumberFormat({ currency })` brings back what that contract removed: its own separators,
-// its own rounding, and a hard `/100` that is wrong the day the hub is not in euros.
+// `Intl.NumberFormat({ currency })` / `.toLocaleString(…, { currency })` brings back what that
+// contract removed: its own separators, its own rounding, and a hard `/100` that is wrong the day
+// the hub is not in euros.
 //
 // The only hand formatting left is NOT display, and each one is listed below with the reason.
 // A new occurrence (or an allowed one that moves to another file) turns this test red.
@@ -40,11 +41,12 @@ function stripComments(src: string): string {
   return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:\\])\/\/.*$/gm, '$1');
 }
 
-/** Every `NumberFormat(…)` call whose arguments (up to the balancing paren, across lines) name a
- *  `currency`: the options object usually sits on its own lines, so a per-line match misses it. */
+/** Every `NumberFormat(…)` or `.toLocaleString(…)` call whose arguments (up to the balancing paren,
+ *  across lines) name a `currency`: the options object usually sits on its own lines, so a per-line
+ *  match misses it. `toLocaleString` is the same Intl path without spelling `NumberFormat`. */
 function currencyNumberFormatCalls(code: string): string[] {
   const calls: string[] = [];
-  const open = /NumberFormat\s*\(/g;
+  const open = /(?:NumberFormat|\.toLocaleString)\s*\(/g;
   let m: RegExpExecArray | null;
   while ((m = open.exec(code))) {
     let depth = 1;
@@ -61,8 +63,8 @@ function currencyNumberFormatCalls(code: string): string[] {
 }
 
 /** Each hand-formatted number in the code: any `.toFixed(…)` (per line — `toFixed(scale)` is the
- *  same float path as `toFixed(2)`) or a `NumberFormat(…currency…)` call (collapsed to one line,
- *  however many it spans). */
+ *  same float path as `toFixed(2)`) or a `NumberFormat(…currency…)` / `.toLocaleString(…currency…)`
+ *  call (collapsed to one line, however many it spans). */
 export function handFormattedMoney(src: string): string[] {
   const code = stripComments(src);
   const hits: string[] = [];
@@ -83,15 +85,49 @@ const NOT_DISPLAY: Record<string, string> = {
     'parent-rule picker label: the parent rule\'s tax PERCENTAGE (rate_pct), not an amount',
 };
 
+/** The hits no exception covers. Each exception covers ONE occurrence: the key is file + exact
+ *  line, so a copy of the allowed line in a new display function of the same file would otherwise
+ *  ride on it. */
+export function unexpectedHits(found: string[], allowed: Record<string, string>): string[] {
+  const left = new Map(Object.keys(allowed).map((k) => [k, 1]));
+  return found.filter((k) => {
+    const n = left.get(k) ?? 0;
+    left.set(k, n - 1);
+    return n <= 0;
+  });
+}
+
 describe('money display goes through the shared formatter (pm#289)', () => {
   it('no hand-formatted amount in ui/ outside the triaged non-display cases', () => {
     const uiRoot = join(moduleRoot(), 'ui');
     const found: string[] = [];
+    // The control that keeps this from passing vacuously: this module paints no amount, so an empty
+    // `found` proves nothing by itself. Its three screens must be scanned AND the code the detector
+    // reads (comments stripped) must still carry their column formatters (`format: (r) =>`), where
+    // an amount would be painted first: a scan over empty or over-stripped content would otherwise
+    // stay green forever (HALLAZGO of the review of appointments#226).
+    const carriers: string[] = [];
+    const scanned: string[] = [];
     for (const f of uiSources(uiRoot)) {
       const rel = f.slice(uiRoot.length + 1);
-      for (const h of handFormattedMoney(readFileSync(f, 'utf8'))) found.push(`${rel}: ${h}`);
+      scanned.push(rel);
+      const src = readFileSync(f, 'utf8');
+      if (stripComments(src).includes('format: (r)')) carriers.push(rel);
+      for (const h of handFormattedMoney(src)) found.push(`${rel}: ${h}`);
     }
-    const unexpected = found.filter((k) => !(k in NOT_DISPLAY));
+    expect(carriers).toEqual(
+      expect.arrayContaining([
+        'components/erp-taxes-rules/erp-taxes-rules.ts',
+        'components/erp-taxes-categories/erp-taxes-categories.ts',
+        'components/erp-taxes-aliases/erp-taxes-aliases.ts',
+      ]),
+    );
+    // `lib/` is where a shared money helper would land first, and it carries no column formatter.
+    expect(scanned).toEqual(expect.arrayContaining(['lib/tax-category-name.ts', 'lib/countries.ts']));
+    // Witness on the detector's OUTPUT, not only on what the loop read: the triaged percentages of
+    // Rules must come out of this very scan, or the detector was fed something else (empty, cut).
+    expect(Object.keys(NOT_DISPLAY).filter((k) => !found.includes(k))).toEqual([]);
+    const unexpected = unexpectedHits(found, NOT_DISPLAY);
     expect(
       unexpected,
       'amount formatted by hand: use erplora().formatMoney(minor) or <ok-money>/formatMinor',
@@ -117,5 +153,71 @@ describe('money display goes through the shared formatter (pm#289)', () => {
     expect(handFormattedMoney("new Intl.NumberFormat(locale, { maximumFractionDigits: 3 })")).toHaveLength(0);
     // The shape prettier produces: the options object on its own lines (this is how it comes back).
     expect(handFormattedMoney("new Intl.NumberFormat('es-ES', {\n  style: 'currency',\n  currency: 'EUR',\n});")).toHaveLength(1);
+    // Same Intl path without spelling `NumberFormat` (gap noted in the review of verifactu#136).
+    expect(handFormattedMoney("const s = (total / 100).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });")).toHaveLength(1);
+    expect(handFormattedMoney("const s = (total / 100).toLocaleString(locale, {\n  style: 'currency',\n  currency,\n});")).toHaveLength(1);
+    expect(handFormattedMoney("const s = new Date(x).toLocaleString(locale, { hour: '2-digit' });")).toHaveLength(0);
+  });
+
+  it('an exception covers one occurrence of its line, not every copy in the file', () => {
+    const allowed = { 'lib/a.ts: x.toFixed(d);': 'input value' };
+    expect(unexpectedHits(['lib/a.ts: x.toFixed(d);'], allowed)).toEqual([]);
+    expect(unexpectedHits(['lib/a.ts: x.toFixed(d);', 'lib/a.ts: x.toFixed(d);'], allowed)).toEqual(['lib/a.ts: x.toFixed(d);']);
+    expect(unexpectedHits(['lib/b.ts: x.toFixed(d);'], allowed)).toEqual(['lib/b.ts: x.toFixed(d);']);
+  });
+});
+
+// GUARD (rv-payment_gateways-36, copied to every module of pm#289): OutfitKit is imported by ENTRY POINT (`@erplora/outfitkit/ok-money`),
+// never as a value from the barrel (`@erplora/outfitkit`). The barrel re-exports every `ok-*`
+// component, so a single `import { formatMinor } from '@erplora/outfitkit'` made esbuild inline the
+// whole library into this module's bundle: `dist/` went from 216 KB to 1.1 MB and registered 90
+// components the screen never paints. Type-only imports/exports are erased and stay allowed; a
+// side-effect, dynamic or re-export of the barrel drags it in just the same.
+export function barrelValueImports(src: string): string[] {
+  const code = stripComments(src);
+  const re =
+    /(?:import|export)\s+(?!type\b)[^;]*?\bfrom\s+['"]@erplora\/outfitkit['"]|\bimport\s*\(?\s*['"]@erplora\/outfitkit['"]/g;
+  return (code.match(re) ?? []).map((m) => m.replace(/\s+/g, ' ').trim());
+}
+
+describe('OutfitKit comes in by entry point, not by the barrel (bundle size)', () => {
+  it('no value import from `@erplora/outfitkit` in ui/', () => {
+    const uiRoot = join(moduleRoot(), 'ui');
+    const found: string[] = [];
+    // Non-vacuity control: each of the three screens imports OutfitKit (its entry points and an
+    // `import type` from the barrel), so the scan must read those imports in all three, or it
+    // would pass on empty content.
+    const importers: string[] = [];
+    for (const f of uiSources(uiRoot)) {
+      const rel = f.slice(uiRoot.length + 1);
+      const src = readFileSync(f, 'utf8');
+      if (stripComments(src).includes("'@erplora/outfitkit")) importers.push(rel);
+      for (const h of barrelValueImports(src)) found.push(`${rel}: ${h}`);
+    }
+    expect(importers, 'the scan read no OutfitKit import: it would pass on empty files').toEqual(
+      expect.arrayContaining([
+        'components/erp-taxes-rules/erp-taxes-rules.ts',
+        'components/erp-taxes-categories/erp-taxes-categories.ts',
+        'components/erp-taxes-aliases/erp-taxes-aliases.ts',
+      ]),
+    );
+    expect(found, 'import it from @erplora/outfitkit/<component> (the barrel drags every ok-* into dist/)').toEqual([]);
+  });
+
+  it('the detector catches the positive and lets type-only imports through', () => {
+    expect(barrelValueImports("import { formatMinor } from '@erplora/outfitkit';")).toHaveLength(1);
+    expect(barrelValueImports("import {\n  formatMinor,\n} from '@erplora/outfitkit';")).toHaveLength(1);
+    expect(barrelValueImports("import type { DataTableColumn } from '@erplora/outfitkit';")).toHaveLength(0);
+    expect(barrelValueImports("import { formatMinor } from '@erplora/outfitkit/ok-money';")).toHaveLength(0);
+    expect(barrelValueImports("// import { formatMinor } from '@erplora/outfitkit';")).toHaveLength(0);
+    // The other doors to the same barrel: a side-effect import (the shape of this module's own
+    // `import '@erplora/outfitkit/ok-data-table'` with the entry point dropped), a dynamic import
+    // and a re-export all evaluate every `ok-*` just the same.
+    expect(barrelValueImports("import '@erplora/outfitkit';")).toHaveLength(1);
+    expect(barrelValueImports("const ok = await import('@erplora/outfitkit');")).toHaveLength(1);
+    expect(barrelValueImports("export { formatMinor } from '@erplora/outfitkit';")).toHaveLength(1);
+    expect(barrelValueImports("export * from '@erplora/outfitkit';")).toHaveLength(1);
+    expect(barrelValueImports("import '@erplora/outfitkit/ok-data-table';")).toHaveLength(0);
+    expect(barrelValueImports("export type { OkDetailItem } from '@erplora/outfitkit';")).toHaveLength(0);
   });
 });
