@@ -304,9 +304,13 @@ describe.each(ROW_ACTIONS)('pm#513 · Tax rules: a refused «$id» from a row st
     refuse = REFUSAL;
     await rowAction(el, a);
     expect(commands).toEqual([a.command]);
-    expect(inside(el, '.page', 'taxes-rules-error')?.textContent?.trim()).toBe(REFUSAL);
+    const notice = inside(el, '.page', 'taxes-rules-error');
+    expect(notice?.textContent?.trim()).toBe(REFUSAL);
     expect(whereIs(el, REFUSAL)).toEqual(['page']);
     expect(inside(el, CREATE, RULES.formError)).toBeNull();
+    // Above the list, where it was before: under a long list of cards on a phone it is never seen.
+    const table = el.shadowRoot.querySelector('ok-data-table')!;
+    expect(notice!.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING, 'the refusal sits above the rules').toBeTruthy();
   });
 
   it('a new row action clears the previous refusal while it runs', async () => {
