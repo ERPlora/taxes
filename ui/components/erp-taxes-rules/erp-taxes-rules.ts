@@ -1,4 +1,5 @@
 import { LitElement, html, css, nothing } from 'lit';
+import type { PropertyValues } from 'lit';
 import { state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { styleMap } from 'lit/directives/style-map.js';
@@ -201,7 +202,12 @@ export class ErpTaxesRules extends LitElement {
     .err { color:#d9480f; font-weight:600; }
   `;
 
+  /** What «Add» in the panel was refused: painted inside that form, never on the page (pm#513). */
   @state() formError = '';
+
+  /** What a row action («Restore», «Deactivate», «Set end date», «Repair») was refused: no panel is
+   *  open then, so it goes on the page. */
+  @state() pageError = '';
 
   @state() newCountry = '';
 
@@ -508,12 +514,12 @@ export class ErpTaxesRules extends LitElement {
   /** Devuelve a la vida una regla desactivada (`taxes.rules.activate`). Sin confirmación: reactivar
    *  no es destructivo —deshace algo que sí lo era— y el mercado tampoco la pide (taxes#52). */
   private async restoreRule(row: Record<string, unknown>): Promise<void> {
-    this.formError = '';
+    this.pageError = '';
     try {
       await erplora().command('taxes.rules.activate', { rule_id: String(row.id) });
       await Promise.all([this.ctrl.load(), this.loadAllRules()]);
     } catch (e) {
-      this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errRestoreRule');
+      this.pageError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errRestoreRule');
     }
   }
 
@@ -521,13 +527,13 @@ export class ErpTaxesRules extends LitElement {
     const row = this.pendingDeactivate;
     this.pendingDeactivate = null;
     if (ev.detail?.role !== 'confirm' || !row) return;
-    this.formError = '';
+    this.pageError = '';
     try {
       await erplora().command('taxes.rules.deactivate', { rule_id: row.id });
       // The whole hub too, not just the page: the banners count every active rule (taxes#68).
       await Promise.all([this.ctrl.load(), this.loadAllRules()]);
     } catch (e) {
-      this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errDeactivateRule');
+      this.pageError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errDeactivateRule');
     }
   }
 
@@ -538,14 +544,14 @@ export class ErpTaxesRules extends LitElement {
     this.pendingEnd = null;
     const validTo = ev.detail?.data?.values?.valid_to?.trim();
     if (ev.detail?.role !== 'confirm' || !row || !validTo) return;
-    this.formError = '';
+    this.pageError = '';
     try {
       await erplora().command('taxes.rules.end', { rule_id: String(row.id), valid_to: validTo });
       await Promise.all([this.ctrl.load(), this.loadAllRules()]);
     } catch (e) {
       // A refusal on the overlap check (taxes#66) explains itself instead of leaving the generic
       // banner as the only clue, the same treatment `createRule()` gives it.
-      this.formError =
+      this.pageError =
         errorCode(e) === 'taxes.rule_overlaps'
           ? erplora().t(CATALOG, 'ui.errRuleOverlaps')
           : e instanceof Error
@@ -560,12 +566,12 @@ export class ErpTaxesRules extends LitElement {
     this.pendingRepair = null;
     const mode = ev.detail?.role;
     if (!row || (mode !== 'no_tax' && mode !== 'charge_tax')) return;
-    this.formError = '';
+    this.pageError = '';
     try {
       await erplora().command('taxes.rules.repair', { rule_id: row.id, mode });
       await Promise.all([this.ctrl.load(), this.loadAllRules()]);
     } catch (e) {
-      this.formError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errRepairRule');
+      this.pageError = e instanceof Error ? e.message : erplora().t(CATALOG, 'ui.errRepairRule');
     }
   }
 
@@ -668,6 +674,7 @@ export class ErpTaxesRules extends LitElement {
     if (!this.newCountry.trim() || !this.newCategoryKey.trim() || this.newRatePct === '') return;
     this.saving = true;
     this.formError = '';
+    this.pageError = ''; // a save is the next thing the person did: an older row refusal is stale (staff#75)
     try {
       const payload: Record<string, unknown> = {
         country_code: this.newCountry.trim().toUpperCase(),
@@ -711,12 +718,26 @@ export class ErpTaxesRules extends LitElement {
     }
   }
 
+  /** pm#513: the refusal appears above the button that was pressed — on a phone that can leave it
+   *  off the sheet. Bring it into view when it appears, not again on every keystroke. */
+  updated(changed: PropertyValues): void {
+    super.updated(changed);
+    if (changed.has('formError') && this.formError) void this.revealRefusal('[data-testid="taxes-rules-form-error"]');
+  }
+
+  /** ok-inline-feedback lays itself out in its own update: scrolled to before it, the box is empty. */
+  private async revealRefusal(selector: string): Promise<void> {
+    const banner = this.renderRoot.querySelector(selector) as (HTMLElement & { updateComplete?: Promise<unknown> }) | null;
+    await banner?.updateComplete;
+    banner?.scrollIntoView?.({ block: 'center' });
+  }
+
   // El título de la vista lo pinta el topbar del shell: repetirlo aquí lo duplicaba en pantalla.
   render() {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return html`<div class="page">
+        ${this.pageError ? html`<ok-inline-feedback data-testid="taxes-rules-error" tone="danger" icon="alert-circle-outline">${this.pageError}</ok-inline-feedback>` : nothing}
         ${can('taxes.manage_tax') ? nothing : html`<ok-inline-feedback data-testid="taxes-rules-readonly" tone="info" icon="lock-closed-outline">${t('ui.readOnlyHint')}</ok-inline-feedback>`}
-        ${this.formError ? html`<ok-inline-feedback data-testid="taxes-rules-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
         ${this.incoherentCount
           ? html`<ok-inline-feedback data-testid="taxes-rules-incoherent-warning" tone="warning" icon="warning-outline">${erplora().t(CATALOG, this.incoherentCount === 1 ? 'ui.incoherentWarningOne' : 'ui.incoherentWarning', { count: this.incoherentCount })}</ok-inline-feedback>`
           : nothing}
@@ -764,6 +785,9 @@ export class ErpTaxesRules extends LitElement {
             </ion-select>
             <ion-input data-testid="taxes-rules-component-label" fill="outline" mode="md" label-placement="floating" label=${t('ui.colComponentLabel')} placeholder=${t('ui.phComponentLabel')} .value=${this.newComponentLabel} @ionInput=${(e: any) => (this.newComponentLabel = e.target.value)}></ion-input>
             <p class="hint">${t('ui.rulesHint')}</p>
+            <!-- pm#513: the refusal travels WITH the form — under 834 px the panel is a full-screen
+                 sheet and a notice on the page underneath it is never seen. -->
+            ${this.formError ? html`<ok-inline-feedback data-testid="taxes-rules-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
             <ion-button data-testid="taxes-rules-submit" type="submit" ?disabled=${this.saving || !this.newCountry || !this.newCategoryKey || this.newRatePct === ''}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
           </form>
         </ok-data-table>

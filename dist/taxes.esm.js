@@ -4279,11 +4279,22 @@ var ErpTaxesAliases = class extends i3 {
       this.saving = false;
     }
   }
+  /** pm#513: the refusal appears above the button that was pressed — on a phone that can leave it
+   *  off the sheet. Bring it into view when it appears, not again on every keystroke. */
+  updated(changed) {
+    super.updated(changed);
+    if (changed.has("formError") && this.formError) void this.revealRefusal('[data-testid="taxes-aliases-form-error"]');
+  }
+  /** ok-inline-feedback lays itself out in its own update: scrolled to before it, the box is empty. */
+  async revealRefusal(selector) {
+    const banner = this.renderRoot.querySelector(selector);
+    await banner?.updateComplete;
+    banner?.scrollIntoView?.({ block: "center" });
+  }
   render() {
     const t5 = (k2) => erplora().t(CATALOG, k2);
     return b2`<div class="page">
         ${can("taxes.manage_tax") ? A : b2`<ok-inline-feedback data-testid="taxes-aliases-readonly" tone="info" icon="lock-closed-outline">${t5("ui.readOnlyHint")}</ok-inline-feedback>`}
-        ${this.formError ? b2`<ok-inline-feedback data-testid="taxes-aliases-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
         ${this.ctrl?.error ? b2`<ok-inline-feedback data-testid="taxes-aliases-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
         <ok-data-table testid="taxes-aliases-table" .serverSide=${true} .fill=${true} .addable=${can("taxes.manage_tax")} .views=${true} .cardTitle=${(row) => String(row.alias ?? "")} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchAlias")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyAliases")} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @pageSizeChange=${(e6) => this.ctrl.setPageSize(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.ctrl.setFilter(e6.detail.col, e6.detail.value)}>
           <!-- Alta de alias: el botón «+» de la tabla despliega este panel. -->
@@ -4294,6 +4305,9 @@ var ErpTaxesAliases = class extends i3 {
               <ion-select-option value="learned">${t5("ui.srcLearned")}</ion-select-option>
               <ion-select-option value="shipped">${t5("ui.srcShipped")}</ion-select-option>
             </ion-select>
+            <!-- pm#513: the refusal travels WITH the form — under 834 px the panel is a full-screen
+                 sheet and a notice on the page underneath it is never seen. -->
+            ${this.formError ? b2`<ok-inline-feedback data-testid="taxes-aliases-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
             <ion-button data-testid="taxes-aliases-submit" type="submit" ?disabled=${this.saving || !this.newAlias || !this.newCategoryKey}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
           </form>
         </ok-data-table>
@@ -4434,12 +4448,23 @@ var ErpTaxesCategories = class extends i3 {
       this.saving = false;
     }
   }
+  /** pm#513: the refusal appears above the button that was pressed — on a phone that can leave it
+   *  off the sheet. Bring it into view when it appears, not again on every keystroke. */
+  updated(changed) {
+    super.updated(changed);
+    if (changed.has("formError") && this.formError) void this.revealRefusal('[data-testid="taxes-categories-form-error"]');
+  }
+  /** ok-inline-feedback lays itself out in its own update: scrolled to before it, the box is empty. */
+  async revealRefusal(selector) {
+    const banner = this.renderRoot.querySelector(selector);
+    await banner?.updateComplete;
+    banner?.scrollIntoView?.({ block: "center" });
+  }
   // El título de la vista lo pinta el topbar del shell: repetirlo aquí lo duplicaba en pantalla.
   render() {
     const t5 = (k2) => erplora2().t(CATALOG2, k2);
     return b2`<div class="page">
         ${can2("taxes.manage_tax") ? A : b2`<ok-inline-feedback data-testid="taxes-categories-readonly" tone="info" icon="lock-closed-outline">${t5("ui.readOnlyHint")}</ok-inline-feedback>`}
-        ${this.formError ? b2`<ok-inline-feedback data-testid="taxes-categories-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
         ${this.ctrl?.error ? b2`<ok-inline-feedback data-testid="taxes-categories-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
         <ok-data-table testid="taxes-categories-table" .serverSide=${true} .fill=${true} .addable=${can2("taxes.manage_tax")} .views=${true} .cardTitle=${(row) => taxCategoryDisplayName(row) || String(row.key ?? "")} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? "asc"} .searchable=${true} .searchPlaceholder=${t5("ui.searchKeyName")} .emptyMessage=${this.ctrl?.loading ? t5("ui.loading") : t5("ui.emptyCategories")} @pageChange=${(e6) => this.ctrl.setPage(e6.detail)} @pageSizeChange=${(e6) => this.ctrl.setPageSize(e6.detail)} @sortChange=${(e6) => this.ctrl.setSort(e6.detail.sort, e6.detail.dir)} @searchChange=${(e6) => this.ctrl.setSearch(e6.detail)} @filterChange=${(e6) => this.ctrl.setFilter(e6.detail.col, e6.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
@@ -4448,6 +4473,9 @@ var ErpTaxesCategories = class extends i3 {
             <ion-input data-testid="taxes-categories-key" fill="outline" label-placement="floating" label=${t5("ui.colKey")} placeholder=${t5("ui.phKey")} .value=${this.newKey} @ionInput=${(e6) => this.newKey = e6.target.value}></ion-input>
             <ion-input data-testid="taxes-categories-name" fill="outline" label-placement="floating" label=${t5("ui.colName")} placeholder=${t5("ui.phName")} .value=${this.newName} @ionInput=${(e6) => this.newName = e6.target.value}></ion-input>
             <ion-input data-testid="taxes-categories-description" fill="outline" label-placement="floating" label=${t5("ui.colDescription")} placeholder=${t5("ui.phDescription")} .value=${this.newDescription} @ionInput=${(e6) => this.newDescription = e6.target.value}></ion-input>
+            <!-- pm#513: the refusal travels WITH the form — under 834 px the panel is a full-screen
+                 sheet and a notice on the page underneath it is never seen. -->
+            ${this.formError ? b2`<ok-inline-feedback data-testid="taxes-categories-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
             <ion-button data-testid="taxes-categories-submit" type="submit" ?disabled=${this.saving || !this.newKey || !this.newName}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
           </form>
         </ok-data-table>
@@ -5236,6 +5264,7 @@ var ErpTaxesRules = class extends i3 {
   constructor() {
     super(...arguments);
     this.formError = "";
+    this.pageError = "";
     this.newCountry = "";
     this.newRegion = "";
     this.newCategoryKey = "";
@@ -5500,24 +5529,24 @@ var ErpTaxesRules = class extends i3 {
   /** Devuelve a la vida una regla desactivada (`taxes.rules.activate`). Sin confirmación: reactivar
    *  no es destructivo —deshace algo que sí lo era— y el mercado tampoco la pide (taxes#52). */
   async restoreRule(row) {
-    this.formError = "";
+    this.pageError = "";
     try {
       await erplora3().command("taxes.rules.activate", { rule_id: String(row.id) });
       await Promise.all([this.ctrl.load(), this.loadAllRules()]);
     } catch (e6) {
-      this.formError = e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errRestoreRule");
+      this.pageError = e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errRestoreRule");
     }
   }
   async onDeactivateDismiss(ev) {
     const row = this.pendingDeactivate;
     this.pendingDeactivate = null;
     if (ev.detail?.role !== "confirm" || !row) return;
-    this.formError = "";
+    this.pageError = "";
     try {
       await erplora3().command("taxes.rules.deactivate", { rule_id: row.id });
       await Promise.all([this.ctrl.load(), this.loadAllRules()]);
     } catch (e6) {
-      this.formError = e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errDeactivateRule");
+      this.pageError = e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errDeactivateRule");
     }
   }
   /** Ends the confirmed rule on the chosen date (`taxes.rules.end`, taxes#66): the legal way to
@@ -5527,12 +5556,12 @@ var ErpTaxesRules = class extends i3 {
     this.pendingEnd = null;
     const validTo = ev.detail?.data?.values?.valid_to?.trim();
     if (ev.detail?.role !== "confirm" || !row || !validTo) return;
-    this.formError = "";
+    this.pageError = "";
     try {
       await erplora3().command("taxes.rules.end", { rule_id: String(row.id), valid_to: validTo });
       await Promise.all([this.ctrl.load(), this.loadAllRules()]);
     } catch (e6) {
-      this.formError = errorCode(e6) === "taxes.rule_overlaps" ? erplora3().t(CATALOG3, "ui.errRuleOverlaps") : e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errEndRule");
+      this.pageError = errorCode(e6) === "taxes.rule_overlaps" ? erplora3().t(CATALOG3, "ui.errRuleOverlaps") : e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errEndRule");
     }
   }
   /** Repairs the confirmed rule (`taxes.rules.repair`, taxes#63) in the way the owner chose. */
@@ -5541,12 +5570,12 @@ var ErpTaxesRules = class extends i3 {
     this.pendingRepair = null;
     const mode = ev.detail?.role;
     if (!row || mode !== "no_tax" && mode !== "charge_tax") return;
-    this.formError = "";
+    this.pageError = "";
     try {
       await erplora3().command("taxes.rules.repair", { rule_id: row.id, mode });
       await Promise.all([this.ctrl.load(), this.loadAllRules()]);
     } catch (e6) {
-      this.formError = e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errRepairRule");
+      this.pageError = e6 instanceof Error ? e6.message : erplora3().t(CATALOG3, "ui.errRepairRule");
     }
   }
   async connectedCallback() {
@@ -5632,6 +5661,7 @@ var ErpTaxesRules = class extends i3 {
     if (!this.newCountry.trim() || !this.newCategoryKey.trim() || this.newRatePct === "") return;
     this.saving = true;
     this.formError = "";
+    this.pageError = "";
     try {
       const payload = {
         country_code: this.newCountry.trim().toUpperCase(),
@@ -5670,12 +5700,24 @@ var ErpTaxesRules = class extends i3 {
       this.saving = false;
     }
   }
+  /** pm#513: the refusal appears above the button that was pressed — on a phone that can leave it
+   *  off the sheet. Bring it into view when it appears, not again on every keystroke. */
+  updated(changed) {
+    super.updated(changed);
+    if (changed.has("formError") && this.formError) void this.revealRefusal('[data-testid="taxes-rules-form-error"]');
+  }
+  /** ok-inline-feedback lays itself out in its own update: scrolled to before it, the box is empty. */
+  async revealRefusal(selector) {
+    const banner = this.renderRoot.querySelector(selector);
+    await banner?.updateComplete;
+    banner?.scrollIntoView?.({ block: "center" });
+  }
   // El título de la vista lo pinta el topbar del shell: repetirlo aquí lo duplicaba en pantalla.
   render() {
     const t5 = (k2) => erplora3().t(CATALOG3, k2);
     return b2`<div class="page">
+        ${this.pageError ? b2`<ok-inline-feedback data-testid="taxes-rules-error" tone="danger" icon="alert-circle-outline">${this.pageError}</ok-inline-feedback>` : A}
         ${can3("taxes.manage_tax") ? A : b2`<ok-inline-feedback data-testid="taxes-rules-readonly" tone="info" icon="lock-closed-outline">${t5("ui.readOnlyHint")}</ok-inline-feedback>`}
-        ${this.formError ? b2`<ok-inline-feedback data-testid="taxes-rules-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
         ${this.incoherentCount ? b2`<ok-inline-feedback data-testid="taxes-rules-incoherent-warning" tone="warning" icon="warning-outline">${erplora3().t(CATALOG3, this.incoherentCount === 1 ? "ui.incoherentWarningOne" : "ui.incoherentWarning", { count: this.incoherentCount })}</ok-inline-feedback>` : A}
         ${this.overlapCount ? b2`<ok-inline-feedback data-testid="taxes-rules-overlap-warning" tone="warning" icon="warning-outline">${erplora3().t(CATALOG3, "ui.overlapWarning", { count: this.overlapCount })}<ion-button slot="actions" data-testid="taxes-rules-overlap-filter" size="small" fill="outline" @click=${() => this.toggleOverlapFilter(!this.showingOverlaps)}>${this.showingOverlaps ? t5("ui.overlapShowAll") : t5("ui.overlapShow")}</ion-button></ok-inline-feedback>` : A}
         ${this.ctrl?.error ? b2`<ok-inline-feedback data-testid="taxes-rules-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : A}
@@ -5720,6 +5762,9 @@ var ErpTaxesRules = class extends i3 {
             </ion-select>
             <ion-input data-testid="taxes-rules-component-label" fill="outline" mode="md" label-placement="floating" label=${t5("ui.colComponentLabel")} placeholder=${t5("ui.phComponentLabel")} .value=${this.newComponentLabel} @ionInput=${(e6) => this.newComponentLabel = e6.target.value}></ion-input>
             <p class="hint">${t5("ui.rulesHint")}</p>
+            <!-- pm#513: the refusal travels WITH the form — under 834 px the panel is a full-screen
+                 sheet and a notice on the page underneath it is never seen. -->
+            ${this.formError ? b2`<ok-inline-feedback data-testid="taxes-rules-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : A}
             <ion-button data-testid="taxes-rules-submit" type="submit" ?disabled=${this.saving || !this.newCountry || !this.newCategoryKey || this.newRatePct === ""}>${this.saving ? t5("ui.btnSaving") : t5("ui.btnAdd")}</ion-button>
           </form>
         </ok-data-table>
@@ -5766,6 +5811,9 @@ var ErpTaxesRules = class extends i3 {
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "formError", 2);
+__decorateClass([
+  r5()
+], ErpTaxesRules.prototype, "pageError", 2);
 __decorateClass([
   r5()
 ], ErpTaxesRules.prototype, "newCountry", 2);

@@ -125,7 +125,8 @@ describe('an active rule can be given an end date (taxes#66)', () => {
     const el = await mount();
     await rowAction(el, 'end', RULE);
     await dismiss(el, 'confirm', '2027-06-30');
-    const banner = el.shadowRoot.querySelector('[data-testid="taxes-rules-form-error"]');
+    // A row action is answered with no panel open: its refusal goes on the page (pm#513).
+    const banner = el.shadowRoot.querySelector('.page > [data-testid="taxes-rules-error"]');
     expect(banner, 'the refusal went silent').toBeTruthy();
     expect(banner?.textContent).toContain('ui.errRuleOverlaps');
   });

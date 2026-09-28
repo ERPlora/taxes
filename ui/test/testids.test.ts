@@ -97,6 +97,7 @@ const COVERED: Record<
       'taxes-rules-country',
       'taxes-rules-deactivate-confirm',
       'taxes-rules-end-confirm',
+      'taxes-rules-error',
       'taxes-rules-exempt-reason',
       'taxes-rules-form',
       'taxes-rules-form-error',

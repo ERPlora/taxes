@@ -1,4 +1,5 @@
 import { LitElement, html, css, nothing } from 'lit';
+import type { PropertyValues } from 'lit';
 import { state } from 'lit/decorators.js';
 import { define } from '@erplora/outfitkit/define';
 import '@erplora/outfitkit/ok-inline-feedback';
@@ -65,6 +66,7 @@ export class ErpTaxesCategories extends LitElement {
     .err { color:#d9480f; font-weight:600; }
   `;
 
+  /** What «Add» in the panel was refused: painted inside that form, never on the page (pm#513). */
   @state() formError = '';
 
   @state() newKey = '';
@@ -171,12 +173,25 @@ export class ErpTaxesCategories extends LitElement {
     }
   }
 
+  /** pm#513: the refusal appears above the button that was pressed — on a phone that can leave it
+   *  off the sheet. Bring it into view when it appears, not again on every keystroke. */
+  updated(changed: PropertyValues): void {
+    super.updated(changed);
+    if (changed.has('formError') && this.formError) void this.revealRefusal('[data-testid="taxes-categories-form-error"]');
+  }
+
+  /** ok-inline-feedback lays itself out in its own update: scrolled to before it, the box is empty. */
+  private async revealRefusal(selector: string): Promise<void> {
+    const banner = this.renderRoot.querySelector(selector) as (HTMLElement & { updateComplete?: Promise<unknown> }) | null;
+    await banner?.updateComplete;
+    banner?.scrollIntoView?.({ block: 'center' });
+  }
+
   // El título de la vista lo pinta el topbar del shell: repetirlo aquí lo duplicaba en pantalla.
   render() {
     const t = (k: string): string => erplora().t(CATALOG, k);
     return html`<div class="page">
         ${can('taxes.manage_tax') ? nothing : html`<ok-inline-feedback data-testid="taxes-categories-readonly" tone="info" icon="lock-closed-outline">${t('ui.readOnlyHint')}</ok-inline-feedback>`}
-        ${this.formError ? html`<ok-inline-feedback data-testid="taxes-categories-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
         ${this.ctrl?.error ? html`<ok-inline-feedback data-testid="taxes-categories-load-error" tone="danger" icon="alert-circle-outline">${this.ctrl.error}</ok-inline-feedback>` : nothing}
         <ok-data-table testid="taxes-categories-table" .serverSide=${true} .fill=${true} .addable=${can('taxes.manage_tax')} .views=${true} .cardTitle=${(row: Record<string, unknown>) => taxCategoryDisplayName(row as TaxCategory) || String(row.key ?? '')} .columns=${this.columns} .rows=${this.ctrl?.rows ?? []} .total=${this.ctrl?.total ?? 0} .page=${this.ctrl?.state.page ?? 0} .pageSize=${this.ctrl?.state.pageSize ?? 50} .sort=${this.ctrl?.state.sort} .sortDir=${this.ctrl?.state.dir ?? 'asc'} .searchable=${true} .searchPlaceholder=${t('ui.searchKeyName')} .emptyMessage=${this.ctrl?.loading ? t('ui.loading') : t('ui.emptyCategories')} @pageChange=${(e: CustomEvent<number>) => this.ctrl.setPage(e.detail)} @pageSizeChange=${(e: CustomEvent<number>) => this.ctrl.setPageSize(e.detail)} @sortChange=${(e: CustomEvent<{ sort: string; dir: 'asc' | 'desc' }>) => this.ctrl.setSort(e.detail.sort, e.detail.dir)} @searchChange=${(e: CustomEvent<string>) => this.ctrl.setSearch(e.detail)} @filterChange=${(e: CustomEvent<{ col: string; value: unknown }>) => this.ctrl.setFilter(e.detail.col, e.detail.value)}>
           <!-- Alta: se proyecta SIEMPRE (aunque el panel esté cerrado); si solo se pintara al abrir,
@@ -185,6 +200,9 @@ export class ErpTaxesCategories extends LitElement {
             <ion-input data-testid="taxes-categories-key" fill="outline" label-placement="floating" label=${t('ui.colKey')} placeholder=${t('ui.phKey')} .value=${this.newKey} @ionInput=${(e: any) => (this.newKey = e.target.value)}></ion-input>
             <ion-input data-testid="taxes-categories-name" fill="outline" label-placement="floating" label=${t('ui.colName')} placeholder=${t('ui.phName')} .value=${this.newName} @ionInput=${(e: any) => (this.newName = e.target.value)}></ion-input>
             <ion-input data-testid="taxes-categories-description" fill="outline" label-placement="floating" label=${t('ui.colDescription')} placeholder=${t('ui.phDescription')} .value=${this.newDescription} @ionInput=${(e: any) => (this.newDescription = e.target.value)}></ion-input>
+            <!-- pm#513: the refusal travels WITH the form — under 834 px the panel is a full-screen
+                 sheet and a notice on the page underneath it is never seen. -->
+            ${this.formError ? html`<ok-inline-feedback data-testid="taxes-categories-form-error" tone="danger" icon="alert-circle-outline">${this.formError}</ok-inline-feedback>` : nothing}
             <ion-button data-testid="taxes-categories-submit" type="submit" ?disabled=${this.saving || !this.newKey || !this.newName}>${this.saving ? t('ui.btnSaving') : t('ui.btnAdd')}</ion-button>
           </form>
         </ok-data-table>
