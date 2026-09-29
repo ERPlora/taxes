@@ -39,6 +39,7 @@ let hubAnswers = false;
 let listQuery = '';
 let pageCalls = 0;
 let queryCalls: string[] = [];
+let commandCalls: string[] = [];
 
 beforeAll(async () => {
   customElements.define('ok-data-table', ShellTable);
@@ -54,6 +55,7 @@ beforeEach(() => {
   listQuery = '';
   pageCalls = 0;
   queryCalls = [];
+  commandCalls = [];
   const answer = async (name: string) => {
     queryCalls.push(name);
     if (!hubAnswers) throw new Error('The hub is not responding.');
@@ -68,7 +70,10 @@ beforeEach(() => {
       if (!hubAnswers) throw new Error('The hub is not responding.');
       return { rows: [ROW], total: 1 };
     },
-    command: async () => ({}),
+    command: async (name: string) => {
+      commandCalls.push(name);
+      return {};
+    },
     hasPermission: () => true,
     on: () => () => {},
     locale: 'es',
@@ -107,6 +112,8 @@ async function retry(el: Screen, table: HTMLElement): Promise<void> {
     await el.updateComplete;
     if ((table as unknown as { error: string }).error !== '') throw new Error('the error is still on the table');
   });
+  // Retry only reads: it must never repeat a write the person did not ask for (rv-schedules-61).
+  expect(commandCalls, 'Retry sent a command').toEqual([]);
 }
 
 describe.each(SCREENS)('$tag — a list that could not load (pm#533)', ({ tag, list, table: testid, banner }) => {
@@ -115,6 +122,8 @@ describe.each(SCREENS)('$tag — a list that could not load (pm#533)', ({ tag, l
     const { el, table } = await mountFailed(tag, list, testid);
     expect((table as unknown as { error: string }).error).toBe('The hub is not responding.');
     expect(el.shadowRoot.querySelector(`[data-testid="${banner}"]`), 'the reason would be said twice').toBeNull();
+    // Any notice counts, not only the one with this testid (rv-schedules-61).
+    expect(el.shadowRoot.textContent, 'another notice repeats the reason').not.toContain('The hub is not responding.');
   });
 
   it('Retry on the table asks the hub again and paints the rows that now arrive', async () => {
@@ -130,6 +139,9 @@ describe.each(SCREENS)('$tag — a list that could not load (pm#533)', ({ tag, l
     const node = el.shadowRoot.querySelector(`[data-testid="${banner}"]`);
     expect(node, 'an older hub would show the failure nowhere').toBeTruthy();
     expect(node!.textContent).toContain('The hub is not responding.');
+    // On the PAGE, said once: a notice inside the closed «new» panel is invisible (rv-appointments-227).
+    expect(node!.closest('[slot="create"]'), 'the notice sits in the «new» panel').toBeNull();
+    expect(el.shadowRoot.textContent!.split('The hub is not responding.').length - 1, 'the reason is said once').toBe(1);
   });
 });
 
