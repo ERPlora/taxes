@@ -5,6 +5,7 @@
 | Error | What happened | What to do |
 |---|---|---|
 | `no_rate` | No active, currently valid rule matches this category, country, region and date | Create the rule, or check the product's category and the hub's fiscal country |
+| `read_unavailable` | The hub could not read its tax rules at that moment (a database fault, a query that did not answer). The calculation stops instead of guessing a rate: it never falls back to 0 % or to rules sent by the caller | Retry; if it persists the hub's database needs attention — the rules themselves are not the problem |
 | Amount required | The calculation was called without an amount | The amount is mandatory and must be **integer cents** |
 | Category key rejected | The key does not match the required shape or already exists | Keys are lowercase, start with a letter and may contain letters, digits, dots and underscores; they are unique per hub |
 | Rate rejected | The percentage is outside 0–100 | A rate above 100 is not a rate. Combined rates are computed from components; do not store the sum |
