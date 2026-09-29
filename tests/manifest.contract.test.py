@@ -160,6 +160,64 @@ def string_array(path: str, value) -> None:
         expect(f"{path}[{i}]", item, str)
 
 
+def read_defs(path: str, value) -> None:
+    """`enum ReadDef` (`#[serde(untagged)]`): a bare query name, or `{query, params, required}`."""
+    if not expect(path, value, list):
+        return
+    for i, item in enumerate(value):
+        if isinstance(item, str):
+            continue
+        if not expect(f"{path}[{i}]", item, dict):
+            continue
+        field(f"{path}[{i}]", item, "query", str, required=True)
+        field(f"{path}[{i}]", item, "required", bool)
+        params = field(f"{path}[{i}]", item, "params", dict)
+        for key, expr in (params or {}).items():
+            expect(f"{path}[{i}].params.{key}", expr, str)
+
+
+# The read the tax RATE comes from. A read that fails is omitted unless it is `required` (hub#701),
+# and then `calculate_tax` has nothing to go on: `no_rate`, 0 % with `allow_missing_rate`, or the
+# rules the CALLER put in `payload.rules` (taxes#82). The kernel aborts a `required` read with
+# `read_unavailable` instead — the rate is never guessed, same as `sales.complete_sale`.
+RULES_READ = "taxes.rules.list"
+# The commands that DECIDE a rate. Each one has to pre-load the rules: with the read dropped from
+# the manifest the handler never gets a catalogue, so `payload.rules` decides EVERY calculation —
+# not only the ones where the database failed.
+RATE_COMMANDS = ("taxes.calculate",)
+
+
+def check_rate_reads_are_required(m: dict) -> None:
+    for name, c in (m.get("commands") or {}).items():
+        if not isinstance(c, dict):
+            continue
+        reads = c.get("reads")
+        declares_rules = False
+        # A `reads` of the wrong type is already reported by `read_defs`; it must not crash here.
+        for i, read in enumerate(reads if isinstance(reads, list) else []):
+            if isinstance(read, str):
+                query = read
+            elif isinstance(read, dict):
+                query = read.get("query")
+            else:
+                continue
+            if query != RULES_READ:
+                continue
+            declares_rules = True
+            if not (isinstance(read, dict) and read.get("required") is True):
+                failures.append(
+                    f"commands.{name}.reads[{i}]: `{RULES_READ}` must be declared "
+                    '`{"query": …, "required": true}` — without it a failed read lets the rate be '
+                    "guessed instead of refusing with `read_unavailable` (taxes#82)"
+                )
+        if name in RATE_COMMANDS and not declares_rules:
+            failures.append(
+                f"commands.{name}.reads: must pre-load `{RULES_READ}` as "
+                '`{"query": …, "required": true}` — without the read the handler has no catalogue '
+                "and the rules the caller sends decide the rate (taxes#82)"
+            )
+
+
 # ── Layer 1: the type contract, mirroring `struct Manifest` ──────────────────────────────
 
 
@@ -256,7 +314,7 @@ def check_sql_blocks(m: dict) -> None:
             field(path, c, "min_affected_rows", int)
             string_array(f"{path}.sql", c.get("sql", []))
             string_array(f"{path}.emit", c.get("emit", []))
-            string_array(f"{path}.reads", c.get("reads", []))
+            read_defs(f"{path}.reads", c.get("reads", []))
             if "handler" in c and expect(f"{path}.handler", c["handler"], dict):
                 h = c["handler"]
                 field(f"{path}.handler", h, "type", str, required=True)
@@ -585,6 +643,7 @@ def main() -> int:
     check_permissions(manifest)
     check_navigation(manifest)
     check_sql_blocks(manifest)
+    check_rate_reads_are_required(manifest)
     check_events_and_slots(manifest)
     check_scheduled_tasks(manifest)
     check_setup(manifest)
