@@ -1771,6 +1771,69 @@ var o6 = e4(class extends i4 {
   }
 });
 
+// @erplora/outfitkit/dist/shared/anchor.js
+function shadowAnchorEvent(ev) {
+  const el = ev.currentTarget ?? ev.target;
+  return new CustomEvent("ok-popover-anchor", { detail: { ionShadowTarget: el } });
+}
+
+// @erplora/outfitkit/dist/shared/ion-tone.js
+var DEFAULT_HEX = {
+  primary: "#0054e9",
+  secondary: "#0163aa",
+  tertiary: "#6030ff",
+  success: "#2dd55b",
+  warning: "#ffc409",
+  danger: "#c5000f",
+  light: "#f4f5f8",
+  medium: "#636469",
+  dark: "#222428"
+};
+var DEFAULT_CONTRAST = {
+  primary: "#fff",
+  secondary: "#fff",
+  tertiary: "#fff",
+  success: "#000",
+  warning: "#000",
+  danger: "#fff",
+  light: "#000",
+  medium: "#fff",
+  dark: "#fff"
+};
+var TONE_NAME = /^[a-z][a-z0-9-]*$/;
+function tokenChain(okName, ionName, hex) {
+  return `var(--ok-${okName}, var(--ion-color-${ionName}${hex ? `, ${hex}` : ""}))`;
+}
+function ionTone(tone, variant) {
+  if (!tone || !TONE_NAME.test(tone)) return void 0;
+  const value = tokenChain(tone, tone, DEFAULT_HEX[tone]);
+  switch (variant) {
+    case "text":
+      return `color: ${value};`;
+    case "clear":
+      return `--color: ${value};`;
+    case "outline":
+      return `--color: ${value}; --border-color: ${value}; --background-activated: ${value}; --background-focused: ${value};`;
+    case "solid": {
+      const contrast = tokenChain(`${tone}-contrast`, `${tone}-contrast`, DEFAULT_CONTRAST[tone]);
+      return `--background: ${value}; --color: ${contrast}; --background-hover: var(--ion-color-${tone}-tint, ${value}); --background-activated: var(--ion-color-${tone}-shade, ${value}); --background-focused: var(--ion-color-${tone}-shade, ${value});`;
+    }
+  }
+}
+
+// @erplora/outfitkit/dist/shared/searchbar-name.js
+function syncSearchbarInputName(root, name) {
+  const bar = root?.querySelector("ion-searchbar");
+  if (!bar) return;
+  void customElements.whenDefined("ion-searchbar").then(() => bar.getInputElement?.()).then((input) => {
+    const n6 = name();
+    if (input && input.getAttribute("aria-label") !== n6) {
+      input.setAttribute("aria-label", n6);
+    }
+  }).catch(() => {
+  });
+}
+
 // @erplora/outfitkit/dist/ok-data-table.js
 var CSV_BOM = "\uFEFF";
 var WINDOWS_1252_C1 = [
@@ -1862,6 +1925,7 @@ var DEFAULT_LABELS2 = {
   actions: "Actions",
   close: "Close",
   newRecord: "New",
+  editRecord: "Edit",
   form: "Form",
   filterPlaceholder: "Filter\u2026",
   from: "From",
@@ -1877,7 +1941,9 @@ var DEFAULT_LABELS2 = {
   showing: "Showing {from}\u2013{to} of",
   recordSingular: "record",
   recordPlural: "records",
-  loadMore: "Load more"
+  loadMore: "Load more",
+  noMatches: "No results match your search or filters",
+  showAll: "Show all"
 };
 var ES_LABELS = {
   search: "Buscar\u2026",
@@ -1899,6 +1965,7 @@ var ES_LABELS = {
   actions: "Acciones",
   close: "Cerrar",
   newRecord: "Nuevo",
+  editRecord: "Editar",
   form: "Formulario",
   filterPlaceholder: "Filtrar\u2026",
   from: "Desde",
@@ -1914,7 +1981,9 @@ var ES_LABELS = {
   showing: "Mostrando {from}\u2013{to} de",
   recordSingular: "registro",
   recordPlural: "registros",
-  loadMore: "Cargar m\xE1s"
+  loadMore: "Cargar m\xE1s",
+  noMatches: "Ning\xFAn resultado coincide con la b\xFAsqueda o los filtros",
+  showAll: "Mostrar todo"
 };
 var _OkDataTable = class _OkDataTable2 extends i3 {
   constructor() {
@@ -1957,6 +2026,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     this.filterDraft = {};
     this.serverFilters = {};
     this.panel = "none";
+    this.panelTitle = "";
     this.viewMode = "table";
     this.viewChosenByUser = false;
     this.isMobile = false;
@@ -1969,10 +2039,18 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     this.internalSelection = /* @__PURE__ */ new Set();
     this.menuOpen = false;
     this.onLocaleChanged = () => this.requestUpdate();
+    this.onKeydown = (e6) => {
+      if (e6.key !== "Escape" || e6.defaultPrevented || this.panel === "none") return;
+      e6.preventDefault();
+      e6.stopPropagation();
+      this.closePanel("escape");
+    };
     this.onWindowResize = () => {
       this.measureXOverflow();
       this.measureRowActionsFit();
+      this.syncSheetInsets();
     };
+    this.sheetContent = null;
     this.onSearch = (ev) => {
       const value = ev.target.value ?? "";
       if (this.serverSide) {
@@ -2050,7 +2128,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
        position:fixed dentro de ion-content se ancla al área de contenido (contain), que es justo el hueco
        bajo la cabecera de la app: el usuario conserva el título de la página. */
     @media (max-width: 833.98px) {
-      .drawer { position: fixed; inset: 0; top: var(--ok-sheet-top, 0px); width: 100%; max-width: none; height: auto; border-left: 0; z-index: 1000; }
+      .drawer { position: fixed; inset: 0; top: var(--ok-sheet-top, 0px); bottom: var(--ok-sheet-bottom, 0px); width: 100%; max-width: none; height: auto; border-left: 0; z-index: 1000; }
       .tk-scrim { display: none; }
     }
     .drawer .dh { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;
@@ -2330,6 +2408,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   }
   connectedCallback() {
     super.connectedCallback();
+    this.addEventListener("keydown", this.onKeydown);
     if (typeof window !== "undefined") {
       window.addEventListener("erplora:locale-changed", this.onLocaleChanged);
       window.addEventListener("resize", this.onWindowResize);
@@ -2368,8 +2447,9 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
       if (this.actionsTrackPx !== 0) this.actionsTrackPx = 0;
       return;
     }
-    const el = this.renderRoot?.querySelector?.(".grow-data .gcell.actions-col .actions");
-    const width = el ? Math.ceil(el.scrollWidth) : 0;
+    const boxes = this.renderRoot?.querySelectorAll?.(".grow-data .gcell.actions-col .actions") ?? [];
+    let width = 0;
+    for (const el of boxes) width = Math.max(width, Math.ceil(el.scrollWidth));
     if (width > 0 && width !== this.actionsTrackPx) this.actionsTrackPx = width;
   }
   /** #122 — Decide si los botones de acción de la fila caben o se pliegan en el menú «⋮».
@@ -2409,17 +2489,26 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     }
     this.measureActionsTrack();
     this.measureRowActionsFit();
-    if (changed.has("panel")) this.syncSheetTop();
+    if (changed.has("panel")) this.syncSheetInsets();
+    syncSearchbarInputName(this.shadowRoot, () => this.effSearchPlaceholder);
   }
-  /** #75 — Where the mobile sheet starts. `position: fixed; inset: 0` painted it from y=0 and the
-   *  app's `ion-header` (its own stacking context, above the content) covered the sheet's title and
-   *  its only Close button — measured at 390×844 in the Appointments parity page. CSS inside a
-   *  shadow root cannot know where the content area begins, so on open the table measures the
-   *  closest `ion-content` (walking through shadow hosts) and hands the offset over as a custom
-   *  property; on close it is removed. Without an `ion-content` around, the sheet keeps y=0. */
-  syncSheetTop() {
+  /** #75/#197 — Where the mobile sheet starts and ends. `position: fixed; inset: 0` painted it from
+   *  y=0 to the screen edge: the app's `ion-header` (its own stacking context, above the content)
+   *  covered the sheet's title and its only Close button — measured at 390×844 in the Appointments
+   *  parity page — and the module tab bar (an `ion-footer` OUTSIDE `ion-content`) covered the last
+   *  66px (ios) / 72px (md) of the sheet, so its Save button could not be tapped (inventory#105).
+   *  CSS inside a shadow root cannot know where the content area begins or ends, so on open the
+   *  table measures the closest `ion-content` (walking through shadow hosts) and hands both offsets
+   *  over as custom properties, re-measuring them while the sheet stays open whenever the content
+   *  resizes (rotation, a tab bar mounted late) or the window resizes; on close both are removed and
+   *  the content stops being observed. Without an `ion-content` around, the sheet keeps the screen
+   *  edge on both ends. */
+  syncSheetInsets() {
     if (this.panel === "none") {
       this.style.removeProperty("--ok-sheet-top");
+      this.style.removeProperty("--ok-sheet-bottom");
+      this.sheetObserver?.disconnect();
+      this.sheetContent = null;
       return;
     }
     let node = this;
@@ -2430,15 +2519,31 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
       node = parent === node ? null : parent;
     }
     const top = content ? Math.max(0, Math.round(content.getBoundingClientRect().top)) : 0;
+    const bottom = content ? Math.max(0, Math.round(window.innerHeight - content.getBoundingClientRect().bottom)) : 0;
     this.style.setProperty("--ok-sheet-top", `${top}px`);
+    this.style.setProperty("--ok-sheet-bottom", `${bottom}px`);
+    if (typeof ResizeObserver !== "undefined") {
+      this.sheetObserver ??= new ResizeObserver(() => {
+        if (this.panel !== "none") this.syncSheetInsets();
+      });
+      if (content !== this.sheetContent) {
+        this.sheetObserver.disconnect();
+        if (content) this.sheetObserver.observe(content);
+        this.sheetContent = content;
+      }
+    }
   }
   disconnectedCallback() {
+    this.removeEventListener("keydown", this.onKeydown);
     if (typeof window !== "undefined") {
       window.removeEventListener("erplora:locale-changed", this.onLocaleChanged);
       window.removeEventListener("resize", this.onWindowResize);
     }
     this.xObserver?.disconnect();
     this.xObserver = void 0;
+    this.sheetObserver?.disconnect();
+    this.sheetObserver = void 0;
+    this.sheetContent = null;
     if (this.mq) {
       const handler = this._mqHandler;
       if (handler) this.mq.removeEventListener("change", handler);
@@ -2458,6 +2563,10 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   /** Mensaje efectivo de estado vacío (prop explícita → label i18n → default inglés). */
   get effEmptyMessage() {
     return this.emptyMessage ?? this.t.empty;
+  }
+  /** #171 — Effective "no matches" message (explicit prop → i18n label → English default). */
+  get effNoMatchesMessage() {
+    return this.noMatchesMessage ?? this.t.noMatches;
   }
   // ── Resolución de alias (compat + documentados) ──────────────────────────────────────────
   get effPageSizes() {
@@ -2544,8 +2653,9 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     a3.download = this.csvName;
     a3.click();
     URL.revokeObjectURL(url);
-    this.emit("csvExport", { rows: this.rows.length });
-    this.emit("export", { rows: this.rows.length });
+    const count = this.rows.length;
+    this.emit("csvExport", { rows: count, count });
+    this.emit("export", { rows: count, count });
   }
   parseCsv(text) {
     const out = [];
@@ -2587,15 +2697,29 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     if (!file) return;
     const text = decodeCsvBuffer(await file.arrayBuffer());
     const { headers, rows } = this.parseCsv(text);
-    this.emit("csvImport", { headers, rows });
-    this.emit("import", { headers, rows });
+    this.emit("csvImport", { headers, rows, count: rows.length });
+    this.emit("import", { headers, rows, count: rows.length });
     input.value = "";
   }
   toggle(p4) {
+    this.panelTitle = "";
     if (p4 === "filters" && this.panel !== "filters") {
       this.filterDraft = this.cloneFilters(this.clientFilters);
     }
-    this.panel = this.panel === p4 ? "none" : p4;
+    if (this.panel === p4) this.closePanel("toggle");
+    else this.panel = p4;
+  }
+  /** Closes the side panel and, if one was actually open, emits `panelClose` with the panel that
+   *  was open and the reason it closed. No-op (no event) when the panel is already `'none'`.
+   *
+   *  outfitkit#195 — modules that load the edit form after an `await` (read the full row, then
+   *  fill the form) listen to `panelClose` to discard that pending load if the person closes the
+   *  panel meanwhile (X, backdrop, Escape) before the reply arrives. */
+  closePanel(reason) {
+    if (this.panel === "none") return;
+    const panel = this.panel;
+    this.panel = "none";
+    this.emit("panelClose", { panel, reason });
   }
   // ── Filtros en memoria (modo cliente): borrador → aplicar. ───────────────────────────────────
   cloneFilters(src) {
@@ -2626,11 +2750,22 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     this.clientFilters = clean;
     this.clientPage = 0;
     this.mobileShown = 0;
-    this.panel = "none";
+    this.closePanel("apply");
     this.emit("filterChange", { filters: this.serializeFilters(clean) });
   }
   clearFilters() {
     this.filterDraft = {};
+  }
+  /** #171 — "Show all" under the no-matches state: drops the search AND the column filters, so
+   *  every row is back in one tap. Consumers listening to `filterChange` hear the reset. */
+  resetSearchAndFilters() {
+    const hadFilters = Object.keys(this.clientFilters).length > 0;
+    this.q = "";
+    this.clientFilters = {};
+    this.filterDraft = {};
+    this.clientPage = 0;
+    this.mobileShown = 0;
+    if (hadFilters) this.emit("filterChange", { filters: {} });
   }
   serializeFilters(src) {
     const out = {};
@@ -2640,13 +2775,16 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     }
     return out;
   }
-  /** Abre el panel lateral (API pública para el módulo, p.ej. "editar" abre el form pre-rellenado). */
-  open(panel = "create") {
+  /** Opens the side panel (public API for the module, e.g. "edit" opens the pre-filled form).
+   *  `mode` sets the default header («New» / «Edit»); `opts.title` replaces it (e.g. «Editing service — Brushing»). */
+  open(panel = "create", opts = {}) {
+    this.panelTitle = panel === "filters" ? "" : (opts.title ?? "").trim();
     this.panel = panel;
   }
-  /** Cierra el panel lateral. */
+  /** Closes the side panel (public API for the module). Emits `panelClose` with reason `'api'`
+   *  when a panel was actually open (outfitkit#195); no-op when it was already closed. */
   close() {
-    this.panel = "none";
+    this.closePanel("api");
   }
   emit(type, detail) {
     this.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
@@ -2852,16 +2990,19 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     }
     this.setClientFilter(col.key, { [edge]: v3 || void 0 });
   }
-  // Menú overflow: ancla el popover al botón vía el evento de click (compatible con Shadow DOM).
+  // Overflow menu: anchor the popover to the tapped button via Ionic's `ionShadowTarget`
+  // (the retargeted `ev.target` after dispatch would be the whole table, since `trigger` does not
+  // resolve inside Shadow DOM).
   openMenu(ev) {
-    this.menuEv = ev;
+    this.menuEv = shadowAnchorEvent(ev);
     this.menuOpen = true;
   }
-  /** #122 — Abre el menú «⋮» de UNA fila. Un solo popover para toda la tabla (uno por fila serían
-   *  tantos como filas), anclado por evento porque `trigger` no resuelve dentro de Shadow DOM. */
+  /** #122 — Opens the «⋮» menu of ONE row. A single popover for the whole table (one per row would
+   *  be as many as there are rows), anchored to the tapped button via Ionic's `ionShadowTarget`
+   *  (the retargeted `ev.target` after dispatch would be the whole table). */
   openRowMenu(ev, row) {
     ev.stopPropagation();
-    this.rowMenuEv = ev;
+    this.rowMenuEv = shadowAnchorEvent(ev);
     this.rowMenuRow = row;
     this.rowMenuOpen = true;
   }
@@ -2870,6 +3011,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   renderRowMenu() {
     const row = this.rowMenuRow;
     if (!this.actions.length || !row) return A;
+    const actions = this.visibleActions(row);
     const key = this.keyOf(row);
     return b2`
       <ion-popover
@@ -2881,7 +3023,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
       >
         <ion-content>
           <ion-list lines="none">
-            ${this.actions.map((a3) => {
+            ${actions.map((a3) => {
       const disabled = a3.loading?.(row) === true || a3.disabled?.(row) === true;
       const label = typeof a3.label === "function" ? a3.label(row) : a3.label;
       return b2`
@@ -2902,8 +3044,8 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
         this.emit("rowAction", { actionId: a3.id, row });
       }}
                 >
-                  ${a3.icon ? b2`<ion-icon slot="start" .icon=${okIcon(a3.icon)} color=${a3.color ?? A}></ion-icon>` : A}
-                  <ion-label color=${a3.color ?? A}>${label}</ion-label>
+                  ${a3.icon ? b2`<ion-icon slot="start" .icon=${okIcon(a3.icon)} style=${ionTone(a3.color, "text") ?? A}></ion-icon>` : A}
+                  <ion-label style=${ionTone(a3.color, "text") ?? A}>${label}</ion-label>
                 </ion-item>
               `;
     })}
@@ -3085,8 +3227,8 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
         this.menuOpen = false;
         this.emit("menuAction", { actionId: a3.id });
       }}>
-                  ${a3.icon ? b2`<ion-icon slot="start" .icon=${okIcon(a3.icon)} color=${a3.color ?? A}></ion-icon>` : A}
-                  <ion-label color=${a3.color ?? A}>${a3.label}</ion-label>
+                  ${a3.icon ? b2`<ion-icon slot="start" .icon=${okIcon(a3.icon)} style=${ionTone(a3.color, "text") ?? A}></ion-icon>` : A}
+                  <ion-label style=${ionTone(a3.color, "text") ?? A}>${a3.label}</ion-label>
                 </ion-item>
               `
     )}
@@ -3106,16 +3248,22 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   // appointment carries, the row asks for 380px and the card gives 379px at 411dp, 237px at 768px
   // and 272px at 1440px — so the first button hung off the card at ALL THREE widths, not just on
   // a phone. If you add a view that lays these buttons out, MEASURE it.
+  /** hub#2014 — The row actions that exist for THIS row (`hidden` filtered out), in their order. */
+  visibleActions(row) {
+    return this.actions.filter((a3) => a3.hidden?.(row) !== true);
+  }
   actionButtons(row, collapsible = false) {
     if (!this.actions.length) return A;
     const key = this.keyOf(row);
+    const actions = this.visibleActions(row);
     if (collapsible && this.rowActionsCollapsed) {
+      if (!actions.length) return b2`<div class="actions"></div>`;
       return b2`
         <div class="actions">
           <ion-button
             size="small"
             fill="clear"
-            color="medium"
+            style=${ionTone("medium", "clear")}
             data-testid=${this.tid(`row-${key}-menu`)}
             aria-label=${this.t.moreActions}
             title=${this.t.moreActions}
@@ -3129,7 +3277,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     }
     return b2`
       <div class="actions">
-        ${this.actions.map(
+        ${actions.map(
       (a3) => {
         const loading = a3.loading?.(row) === true;
         const disabled = loading || a3.disabled?.(row) === true;
@@ -3138,7 +3286,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
             <ion-button
               size="small"
               fill="clear"
-              color=${a3.color ?? "medium"}
+              style=${ionTone(a3.color ?? "medium", "clear") ?? A}
               data-testid=${this.tid(`row-${key}-${a3.id}`)}
               ?disabled=${disabled}
               aria-disabled=${disabled ? "true" : A}
@@ -3223,6 +3371,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     }
     const served = this.serverSide ? (current + 1) * ps : Math.min(this.mobileShown || ps, count);
     const canLoadMore = this.isMobile && served < count;
+    const rangeTo = this.isMobile && !this.serverSide ? Math.min(served, count) : Math.min((current + 1) * ps, count);
     const loadMore = () => {
       if (this.serverSide) this.emit("pageChange", current + 1);
       else this.mobileShown = Math.min((this.mobileShown || ps) + ps, count);
@@ -3331,7 +3480,7 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
               <div class="pager">
                 <div class="left">
                   <span>
-                    ${pages > 1 ? b2`${this.t.showing.replace("{from}", String(this.isMobile && !this.serverSide ? 1 : current * ps + 1)).replace("{to}", String(Math.min(served, count)))} ` : A}
+                    ${pages > 1 ? b2`${this.t.showing.replace("{from}", String(this.isMobile && !this.serverSide ? 1 : current * ps + 1)).replace("{to}", String(rangeTo))} ` : A}
                     <span class="strong">${count}</span> ${count === 1 ? this.t.recordSingular : this.t.recordPlural}
                   </span>
                   ${!showTopbar && this.effPageSizes.length ? b2`
@@ -3360,12 +3509,13 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
   renderDrawer() {
     const isFilters = this.panel === "filters";
     const clientFilters = isFilters && !this.serverSide;
+    const formTitle = this.panelTitle || (this.panel === "edit" ? this.t.editRecord : this.t.newRecord);
     return b2`
-      <div class="tk-scrim" @click=${() => this.close()}></div>
-      <aside class="drawer" role="dialog" aria-label=${isFilters ? this.t.filters : this.t.form}>
+      <div class="tk-scrim" @click=${() => this.closePanel("backdrop")}></div>
+      <aside class="drawer" role="dialog" aria-label=${isFilters ? this.t.filters : this.panelTitle || this.t.form}>
         <header class="dh">
-          <strong>${isFilters ? this.t.filters : this.t.newRecord}</strong>
-          <ion-button fill="clear" size="small" aria-label=${this.t.close} @click=${() => this.close()}><ion-icon slot="icon-only" .icon=${iconClose}></ion-icon></ion-button>
+          <strong>${isFilters ? this.t.filters : formTitle}</strong>
+          <ion-button fill="clear" size="small" aria-label=${this.t.close} @click=${() => this.closePanel("close-button")}><ion-icon slot="icon-only" .icon=${iconClose}></ion-icon></ion-button>
         </header>
         <div class="db">
           ${isFilters ? clientFilters ? this.filterColumns.map((c5) => this.renderClientFilter(c5)) : this.filterColumns.map((c5) => b2`<div class="fblock">${this.renderFilterControl(c5)}</div>`) : b2`<slot name="create"></slot>`}
@@ -3422,10 +3572,12 @@ var _OkDataTable = class _OkDataTable2 extends i3 {
     this.emit("rowClick", { row });
   }
   emptyState() {
+    const noMatches = this.rows.length > 0;
     return b2`
       <div class="empty">
         <span class="empty-ic"><ion-icon .icon=${iconFileTrayOutline}></ion-icon></span>
-        <span>${this.effEmptyMessage}</span>
+        <span>${noMatches ? this.effNoMatchesMessage : this.effEmptyMessage}</span>
+        ${noMatches ? b2`<ion-button fill="clear" size="small" data-role="no-matches-reset" data-testid=${this.tid("show-all")} @click=${() => this.resetSearchAndFilters()}>${this.t.showAll}</ion-button>` : A}
       </div>
     `;
   }
@@ -3558,6 +3710,9 @@ __decorateClass3([
   n4({ attribute: "empty-message" })
 ], _OkDataTable.prototype, "emptyMessage");
 __decorateClass3([
+  n4({ attribute: "no-matches-message" })
+], _OkDataTable.prototype, "noMatchesMessage");
+__decorateClass3([
   n4({ attribute: "search-placeholder" })
 ], _OkDataTable.prototype, "searchPlaceholder");
 __decorateClass3([
@@ -3689,6 +3844,9 @@ __decorateClass3([
 __decorateClass3([
   r5()
 ], _OkDataTable.prototype, "panel");
+__decorateClass3([
+  r5()
+], _OkDataTable.prototype, "panelTitle");
 __decorateClass3([
   r5()
 ], _OkDataTable.prototype, "viewMode");
