@@ -110,8 +110,7 @@ Pasos:
 Entra: nada; lee las categorías activas del negocio.
 Sale: nada (solo lectura).
 Si falla: el aviso de la tabla con reintento. Sin permiso de consulta la pestaña se ve (la navegación del módulo no declara permiso), pero la tabla no carga y sale el aviso de error; afecta solo a roles propios, porque los cuatro de fábrica tienen permiso de consulta.
-Implicados: pendiente
-Pendiente de enlazar: sales — el selector «Departamento (IVA)» del punto de venta pinta estas categorías
+Implicados: SALES-F09, SALES-F35
 Pendiente de enlazar: inventory — el selector de categoría fiscal del producto y de las categorías de producto
 Pendiente de enlazar: services — el selector de categoría fiscal del servicio
 QA: ninguno
@@ -166,9 +165,7 @@ Pasos:
 Entra: país, región, categoría, tipo, familia de impuesto y fechas que elige la persona.
 Sale: la regla activa (avisa: taxes.rule.created). Desde ese momento Ventas y Facturación la usan para las ventas nuevas: gana la regla de la región del negocio y, si no hay, la del país entero; una regla de otra región nunca se usa. Las ventas ya hechas no cambian (TAXES-F07).
 Si falla: el motivo sale dentro del panel. Dos reglas activas de la misma categoría, país y región no pueden estar vigentes el mismo día: el rechazo marca «Vigente desde» con «Se solapa con otra regla activa de este país, región y categoría…» (se resuelve con TAXES-F07). Un rango de fechas al revés, o un componente que no cuelga de una raíz de su mismo país, región y categoría, se rechaza con el aviso de «no se ha podido crear la regla».
-Implicados: pendiente
-Pendiente de enlazar: sales — cobrar un tique resuelve el tipo de cada línea contra estas reglas
-Pendiente de enlazar: invoice — emitir una factura califica cada línea contra estas reglas
+Implicados: INVOICE-F01, SALES-F01
 QA: L-01, L-08
 
 ### TAXES-F05 Declarar una operación exenta, no sujeta o con inversión del sujeto pasivo
@@ -185,11 +182,9 @@ Pasos:
    opcional (por defecto el general, 01).
 4. Pulsa «Añadir».
 Entra: calificación, causa de exención y régimen que elige o escribe la persona (códigos de la AEAT, opacos para este módulo).
-Sale: la regla con su calificación (avisa: taxes.rule.created). La venta no copia la calificación en su línea: la resuelve Facturación al emitir, contra las reglas vigentes ese día, y queda en el desglose de la factura; quien declara a la AEAT traduce los códigos.
-Si falla: una regla que no cobra impuesto con tipo mayor que 0, o un componente con tipo colgado de ella, se rechaza («no se ha podido crear la regla…»). La causa de exención no se comprueba contra ninguna lista ni se exige: una exenta sin causa se guarda y Facturación la emite con clase exenta y sin causa (qué hace después VeriFactu con ella, sin confirmar).
-Implicados: pendiente
-Pendiente de enlazar: invoice — la factura de una línea exenta o no sujeta, que no admite cuota (invoice.quota_on_non_subject_class)
-Pendiente de enlazar: verifactu — traduce la causa de exención y el régimen al registro de la AEAT
+Sale: la regla con su calificación (avisa: taxes.rule.created). La venta no copia la calificación en su línea: la resuelve Facturación al emitir, contra las reglas vigentes ese día, y queda en el desglose de la factura. VeriFactu no lee Impuestos: toma la calificación, la causa y el régimen de ese desglose y los traduce al registro de la AEAT (REC_FISCAL-F04).
+Si falla: una regla que no cobra impuesto con tipo mayor que 0, o un componente con tipo colgado de ella, se rechaza («no se ha podido crear la regla…»). La causa de exención no se comprueba contra ninguna lista ni se exige: una exenta sin causa se guarda, Facturación la emite con clase exenta y sin causa, y el motor fiscal del hub la declara a la AEAT como exenta «por otros» (E6) (`hub` `crates/plugins/verifactu/src/aeat.rs`).
+Implicados: INVOICE-F01, REC_FISCAL-F04
 QA: ninguno
 
 ### TAXES-F06 Añadir un recargo de equivalencia a un tipo
@@ -207,9 +202,7 @@ Pasos:
 Entra: el recargo, la raíz de la que cuelga y su etiqueta.
 Sale: la regla componente (avisa: taxes.rule.created). Las ventas de esa categoría llevan tipo combinado (21 + 5,2 = 26,2) con el desglose por componente; la calificación y la familia de impuesto siguen siendo las de la raíz.
 Si falla: sin raíz compatible el selector dice «No hay regla raíz compatible para ese país/región/categoría» y está apagado; una raíz que no cobra impuesto no se ofrece. Un componente de un componente no existe: solo se mira un nivel.
-Implicados: pendiente
-Pendiente de enlazar: sales — la línea con recargo reparte la cuota entre sus componentes
-Pendiente de enlazar: invoice — el recargo viaja como tipo propio dentro de la línea de factura
+Implicados: INVOICE-F01, SALES-F01
 QA: ninguno
 
 ### TAXES-F07 Cambiar un tipo a partir de una fecha
@@ -226,9 +219,7 @@ Pasos:
 Entra: la fecha de fin (inclusiva) y los datos de la regla nueva.
 Sale: la regla con su fecha de fin (avisa: taxes.rule.ended). Una venta ya hecha conserva su tipo, categoría, país, región y regla: la línea de venta guarda esa copia. Una factura ya emitida no cambia. En cambio, Facturación vuelve a leer el tipo y la calificación de la regla vigente el día de emisión: si el tipo cambió entre la venta y una factura emitida después (por ejemplo una factura completa a petición), la factura se rechaza por descuadre de cuota. No se edita una regla: no existe esa acción.
 Si falla: un fin anterior al inicio de la regla se rechaza con «Esa regla no puede terminar en esa fecha…»; un fin que invade otra regla activa del mismo hueco, con el aviso de solape. No se comprueba que la fecha sea futura: poner un fin pasado deja un hueco sin tipo y las ventas de esa categoría se rechazan hasta crear la siguiente. Dos tramos seguidos (uno acaba el 31/12, el otro empieza el 1/1) no se solapan.
-Implicados: pendiente
-Pendiente de enlazar: sales — las ventas ya cobradas conservan su tipo; las nuevas toman el vigente ese día
-Pendiente de enlazar: invoice — el tipo llega congelado a la factura, pero su calificación se resuelve contra las reglas vigentes el día de emisión
+Implicados: INVOICE-F01, INVOICE-F04, SALES-F01, REC_FISCAL-F02, REC_FISCAL-F10
 QA: ninguno
 
 ### TAXES-F08 Desactivar y reactivar una regla
@@ -244,8 +235,7 @@ Pasos:
 Entra: la regla elegida.
 Sale: la regla activa o inactiva (avisa: taxes.rule.deactivated / taxes.rule.activated). Desactivar una raíz deja sus componentes donde estaban, pero dejan de contar porque solo se leen los de la raíz que se usa. Si era la única raíz de la categoría, las ventas de esa categoría se rechazan. No existe borrar una regla.
 Si falla: reactivar una regla que ya está activa, o que no es de este negocio, sale como «No se ha podido recuperar la regla…»; reactivar una que ahora se solapa con otra activa, con el aviso de solape. Desactivar, en cambio, no comprueba que la regla exista ni que esté activa: responde bien y avisa igualmente.
-Implicados: pendiente
-Pendiente de enlazar: sales — una categoría sin regla activa hace que el punto de venta rechace la línea
+Implicados: SALES-F01
 QA: ninguno
 
 ### TAXES-F09 Reparar una regla que cobra un tipo donde no toca
@@ -264,8 +254,7 @@ Pasos:
 Entra: la regla y la lectura que elige la persona.
 Sale: la regla corregida en su sitio (avisa: taxes.rule.repaired). Las ventas ya hechas y las facturas emitidas no cambian; las nuevas se facturan con normalidad.
 Si falla: una regla que no existe, no es de este negocio o no tiene nada que reparar se rechaza («No se pudo reparar la regla…»). Estas reglas son las guardadas antes de que se prohibiera crearlas: la alta normal ya no las deja nacer, pero el lote del asistente sí puede crear un componente con tipo bajo una raíz exenta; nadie las repara solo.
-Implicados: pendiente
-Pendiente de enlazar: invoice — una venta de una regla incoherente se cobra pero la factura no la sella
+Implicados: INVOICE-F06, REC_FISCAL-F09
 QA: ninguno
 
 ### TAXES-F10 Resolver reglas que se solapan
@@ -302,9 +291,7 @@ Pasos:
 Entra: región del negocio, y un tipo regional por categoría que fija la persona (no se siembra ninguno a propósito).
 Sale: reglas regionales; para una venta, la regla de la región gana a la nacional. La familia de impuesto no se guarda en la línea de venta: la resuelve Facturación al emitir y queda en el desglose de la factura.
 Si falla: una categoría sin regla regional se cobra con la nacional, al IVA, sin avisar; con la región vacía, las reglas regionales no se usan nunca.
-Implicados: pendiente
-Pendiente de enlazar: sales — cobrar una venta en un negocio con región
-Pendiente de enlazar: invoice — la factura declara IGIC o IPSI según la familia de la regla
+Implicados: INVOICE-F01, SALES-F01, REC_FISCAL-F04
 QA: ninguno
 
 ### TAXES-F12 Crear varias reglas de golpe con el asistente
@@ -384,8 +371,7 @@ Pasos:
 Entra: nada.
 Sale: 10 categorías de sistema (`restaurant.food`, `restaurant.drink`, `restaurant.alcohol`, `restaurant.delivery`, `service.generic`, `service.health`, `service.education`, `product.generic`, `product.reduced`, `product.super_reduced`), 16 alias de fábrica y 10 reglas para España, para todo el país y desde el 01/09/2012: general 21 % (`product.generic`, `service.generic`, `restaurant.alcohol`), 10 % (`restaurant.food`, `restaurant.drink`, `restaurant.delivery`, `product.reduced`), 4 % (`product.super_reduced`) y exentas con causa E1 al 0 % (`service.health`, `service.education`). No hay reglas de IGIC, IPSI, recargo ni de ningún otro país.
 Si falla: nunca pisa una fila editada, ni recrea una desactivada ni un alias reapuntado; repetirla no duplica nada.
-Implicados: pendiente
-Pendiente de enlazar: sales — un negocio nuevo cobra su primera venta con estos tipos de fábrica
+Implicados: ninguno
 QA: qa-hub §4 (discrepa)
 
 ### TAXES-F17 Avisar de que faltan tipos para el país del negocio
@@ -416,10 +402,10 @@ Pasos:
 3. Se obtiene la base, la cuota, el total, el tipo combinado, la calificación y el desglose por
    componente.
 Entra: importe en céntimos, categoría, y país y región del negocio (el que llama puede sustituirlos); fecha por defecto, hoy en UTC (entre la medianoche local y la UTC puede resolver otra regla que la caja, que usa la fecha local del negocio).
-Sale: solo respuesta; no guarda nada ni avisa. Sobre importe sin impuesto, cuota de cada componente = base × tipo redondeada al céntimo a mitad hacia arriba; con el impuesto incluido, base = importe ÷ (1 + tipo combinado) redondeada, y la cuota es lo que resta, así que lo cobrado nunca se mueve un céntimo (el último componente absorbe el ajuste).
+Sale: solo respuesta; no guarda nada ni avisa. Sobre importe sin impuesto, cuota de cada componente = base × tipo redondeada al céntimo a mitad hacia arriba; con el impuesto incluido, base = importe ÷ (1 + tipo combinado) redondeada, y la cuota es lo que resta, así que lo cobrado nunca se mueve un céntimo (el último componente absorbe el ajuste). El redondeo no es propio de Impuestos: es el común del hub (`guest-sdk`, `money::round` y `money::percent_of`), el mismo con que Ventas cierra el tique por tipo (SALES-F01), Facturación cuadra la cuota de cada tipo al céntimo (INVOICE-F01) y el motor de VeriFactu se niega a sellar una cuota que no cuadra con su tipo (REC_FISCAL-F04). Cambiar ese redondeo cambia los cuatro a la vez; cambiar solo el cálculo de este módulo deja al asistente diciendo una cifra distinta de la del tique.
 Si falla: sin regla aplicable responde «no_rate» (no cobra 0 % salvo que el que llama lo pida expresamente); si el hub no pudo leer las reglas, el cálculo se detiene sin adivinar; sin importe o sin categoría, se rechaza. Cobrar un tique no pasa por aquí (TAXES-F19).
-Implicados: pendiente
-Pendiente de enlazar: sales — el total y la cuota de un tique se cierran en Ventas (por tipo, o por perfil de componentes con el IVA incluido)
+Implicados: INVOICE-F01, SALES-F01, REC_FISCAL-F04
+Pendiente de enlazar: hub — el redondeo común (`guest-sdk`, `money::round` a mitad hacia arriba) que comparten Impuestos, Ventas, Facturación y el motor fiscal de VeriFactu
 QA: L-08
 
 ### TAXES-F19 Entregar las reglas y las categorías a Ventas, Facturación, Inventario y Servicios
@@ -436,9 +422,7 @@ Pasos:
 Entra: lo que ya está guardado en Reglas y Categorías.
 Sale: lo que la línea de venta congela: categoría, tipo combinado, país, región y regla. La calificación (familia, clase, régimen y causa) no viaja en la venta: la resuelve Facturación al emitir, contra las reglas vigentes ese día, y queda en el desglose de la factura. Con la lista de reglas vacía, una línea con categoría se rechaza («no hay regla»); una línea sin categoría cae al tipo que traiga o a 0 % (es cosa de Ventas).
 Si falla: si las reglas no se pueden leer, el hub rechaza antes de escribir (error de lectura no disponible; el aviso propio de Ventas solo salta en un runtime antiguo) y Facturación aborta sin gastar número; el cajero no cobra con un tipo supuesto. Servicios no comprueba la categoría al guardar.
-Implicados: pendiente
-Pendiente de enlazar: sales — cobrar un tique
-Pendiente de enlazar: invoice — emitir una factura
+Implicados: INVOICE-F01, INVOICE-F03, SALES-F01, SALES-F07, REC_FISCAL-F01, REC_FISCAL-F02
 Pendiente de enlazar: inventory — guardar un producto con su categoría fiscal
 Pendiente de enlazar: services — guardar un servicio con su categoría fiscal
 QA: L-01, L-08
