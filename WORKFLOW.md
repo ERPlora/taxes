@@ -109,7 +109,7 @@ Pasos:
    una etiqueta.
 Entra: nada; lee las categorías activas del negocio.
 Sale: nada (solo lectura).
-Si falla: el aviso de la tabla con reintento; sin permiso de consulta no se ve la pestaña.
+Si falla: el aviso de la tabla con reintento. Sin permiso de consulta la pestaña se ve (la navegación del módulo no declara permiso), pero la tabla no carga y sale el aviso de error; afecta solo a roles propios, porque los cuatro de fábrica tienen permiso de consulta.
 Implicados: pendiente
 Pendiente de enlazar: sales — el selector «Departamento (IVA)» del punto de venta pinta estas categorías
 Pendiente de enlazar: inventory — el selector de categoría fiscal del producto y de las categorías de producto
@@ -143,10 +143,10 @@ Pasos:
 1. Abre **Impuestos → Reglas**.
 2. Busca por categoría o país, o filtra por Categoría, País, Región, Tipo, Calificación o Activa.
 3. Filtra Activa = «No» para ver las desactivadas; la fila ofrece «Reactivar» (TAXES-F08).
-4. Lee un componente (recargo) bajo su regla como «↳ clave · etiqueta».
+4. Reconoce un componente (recargo) por «↳ clave · etiqueta»; no sale necesariamente debajo de su raíz, porque la tabla se ordena por país.
 Entra: nada; lee las reglas del negocio (por defecto solo las activas).
 Sale: nada (solo lectura).
-Si falla: el aviso de la tabla con reintento; si la lista no carga, los selectores de país y categoría pueden quedar vacíos aunque la tabla se recupere.
+Si falla: el aviso de la tabla con reintento; si fallan las lecturas auxiliares, el selector de categoría del alta y el filtro de País pueden quedar vacíos hasta reintentar (el país del alta es una lista fija y nunca queda vacío).
 Implicados: ninguno
 QA: ninguno
 
@@ -185,15 +185,15 @@ Pasos:
    opcional (por defecto el general, 01).
 4. Pulsa «Añadir».
 Entra: calificación, causa de exención y régimen que elige o escribe la persona (códigos de la AEAT, opacos para este módulo).
-Sale: la regla con su calificación (avisa: taxes.rule.created). Ventas y Facturación la copian en la línea; quien declara a la AEAT traduce los códigos.
-Si falla: una regla que no cobra impuesto con tipo mayor que 0, o un componente con tipo colgado de ella, se rechaza («no se ha podido crear la regla…»). La causa de exención no se comprueba contra ninguna lista ni se exige: una exenta sin causa se guarda (qué hace Facturación con ella, sin confirmar).
+Sale: la regla con su calificación (avisa: taxes.rule.created). La venta no copia la calificación en su línea: la resuelve Facturación al emitir, contra las reglas vigentes ese día, y queda en el desglose de la factura; quien declara a la AEAT traduce los códigos.
+Si falla: una regla que no cobra impuesto con tipo mayor que 0, o un componente con tipo colgado de ella, se rechaza («no se ha podido crear la regla…»). La causa de exención no se comprueba contra ninguna lista ni se exige: una exenta sin causa se guarda y Facturación la emite con clase exenta y sin causa (qué hace después VeriFactu con ella, sin confirmar).
 Implicados: pendiente
 Pendiente de enlazar: invoice — la factura de una línea exenta o no sujeta, que no admite cuota (invoice.quota_on_non_subject_class)
 Pendiente de enlazar: verifactu — traduce la causa de exención y el régimen al registro de la AEAT
 QA: ninguno
 
 ### TAXES-F06 Añadir un recargo de equivalencia a un tipo
-Estado: parcial — el recargo se suma a toda venta de la categoría, sin mirar al cliente; no se siembra ninguno y los lotes del asistente no lo crean
+Estado: parcial — el recargo se suma a toda venta de la categoría, sin mirar al cliente; no se siembra ninguno; por lote se puede crear sin ninguna comprobación (TAXES-F12)
 Vertical: comun
 Actor: administrador, responsable
 Pantalla: Reglas
@@ -224,7 +224,7 @@ Pasos:
 3. Crea la regla nueva (TAXES-F04) con «Vigente desde» el día siguiente.
 4. La tabla enseña las dos con sus fechas; desde la fecha de cambio las ventas nuevas usan la nueva.
 Entra: la fecha de fin (inclusiva) y los datos de la regla nueva.
-Sale: la regla con su fecha de fin (avisa: taxes.rule.ended). Las ventas y facturas ya emitidas conservan el tipo y la regla con los que se hicieron: llevan una copia congelada en cada línea. No se edita una regla: no existe esa acción.
+Sale: la regla con su fecha de fin (avisa: taxes.rule.ended). Una venta ya hecha conserva su tipo, categoría, país, región y regla: la línea de venta guarda esa copia. Una factura ya emitida no cambia. En cambio, Facturación vuelve a leer el tipo y la calificación de la regla vigente el día de emisión: si el tipo cambió entre la venta y una factura emitida después (por ejemplo una factura completa a petición), la factura se rechaza por descuadre de cuota. No se edita una regla: no existe esa acción.
 Si falla: un fin anterior al inicio de la regla se rechaza con «Esa regla no puede terminar en esa fecha…»; un fin que invade otra regla activa del mismo hueco, con el aviso de solape. No se comprueba que la fecha sea futura: poner un fin pasado deja un hueco sin tipo y las ventas de esa categoría se rechazan hasta crear la siguiente. Dos tramos seguidos (uno acaba el 31/12, el otro empieza el 1/1) no se solapan.
 Implicados: pendiente
 Pendiente de enlazar: sales — las ventas ya cobradas conservan su tipo; las nuevas toman el vigente ese día
@@ -263,7 +263,7 @@ Pasos:
 4. La marca y el aviso desaparecen.
 Entra: la regla y la lectura que elige la persona.
 Sale: la regla corregida en su sitio (avisa: taxes.rule.repaired). Las ventas ya hechas y las facturas emitidas no cambian; las nuevas se facturan con normalidad.
-Si falla: una regla que no existe, no es de este negocio o no tiene nada que reparar se rechaza («No se pudo reparar la regla…»). Estas reglas son las guardadas antes de que se prohibiera crearlas: hoy el alta no las deja nacer, y nadie las repara solo.
+Si falla: una regla que no existe, no es de este negocio o no tiene nada que reparar se rechaza («No se pudo reparar la regla…»). Estas reglas son las guardadas antes de que se prohibiera crearlas: la alta normal ya no las deja nacer, pero el lote del asistente sí puede crear un componente con tipo bajo una raíz exenta; nadie las repara solo.
 Implicados: pendiente
 Pendiente de enlazar: invoice — una venta de una regla incoherente se cobra pero la factura no la sella
 QA: ninguno
@@ -287,20 +287,20 @@ Implicados: ninguno
 QA: ninguno
 
 ### TAXES-F11 Montar un negocio de Canarias, Ceuta o Melilla
-Estado: parcial — Ajustes del hub solo deja elegir el país (España o Portugal) y no tiene campo para la región; cómo se fija ES-CN, ES-CE o ES-ML sin la API: sin confirmar. Sin región el negocio cobra las reglas nacionales (IVA)
+Estado: parcial — ninguna pantalla del hub escribe la región: Ajustes solo deja elegir el país (España o Portugal) y la región solo se fija con la API de ajustes, que la valida y exige que sea del país del negocio. Sin región el negocio cobra las reglas nacionales (IVA)
 Vertical: comun
 Actor: administrador
 Pantalla: Reglas
 Pasos:
 1. Comprueba que la región del negocio es ES-CN (Canarias), ES-CE (Ceuta) o ES-ML (Melilla); el país,
-   España.
+   España. Hoy solo se fija por la API de ajustes; no hay pantalla.
 2. En Reglas crea una regla por cada categoría que vendes: País «España», esa Región, el % del
    territorio, Tipo «IGIC (Canarias)» o «IPSI (Ceuta/Melilla)» (TAXES-F04).
-3. No borres ni desactives las reglas de IVA: no casan con un negocio con región y siguen sirviendo si
-   se quita la región.
-4. Haz una venta de prueba y comprueba que el desglose dice IGIC o IPSI.
+3. No borres las reglas de IVA: en un negocio con región se aplican a toda categoría que no tenga regla
+   regional, cobrando IVA sin avisar. Por eso hace falta una regla regional por cada categoría que vendas.
+4. Haz una venta de prueba y comprueba el tipo cobrado (que la factura declare IGIC o IPSI, y si el tique impreso lo enseña, sin confirmar).
 Entra: región del negocio, y un tipo regional por categoría que fija la persona (no se siembra ninguno a propósito).
-Sale: reglas regionales; para una venta, la regla de la región gana a la nacional y la familia de impuesto viaja a la línea.
+Sale: reglas regionales; para una venta, la regla de la región gana a la nacional. La familia de impuesto no se guarda en la línea de venta: la resuelve Facturación al emitir y queda en el desglose de la factura.
 Si falla: una categoría sin regla regional se cobra con la nacional, al IVA, sin avisar; con la región vacía, las reglas regionales no se usan nunca.
 Implicados: pendiente
 Pendiente de enlazar: sales — cobrar una venta en un negocio con región
@@ -308,18 +308,18 @@ Pendiente de enlazar: invoice — la factura declara IGIC o IPSI según la famil
 QA: ninguno
 
 ### TAXES-F12 Crear varias reglas de golpe con el asistente
-Estado: parcial — sin pantalla; el lote deja pasar un componente (parent_id) y un rango de fechas al revés sin las comprobaciones de la alta normal
+Estado: parcial — sin pantalla; el lote deja pasar un componente (parent_id), también uno con tipo bajo una raíz exenta, y un rango de fechas al revés, sin las comprobaciones de la alta normal; la respuesta no trae el motivo de cada fila saltada
 Vertical: comun
 Actor: administrador, responsable, asistente
 Pantalla: asistente
 Pasos:
 1. Pide al asistente algo como «crea los tipos de IVA de España 2026».
 2. El asistente prepara hasta 100 reglas y las guarda.
-3. Revisa el resultado: las filas inválidas se saltan y se cuentan en el informe; el resto entra.
+3. Revisa el resultado: la respuesta dice cuántas reglas entraron; solo se salta, y entra el resto, una fila con calificación que no cobra impuesto y tipo mayor que 0.
 4. Comprueba las reglas en Reglas (TAXES-F03).
 Entra: la lista de reglas que dicta la persona al asistente.
-Sale: una regla por fila válida (avisa: taxes.rule.created por cada una y un informe con cuántas entraron y cuáles se rechazaron). Si una fila solapa otra regla activa del mismo hueco, falla el lote entero. Una fila con calificación que no cobra impuesto y tipo mayor que 0, con calificación inventada o con país que no son dos letras, se salta.
-Si falla: el asistente cuenta qué filas no entraron. Por lectura del código, una categoría que no existe hace fallar el lote entero (clave ajena), no solo esa fila. Los componentes deberían crearse uno a uno, pero el lote acepta un `parent_id` y lo guarda sin comprobar raíz, país ni categoría.
+Sale: una regla por fila válida (avisa: taxes.rule.created por cada una y un informe con cuántas entraron y el motivo de cada fila saltada; ese motivo va solo en el aviso, no en la respuesta a quien llama). Si una fila solapa otra regla activa del mismo hueco, falla el lote entero.
+Si falla: si cualquier fila incumple el formato (país fuera de la lista ISO, calificación fuera de la lista, falta categoría o tipo, tipo mayor que 100, fecha mal escrita) se rechaza el lote entero antes de procesar ninguna fila. Por lectura del código, una categoría que no existe también hace fallar el lote entero (clave ajena). Los componentes deberían crearse uno a uno, pero el lote acepta un `parent_id` y lo guarda sin comprobar raíz, país ni categoría.
 Implicados: ninguno
 QA: ninguno
 
@@ -338,7 +338,7 @@ Implicados: ninguno
 QA: ninguno
 
 ### TAXES-F14 Enseñar un alias de categoría a mano
-Estado: parcial — la pantalla guarda el texto tal como se escribe (sin pasar a minúsculas ni quitar espacios dobles, como sí hace el importador), así que un alias con mayúsculas nunca casa; no se puede editar ni quitar un alias; un alias repetido se rechaza sin mensaje propio (sin confirmar el texto)
+Estado: parcial — la pantalla guarda el texto sin pasarlo a minúsculas ni juntar espacios dobles (solo quita los de los extremos; el importador sí lo normaliza todo), así que un alias con mayúsculas nunca casa; no se puede editar ni quitar un alias; un alias repetido se rechaza sin mensaje propio (sin confirmar el texto)
 Vertical: comun
 Actor: administrador, responsable
 Pantalla: Alias
@@ -367,7 +367,7 @@ Pasos:
    categoría nueva (TAXES-F02, TAXES-F14).
 Entra: el texto normalizado, de Inventario.
 Sale: la clave de categoría, o nada si no hay alias; los alias y categorías nuevos que decida la persona (avisa: taxes.alias.created / taxes.category.created).
-Si falla: si la consulta falla, Inventario trata el texto como no resuelto y pregunta.
+Si falla: si falla la búsqueda de alias, el texto queda sin resolver y se pregunta; si no carga la lista de categorías, la importación falla.
 Implicados: pendiente
 Pendiente de enlazar: inventory — importar productos con una columna de categoría fiscal
 QA: ninguno
@@ -396,7 +396,7 @@ Pantalla: Hub: Termina de configurar tu negocio
 Pasos:
 1. En la lista «Termina de configurar tu negocio» sale el paso «Tus impuestos» («Configura los tipos de
    IVA del país en el que vendes para que el TPV pueda calcular el precio de una venta.»).
-2. Pulsa «Configurar»: lleva a la pestaña Reglas (solo si la persona puede gestionar impuestos).
+2. Pulsa «Configurar»: lleva a la pestaña Reglas. El paso solo se enseña a quien puede gestionar impuestos.
 3. Cuando existe una regla raíz activa y vigente hoy para el país del negocio, el paso sale hecho.
 Entra: las reglas y el país guardado en Ajustes del hub.
 Sale: un único paso, de nivel «Importante»; no bloquea vender por sí mismo.
@@ -407,15 +407,15 @@ QA: qa-hub §4
 ### TAXES-F18 Calcular el impuesto de un importe
 Estado: hecho
 Vertical: comun
-Actor: asistente, sistema
+Actor: asistente
 Pantalla: asistente
 Pasos:
-1. Pide al asistente «¿cuánto IVA lleva 100 € de producto general?», o lo pide otro módulo.
+1. Pide al asistente «¿cuánto IVA lleva 100 € de producto general?». Ningún módulo lo llama: Ventas y Facturación resuelven por su cuenta (TAXES-F19).
 2. Se indica el importe (en céntimos enteros) y la categoría; opcionalmente la fecha y si el importe ya
    lleva el impuesto.
 3. Se obtiene la base, la cuota, el total, el tipo combinado, la calificación y el desglose por
    componente.
-Entra: importe en céntimos, categoría, y país y región del negocio (el que llama puede sustituirlos); fecha por defecto, hoy.
+Entra: importe en céntimos, categoría, y país y región del negocio (el que llama puede sustituirlos); fecha por defecto, hoy en UTC (entre la medianoche local y la UTC puede resolver otra regla que la caja, que usa la fecha local del negocio).
 Sale: solo respuesta; no guarda nada ni avisa. Sobre importe sin impuesto, cuota de cada componente = base × tipo redondeada al céntimo a mitad hacia arriba; con el impuesto incluido, base = importe ÷ (1 + tipo combinado) redondeada, y la cuota es lo que resta, así que lo cobrado nunca se mueve un céntimo (el último componente absorbe el ajuste).
 Si falla: sin regla aplicable responde «no_rate» (no cobra 0 % salvo que el que llama lo pida expresamente); si el hub no pudo leer las reglas, el cálculo se detiene sin adivinar; sin importe o sin categoría, se rechaza. Cobrar un tique no pasa por aquí (TAXES-F19).
 Implicados: pendiente
@@ -434,8 +434,8 @@ Pasos:
 3. Inventario comprueba que la categoría de un producto existe antes de guardarlo; Inventario, Servicios
    y Ventas listan las categorías para elegirlas.
 Entra: lo que ya está guardado en Reglas y Categorías.
-Sale: el tipo y la calificación que cada línea congela (categoría, tipo combinado, país, región, regla, familia de impuesto, clase de operación, régimen, causa de exención). Con la lista de reglas vacía, una línea con categoría se rechaza («no hay regla»); una línea sin categoría cae al tipo que traiga o a 0 % (es cosa de Ventas).
-Si falla: si las reglas no se pueden leer, Ventas rechaza («catálogo no disponible») y Facturación aborta sin gastar número; el cajero no cobra con un tipo supuesto. Servicios no comprueba la categoría al guardar.
+Sale: lo que la línea de venta congela: categoría, tipo combinado, país, región y regla. La calificación (familia, clase, régimen y causa) no viaja en la venta: la resuelve Facturación al emitir, contra las reglas vigentes ese día, y queda en el desglose de la factura. Con la lista de reglas vacía, una línea con categoría se rechaza («no hay regla»); una línea sin categoría cae al tipo que traiga o a 0 % (es cosa de Ventas).
+Si falla: si las reglas no se pueden leer, el hub rechaza antes de escribir (error de lectura no disponible; el aviso propio de Ventas solo salta en un runtime antiguo) y Facturación aborta sin gastar número; el cajero no cobra con un tipo supuesto. Servicios no comprueba la categoría al guardar.
 Implicados: pendiente
 Pendiente de enlazar: sales — cobrar un tique
 Pendiente de enlazar: invoice — emitir una factura
@@ -461,7 +461,7 @@ QA: L-01, L-08
 | Una sola regla vigente por hueco | hecho (las anteriores se marcan) | F04, F10 |
 | Editar una regla | no hecho a propósito: se pone fecha de fin y se crea otra | F07 |
 | Archivar una categoría o un alias | no hecho | F02, F14 |
-| Una venta ya hecha no cambia al cambiar el tipo | hecho (copia en la línea) | F07 |
+| Una venta ya hecha no cambia al cambiar el tipo | hecho en Ventas (copia en la línea); Facturación relee el tipo al emitir | F07 |
 | Reglas por cliente o posición fiscal | no hecho (fuera del MVP) | — |
 | Alias para importar | parcial | F14, F15 |
 
@@ -479,13 +479,15 @@ Todo el módulo es `comun`: no hay ningún flujo propio de restaurante ni de pel
 
 ## Datos: de quién es cada dato
 
-- **Propios**: categorías fiscales, reglas (con sus componentes), alias y la tabla de nombres traducidos
-  de las categorías de fábrica (igual en todos los negocios; no la edita nadie).
-- **Lee de otro**: el país, la región y el idioma del negocio, de Ajustes del hub (los inyecta el
-  runtime; el idioma lo lee la lista de categorías). La zona horaria del negocio no se usa aquí.
-- **Lo leen otros** por sus consultas públicas: Ventas y Facturación leen las reglas; Inventario,
-  Servicios y Ventas, las categorías; Inventario, además, los alias y comprueba que una categoría
-  existe. Ninguno toca las tablas.
+- **Propios**: categorías fiscales, reglas (con sus componentes), alias, la tabla de nombres traducidos
+  de las categorías de fábrica (igual en todos los negocios; no la edita nadie) y una tabla interna de la
+  guarda de solapes que nunca guarda filas.
+- **Lee de otro**: el país y la región del negocio, de Ajustes del hub (el runtime los inyecta al calcular;
+  la consulta de primeros pasos lee el país directamente de los ajustes); el idioma, de la preferencia
+  personal y de los ajustes del negocio. La zona horaria no se usa aquí.
+- **Lo leen otros** por sus consultas públicas: Ventas y Facturación leen las reglas; Inventario y la
+  pantalla de Departamentos de Ventas, además, para enseñar el %; Inventario, Servicios y Ventas, las
+  categorías; Inventario, además, los alias y comprueba que una categoría existe. Ninguno toca las tablas.
 - **Datos personales** (inventario RGPD): ninguna tabla guarda datos de clientes. Solo hay quién creó y
   cambió cada fila (el identificador del usuario) en categorías, reglas y alias; las filas sembradas o
   rellenadas por actualización llevan `system` o el usuario que instaló. Los avisos de los comandos
@@ -498,15 +500,16 @@ Todo el módulo es `comun`: no hay ningún flujo propio de restaurante ni de pel
   componente: TAXES-F12.)
 - **Una regla que no cobra impuesto no lleva tipo**: exenta, no sujeta o con inversión del sujeto
   pasivo y tipo mayor que 0 se rechaza al crear (por pantalla, asistente y lote); lo mismo un componente
-  con tipo bajo una raíz así. Las ya guardadas se marcan y se reparan (TAXES-F09).
+  con tipo bajo una raíz así, salvo un componente creado por lote. Las ya guardadas se marcan y se
+  reparan (TAXES-F09).
 - **Una sola regla activa vigente por categoría, país y región**: se rechaza al crear, reactivar, acabar
   y en el lote, también si dos personas guardan a la vez (el servidor las pone en cola).
 - **El tipo está entre 0 y 100**, el país es de la lista ISO y la clave de categoría sigue su patrón;
   los comprueba el servidor al crear por pantalla o asistente.
 - **Sin regla no hay tipo inventado**: sin regla aplicable el cálculo falla; el 0 % solo si el que
   llama lo pide.
-- **Dinero**: céntimos enteros, redondeo a mitad hacia arriba sobre decimales exactos, nunca
-  coma flotante; con el impuesto incluido, la cuota es la diferencia y lo cobrado no se mueve.
+- **Dinero**: céntimos enteros, redondeo a mitad hacia arriba sobre decimales exactos; el % se guarda como
+  número decimal y se convierte antes de multiplicar; con el impuesto incluido, la cuota es la diferencia y lo cobrado no se mueve.
 - **La región gana al país y nunca se usa la de otra región**: una región distinta de la del negocio
   no sirve de segunda opción.
 - **No se borra nada**: no hay acción de borrar reglas, categorías ni alias; una regla se desactiva y
@@ -564,3 +567,8 @@ Contra `origin/main` v2.3.34 (05/10/2026). Una línea por discrepancia; manda el
 - **QA `qa-hub §4`** y `qa-hub-beauty`: «`taxes` siembra IVA21/10/4/0»: no hay un tipo general al 0 %; hay 21, 10, 4 y dos categorías exentas al 0 % (F16). `qa-hub-beauty` pide `tax_rate_id` en el producto: ya no existe, es `tax_category_key` (ADR-0085).
 - **Textos**: `taxType_sales_tax` sale como «Sales tax» en la pantalla española; el aviso de ayuda de Reglas dice «Etiqueta del componente» y el campo se llama «Etiqueta componente»; `locales/es.json` trae una clave `description` que `en.json` no tiene.
 - **Formularios de Categorías y Alias**: sus `ion-input` e `ion-select` llevan `fill="outline"` sin `mode="md"` (el de Reglas sí), lo que la convención del repo (hub#760) no admite.
+- **`docs/concepts.md`, `docs/limits.md` y el documento técnico** dicen que cada línea congela su impuesto al emitir el documento: la línea de venta guarda categoría, tipo, país, región y regla; la calificación y el tipo de la factura los resuelve Facturación al emitir contra las reglas vigentes ese día, y una diferencia de cuota con la venta rechaza la factura (F07, F19).
+- **`docs/screens.md`** dice que quitar la región «no rompe» las reglas de IVA y que siguen sin casar con un negocio con región: sí casan, como reserva, para toda categoría sin regla regional (F11).
+- **Pestañas**: ninguna de las tres declara permiso de navegación, así que se ven siempre; sin consulta falla la tabla, no se oculta la pestaña (F01).
+- **Lote del asistente**: el esquema cierra país, calificación y tipo antes de ejecutar el código, por lo que una fila con formato inválido tumba el lote entero; las comprobaciones fila a fila del código solo alcanzan la calificación que no cobra impuesto con tipo mayor que 0 (F12).
+- **`docs/overview.md`**: el cálculo lo usan «el TPV y las facturas»; solo el asistente lo llama, y su fecha por defecto es la UTC (F18).
