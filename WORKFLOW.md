@@ -366,7 +366,7 @@ Pasos:
 Entra: nada.
 Sale: 10 categorías de sistema (`restaurant.food`, `restaurant.drink`, `restaurant.alcohol`, `restaurant.delivery`, `service.generic`, `service.health`, `service.education`, `product.generic`, `product.reduced`, `product.super_reduced`), 16 alias de fábrica y 10 reglas para España, para todo el país y desde el 01/09/2012: general 21 % (`product.generic`, `service.generic`, `restaurant.alcohol`), 10 % (`restaurant.food`, `restaurant.drink`, `restaurant.delivery`, `product.reduced`), 4 % (`product.super_reduced`) y exentas con causa E1 al 0 % (`service.health`, `service.education`). No hay reglas de IGIC, IPSI, recargo ni de ningún otro país.
 Si falla: nunca pisa una fila editada, ni recrea una desactivada ni un alias reapuntado; repetirla no duplica nada.
-Implicados: ninguno
+Implicados: REC_ALTA-F08
 QA: qa-hub §4 (discrepa)
 
 ### TAXES-F17 Avisar de que faltan tipos para el país del negocio
@@ -399,7 +399,7 @@ Pasos:
 Entra: importe en céntimos, categoría, y país y región del negocio (el que llama puede sustituirlos); fecha por defecto, hoy en UTC (entre la medianoche local y la UTC puede resolver otra regla que la caja, que usa la fecha local del negocio).
 Sale: solo respuesta; no guarda nada ni avisa. Sobre importe sin impuesto, cuota de cada componente = base × tipo redondeada al céntimo a mitad hacia arriba; con el impuesto incluido, base = importe ÷ (1 + tipo combinado) redondeada, y la cuota es lo que resta, así que lo cobrado nunca se mueve un céntimo (el último componente absorbe el ajuste). El redondeo no es propio de Impuestos: es el común del hub (`guest-sdk`, `money::round` y `money::percent_of`), el mismo con que Ventas cierra el tique por tipo (SALES-F01) y Facturación cuadra la cuota de cada tipo al céntimo (INVOICE-F01). Cambiar ese redondeo cambia los tres a la vez. El motor de VeriFactu no usa este redondeo: compara la cuota con base × tipo con su propia tolerancia y solo puede negarse a sellar una que no cuadra (REC_FISCAL-F04); cambiar solo el cálculo de este módulo deja al asistente diciendo una cifra distinta de la del tique.
 Si falla: sin regla aplicable responde «no_rate» (no cobra 0 % salvo que el que llama lo pida expresamente); si el hub no pudo leer las reglas, el cálculo se detiene sin adivinar; sin importe o sin categoría, se rechaza. Cobrar un tique no pasa por aquí (TAXES-F19).
-Implicados: INVOICE-F01, SALES-F01, REC_FISCAL-F04, HUB-F18
+Implicados: INVOICE-F01, SALES-F01, REC_FISCAL-F04, HUB-F18, PRICING-F02, PRICING-F08
 QA: L-08
 
 ### TAXES-F19 Entregar las reglas y las categorías a Ventas, Facturación, Inventario y Servicios
