@@ -110,8 +110,7 @@ Pasos:
 Entra: nada; lee las categorías activas del negocio.
 Sale: nada (solo lectura).
 Si falla: el aviso de la tabla con reintento. Sin permiso de consulta la pestaña se ve (la navegación del módulo no declara permiso), pero la tabla no carga y sale el aviso de error; afecta solo a roles propios, porque los cuatro de fábrica tienen permiso de consulta.
-Implicados: COMBOS-F02, INVENTORY-F01, INVENTORY-F02, INVENTORY-F05, INVENTORY-F06, SALES-F09, SALES-F35
-Pendiente de enlazar: services — el selector de categoría fiscal del servicio
+Implicados: COMBOS-F02, INVENTORY-F01, INVENTORY-F02, INVENTORY-F05, INVENTORY-F06, SALES-F09, SALES-F35, SERVICES-F01, SERVICES-F02, REC_PELUQUERIA-F04
 QA: ninguno
 
 ### TAXES-F02 Crear una categoría fiscal propia
@@ -420,8 +419,7 @@ Pasos:
 Entra: lo que ya está guardado en Reglas y Categorías.
 Sale: lo que la línea de venta congela: categoría, tipo combinado, país, región y regla. La calificación (familia, clase, régimen y causa) no viaja en la venta: la resuelve Facturación al emitir, contra las reglas vigentes ese día, y queda en el desglose de la factura. Con la lista de reglas vacía, una línea con categoría se rechaza («no hay regla»); una línea sin categoría cae al tipo que traiga o a 0 % (es cosa de Ventas).
 Si falla: si las reglas no se pueden leer, el hub rechaza antes de escribir (error de lectura no disponible; el aviso propio de Ventas solo salta en un runtime antiguo) y Facturación aborta sin gastar número; el cajero no cobra con un tipo supuesto. Servicios no comprueba la categoría al guardar.
-Implicados: INVENTORY-F01, INVENTORY-F02, INVOICE-F01, INVOICE-F03, SALES-F01, SALES-F07, REC_FISCAL-F01, REC_FISCAL-F02
-Pendiente de enlazar: services — guardar un servicio con su categoría fiscal
+Implicados: INVENTORY-F01, INVENTORY-F02, INVOICE-F01, INVOICE-F03, SALES-F01, SALES-F07, SERVICES-F01, SERVICES-F06, REC_FISCAL-F01, REC_FISCAL-F02
 QA: L-01, L-08
 
 ## Cobertura contra la referencia
