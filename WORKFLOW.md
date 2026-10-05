@@ -110,8 +110,7 @@ Pasos:
 Entra: nada; lee las categorías activas del negocio.
 Sale: nada (solo lectura).
 Si falla: el aviso de la tabla con reintento. Sin permiso de consulta la pestaña se ve (la navegación del módulo no declara permiso), pero la tabla no carga y sale el aviso de error; afecta solo a roles propios, porque los cuatro de fábrica tienen permiso de consulta.
-Implicados: SALES-F09, SALES-F35
-Pendiente de enlazar: inventory — el selector de categoría fiscal del producto y de las categorías de producto
+Implicados: COMBOS-F02, INVENTORY-F01, INVENTORY-F02, INVENTORY-F05, INVENTORY-F06, SALES-F09, SALES-F35
 Pendiente de enlazar: services — el selector de categoría fiscal del servicio
 QA: ninguno
 
@@ -129,8 +128,7 @@ Pasos:
 Entra: clave, nombre y descripción que escribe la persona.
 Sale: la categoría, única por clave en el negocio (avisa: taxes.category.created). No trae ninguna regla: hasta que se cree (TAXES-F04), una venta de esa categoría se rechaza. Inventario también la crea cuando alguien elige «crear» al importar un archivo (TAXES-F15).
 Si falla: el motivo sale dentro del panel; el botón «Añadir» está apagado mientras falte Clave o Nombre.
-Implicados: pendiente
-Pendiente de enlazar: inventory — el importador de productos crea categorías y alias aprendidos
+Implicados: INVENTORY-F09
 QA: ninguno
 
 ### TAXES-F03 Ver y filtrar las reglas
@@ -337,8 +335,7 @@ Pasos:
 Entra: texto externo y categoría que elige la persona.
 Sale: el alias, único por texto en el negocio (avisa: taxes.alias.created). La próxima importación de Inventario lo entiende.
 Si falla: el motivo sale dentro del panel; «Añadir» está apagado mientras falte Alias o Categoría.
-Implicados: pendiente
-Pendiente de enlazar: inventory — el importador de productos busca el texto normalizado (minúsculas, sin espacios de sobra) entre estos alias
+Implicados: INVENTORY-F09
 QA: ninguno
 
 ### TAXES-F15 Decir al importador de Inventario qué categoría es un texto
@@ -354,9 +351,8 @@ Pasos:
    categoría nueva (TAXES-F02, TAXES-F14).
 Entra: el texto normalizado, de Inventario.
 Sale: la clave de categoría, o nada si no hay alias; los alias y categorías nuevos que decida la persona (avisa: taxes.alias.created / taxes.category.created).
-Si falla: si falla la búsqueda de alias, el texto queda sin resolver y se pregunta; si no carga la lista de categorías, la importación falla.
-Implicados: pendiente
-Pendiente de enlazar: inventory — importar productos con una columna de categoría fiscal
+Si falla: si falla la búsqueda de alias, el texto queda sin resolver y se pregunta; si no carga la lista de categorías, Inventario lo captura sin avisar y la importación sigue: las filas con texto fiscal acaban fallidas con «Falta la categoría fiscal» y las que no traen columna se preguntan con el desplegable vacío (INVENTORY-F09).
+Implicados: INVENTORY-F09, INVENTORY-F10
 QA: ninguno
 
 ### TAXES-F16 Sembrar el catálogo de fábrica al instalar
@@ -417,13 +413,14 @@ Pasos:
 1. Quien cobra un tique, emite una factura o guarda un producto no abre Impuestos.
 2. Ventas y Facturación piden al arrancar la operación todas las reglas activas; si no llegan, la
    operación se rechaza antes de escribir nada.
-3. Inventario comprueba que la categoría de un producto existe antes de guardarlo; Inventario, Servicios
-   y Ventas listan las categorías para elegirlas.
+3. Inventario, Servicios y Ventas listan las categorías para elegirlas. Nadie comprueba al guardar un
+   producto que su categoría exista en Impuestos: el bloque que lo pedía en Inventario está retirado en
+   el hub (hub#610) y no se ejecuta, así que por el asistente o la API entra una clave inventada y el
+   TPV marca después ese artículo como no vendible (INVENTORY-F01).
 Entra: lo que ya está guardado en Reglas y Categorías.
 Sale: lo que la línea de venta congela: categoría, tipo combinado, país, región y regla. La calificación (familia, clase, régimen y causa) no viaja en la venta: la resuelve Facturación al emitir, contra las reglas vigentes ese día, y queda en el desglose de la factura. Con la lista de reglas vacía, una línea con categoría se rechaza («no hay regla»); una línea sin categoría cae al tipo que traiga o a 0 % (es cosa de Ventas).
 Si falla: si las reglas no se pueden leer, el hub rechaza antes de escribir (error de lectura no disponible; el aviso propio de Ventas solo salta en un runtime antiguo) y Facturación aborta sin gastar número; el cajero no cobra con un tipo supuesto. Servicios no comprueba la categoría al guardar.
-Implicados: INVOICE-F01, INVOICE-F03, SALES-F01, SALES-F07, REC_FISCAL-F01, REC_FISCAL-F02
-Pendiente de enlazar: inventory — guardar un producto con su categoría fiscal
+Implicados: INVENTORY-F01, INVENTORY-F02, INVOICE-F01, INVOICE-F03, SALES-F01, SALES-F07, REC_FISCAL-F01, REC_FISCAL-F02
 Pendiente de enlazar: services — guardar un servicio con su categoría fiscal
 QA: L-01, L-08
 
@@ -471,7 +468,7 @@ Todo el módulo es `comun`: no hay ningún flujo propio de restaurante ni de pel
   personal y de los ajustes del negocio. La zona horaria no se usa aquí.
 - **Lo leen otros** por sus consultas públicas: Ventas y Facturación leen las reglas; Inventario y la
   pantalla de Departamentos de Ventas, además, para enseñar el %; Inventario, Servicios y Ventas, las
-  categorías; Inventario, además, los alias y comprueba que una categoría existe. Ninguno toca las tablas.
+  categorías; Inventario, además, los alias. Ninguno toca las tablas.
 - **Datos personales** (inventario RGPD): ninguna tabla guarda datos de clientes. Solo hay quién creó y
   cambió cada fila (el identificador del usuario) en categorías, reglas y alias; las filas sembradas o
   rellenadas por actualización llevan `system` o el usuario que instaló. Los avisos de los comandos
@@ -556,3 +553,4 @@ Contra `origin/main` v2.3.34 (05/10/2026). Una línea por discrepancia; manda el
 - **Pestañas**: ninguna de las tres declara permiso de navegación, así que se ven siempre; sin consulta falla la tabla, no se oculta la pestaña (F01).
 - **Lote del asistente**: el esquema cierra país, calificación y tipo antes de ejecutar el código, por lo que una fila con formato inválido tumba el lote entero; las comprobaciones fila a fila del código solo alcanzan la calificación que no cobra impuesto con tipo mayor que 0 (F12).
 - **`docs/overview.md`**: el cálculo lo usan «el TPV y las facturas»; solo el asistente lo llama, y su fecha por defecto es la UTC (F18).
+- **Oleada 2 (Inventario, 05/10/2026)**: TAXES-F19 decía que Inventario comprueba que la categoría fiscal existe antes de guardar un producto; el bloque `validates` de su `module.json` lo declara, pero el hub lo tiene retirado (`manifest.rs`, `RETIRED_FIELDS`, hub#610) y no se ejecuta (F19). TAXES-F15 decía que, si no carga la lista de categorías, la importación de Inventario falla; el fallo se captura y la importación sigue (F15).
