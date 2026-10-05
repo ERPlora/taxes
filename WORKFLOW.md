@@ -397,10 +397,9 @@ Pasos:
 3. Se obtiene la base, la cuota, el total, el tipo combinado, la calificación y el desglose por
    componente.
 Entra: importe en céntimos, categoría, y país y región del negocio (el que llama puede sustituirlos); fecha por defecto, hoy en UTC (entre la medianoche local y la UTC puede resolver otra regla que la caja, que usa la fecha local del negocio).
-Sale: solo respuesta; no guarda nada ni avisa. Sobre importe sin impuesto, cuota de cada componente = base × tipo redondeada al céntimo a mitad hacia arriba; con el impuesto incluido, base = importe ÷ (1 + tipo combinado) redondeada, y la cuota es lo que resta, así que lo cobrado nunca se mueve un céntimo (el último componente absorbe el ajuste). El redondeo no es propio de Impuestos: es el común del hub (`guest-sdk`, `money::round` y `money::percent_of`), el mismo con que Ventas cierra el tique por tipo (SALES-F01), Facturación cuadra la cuota de cada tipo al céntimo (INVOICE-F01) y el motor de VeriFactu se niega a sellar una cuota que no cuadra con su tipo (REC_FISCAL-F04). Cambiar ese redondeo cambia los cuatro a la vez; cambiar solo el cálculo de este módulo deja al asistente diciendo una cifra distinta de la del tique.
+Sale: solo respuesta; no guarda nada ni avisa. Sobre importe sin impuesto, cuota de cada componente = base × tipo redondeada al céntimo a mitad hacia arriba; con el impuesto incluido, base = importe ÷ (1 + tipo combinado) redondeada, y la cuota es lo que resta, así que lo cobrado nunca se mueve un céntimo (el último componente absorbe el ajuste). El redondeo no es propio de Impuestos: es el común del hub (`guest-sdk`, `money::round` y `money::percent_of`), el mismo con que Ventas cierra el tique por tipo (SALES-F01) y Facturación cuadra la cuota de cada tipo al céntimo (INVOICE-F01). Cambiar ese redondeo cambia los tres a la vez. El motor de VeriFactu no usa este redondeo: compara la cuota con base × tipo con su propia tolerancia y solo puede negarse a sellar una que no cuadra (REC_FISCAL-F04); cambiar solo el cálculo de este módulo deja al asistente diciendo una cifra distinta de la del tique.
 Si falla: sin regla aplicable responde «no_rate» (no cobra 0 % salvo que el que llama lo pida expresamente); si el hub no pudo leer las reglas, el cálculo se detiene sin adivinar; sin importe o sin categoría, se rechaza. Cobrar un tique no pasa por aquí (TAXES-F19).
-Implicados: INVOICE-F01, SALES-F01, REC_FISCAL-F04
-Pendiente de enlazar: hub — el redondeo común (`guest-sdk`, `money::round` a mitad hacia arriba) que comparten Impuestos, Ventas, Facturación y el motor fiscal de VeriFactu
+Implicados: INVOICE-F01, SALES-F01, REC_FISCAL-F04, HUB-F18
 QA: L-08
 
 ### TAXES-F19 Entregar las reglas y las categorías a Ventas, Facturación, Inventario y Servicios
@@ -419,7 +418,7 @@ Pasos:
 Entra: lo que ya está guardado en Reglas y Categorías.
 Sale: lo que la línea de venta congela: categoría, tipo combinado, país, región y regla. La calificación (familia, clase, régimen y causa) no viaja en la venta: la resuelve Facturación al emitir, contra las reglas vigentes ese día, y queda en el desglose de la factura. Con la lista de reglas vacía, una línea con categoría se rechaza («no hay regla»); una línea sin categoría cae al tipo que traiga o a 0 % (es cosa de Ventas).
 Si falla: si las reglas no se pueden leer, el hub rechaza antes de escribir (error de lectura no disponible; el aviso propio de Ventas solo salta en un runtime antiguo) y Facturación aborta sin gastar número; el cajero no cobra con un tipo supuesto. Servicios no comprueba la categoría al guardar.
-Implicados: INVENTORY-F01, INVENTORY-F02, INVOICE-F01, INVOICE-F03, SALES-F01, SALES-F07, SERVICES-F01, SERVICES-F06, REC_FISCAL-F01, REC_FISCAL-F02
+Implicados: INVENTORY-F01, INVENTORY-F02, INVOICE-F01, INVOICE-F03, SALES-F01, SALES-F07, SERVICES-F01, SERVICES-F06, REC_FISCAL-F01, REC_FISCAL-F02, HUB-F11
 QA: L-01, L-08
 
 ## Cobertura contra la referencia
